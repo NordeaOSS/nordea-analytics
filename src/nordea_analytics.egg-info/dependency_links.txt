@@ -1,0 +1,1 @@
+https://artifactory.itcm.oneadr.net/api/pypi/pypi-remote/simple/
