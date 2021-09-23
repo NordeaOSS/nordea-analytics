@@ -16,7 +16,7 @@ babel
     # via sphinx
 certifi==2021.5.30
     # via requests
-cffi
+#cffi
     # via pygit2
 charset-normalizer==2.0.6
     # via requests
