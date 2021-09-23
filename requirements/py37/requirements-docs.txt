@@ -8,15 +8,15 @@
 
 alabaster==0.7.12
     # via sphinx
-#astroid==2.7.1
+astroid
     # via sphinx-autoapi
-#atomicwrites==1.4.0
+atomicwrites
     # via pytest
 babel
     # via sphinx
 certifi==2021.5.30
     # via requests
-cffi==1.14.6
+cffi
     # via pygit2
 charset-normalizer==2.0.6
     # via requests
