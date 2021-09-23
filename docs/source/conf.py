@@ -14,7 +14,7 @@ import sys
 from pathlib import Path
 from sphinx.ext.autodoc import between
 
-na_analytics_src = "\\".join(Path(__file__)._parts[:-3] +['src'])
+na_analytics_src = "\\".join(Path(__file__)._parts[1:-3] +['src'])
 sys.path.insert(0, na_analytics_src)
 
 
@@ -42,7 +42,7 @@ def setup(app):
 
 
 autoapi_type = 'python'
-autoapi_dirs = ['../src']
+autoapi_dirs = [na_analytics_src]
 
 
 # Add any paths that contain templates here, relative to this directory.
