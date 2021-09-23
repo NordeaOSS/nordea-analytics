@@ -10,7 +10,7 @@ alabaster==0.7.12
     # via sphinx
 #astroid
     # via sphinx-autoapi
-atomicwrites
+#atomicwrites
     # via pytest
 babel
     # via sphinx
