@@ -42,7 +42,7 @@ def setup(app):
 
 
 autoapi_type = 'python'
-autoapi_dirs = 'https://github.com/NordeaOSS/nordea-analytics/tree/master/src'
+#autoapi_dirs = 'https://github.com/NordeaOSS/nordea-analytics/tree/master/src'
 
 
 # Add any paths that contain templates here, relative to this directory.
