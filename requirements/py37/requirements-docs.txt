@@ -10,7 +10,7 @@ alabaster==0.7.12
     # via sphinx
 #astroid==2.7.1
     # via sphinx-autoapi
-atomicwrites==1.4.0
+#atomicwrites==1.4.0
     # via pytest
 attrs==21.2.0
     # via pytest
