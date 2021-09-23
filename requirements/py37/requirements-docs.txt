@@ -22,7 +22,7 @@ charset-normalizer==2.0.6
     # via requests
 #click==8.0.1
     # via pip-tools
-colorama
+#colorama
     # via
     #   click
     #   pytest
