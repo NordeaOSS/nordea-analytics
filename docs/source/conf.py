@@ -42,7 +42,7 @@ def setup(app):
 
 
 autoapi_type = 'python'
-autoapi_dirs = [na_analytics_src]
+autoapi_dirs = ['\home\docs\checkouts\readthedocs.org\user_builds\nordea-analytics\checkouts\latest\src']
 
 
 # Add any paths that contain templates here, relative to this directory.
