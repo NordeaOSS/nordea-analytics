@@ -14,7 +14,7 @@ import sys
 from pathlib import Path
 from sphinx.ext.autodoc import between
 
-na_analytics_src = "\\".join(Path(__file__)._parts[:-5] +['src'])
+na_analytics_src = "\\".join(Path(__file__)._parts)
 sys.path.insert(0, na_analytics_src)
 
 
