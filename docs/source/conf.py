@@ -14,8 +14,8 @@ import sys
 from pathlib import Path
 from sphinx.ext.autodoc import between
 
-#na_analytics_src = "\\".join(Path(__file__)._parts)
-#sys.path.insert(0, na_analytics_src)
+na_analytics_src = "\\".join(Path(__file__)._parts[:-3] +['src'])
+sys.path.insert(0, na_analytics_src)
 
 
 # -- Project information -----------------------------------------------------
@@ -42,7 +42,7 @@ def setup(app):
 
 
 autoapi_type = 'python'
-#autoapi_dirs = 'https://github.com/NordeaOSS/nordea-analytics/tree/master/src'
+autoapi_dirs = [na_analytics_src]
 
 
 # Add any paths that contain templates here, relative to this directory.
@@ -65,4 +65,4 @@ html_theme = "sphinx_rtd_theme"
 # Add any paths that contain custom static files (such as style sheets) here,
 # relative to this directory. They are copied after the builtin static files,
 # so a file named "default.css" will overwrite the builtin "default.css".
-html_static_path = ['_static']
+#html_static_path = ['_static']
