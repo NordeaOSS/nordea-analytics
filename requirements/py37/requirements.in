@@ -1,4 +1,5 @@
 # IMPORTANT: make sure these requirements exactly match the ones in setup.cfg under install_requires
+autoapi
 easygui>=0,<1
 keyring>=21,<24
 pandas>=1,<1.3; python_version < "3.7"
