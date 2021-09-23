@@ -1,14 +1,3 @@
-autoapi
-pip-tools
-pygit2
-pygments
-pytest
-pytest-cov
-pytest-mock
-requests
 sphinx
 sphinx-rtd-theme
 sphinx-autoapi
-types-PyYAML
-types-requests
-xdoctest
