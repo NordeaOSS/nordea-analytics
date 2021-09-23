@@ -14,7 +14,7 @@ import sys
 from pathlib import Path
 from sphinx.ext.autodoc import between
 
-na_analytics_src = "\\".join(Path(__file__)._parts[:-3])
+na_analytics_src = "\\".join(Path(__file__)._parts[:-5] +['src'])
 sys.path.insert(0, na_analytics_src)
 
 
@@ -42,8 +42,7 @@ def setup(app):
 
 
 autoapi_type = 'python'
-#autoapi_dirs = [na_analytics_src, 'src']
-autoapi_dirs = ['/\home\docs\checkouts\readthedocs.org\user_builds\nordea-analytics\src']
+autoapi_dirs = [na_analytics_src]
 
 
 # Add any paths that contain templates here, relative to this directory.
