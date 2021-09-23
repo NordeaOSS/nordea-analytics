@@ -1,4 +1,5 @@
 -c requirements.txt
+autoapi
 black
 colorama
 coverage[toml]
