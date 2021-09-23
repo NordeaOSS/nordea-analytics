@@ -14,8 +14,8 @@ import sys
 from pathlib import Path
 from sphinx.ext.autodoc import between
 
-na_analytics_src = "\\".join(Path(__file__)._parts)
-sys.path.insert(0, na_analytics_src)
+#na_analytics_src = "\\".join(Path(__file__)._parts)
+#sys.path.insert(0, na_analytics_src)
 
 
 # -- Project information -----------------------------------------------------
@@ -42,7 +42,7 @@ def setup(app):
 
 
 autoapi_type = 'python'
-autoapi_dirs = [na_analytics_src]
+autoapi_dirs = ['https://github.com/NordeaOSS/nordea-analytics/tree/master/src']
 
 
 # Add any paths that contain templates here, relative to this directory.
