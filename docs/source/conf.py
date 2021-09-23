@@ -17,8 +17,6 @@ from sphinx.ext.autodoc import between
 na_analytics_src = "\\".join(Path(__file__)._parts[:-3] +['src'])
 sys.path.insert(0, na_analytics_src)
 
-autodoc_mock_imports = ['autoapi']
-
 
 # -- Project information -----------------------------------------------------
 
@@ -35,9 +33,9 @@ release = '0.4.1'
 # Add any Sphinx extension module names here, as strings. They can be
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom
 # ones.
-extensions = ['sphinx.ext.autodoc', 'autoapi.extension', 'rst2pdf.pdfbuilder']
+extensions = ['sphinx.ext.autodoc', 'autoapi.extension']
 autodoc_typehints = 'description'
-pdf_documents = [('index', u'rst2pdf', u'Sample rst2pdf docs', u'Desk Qants'),]
+#pdf_documents = [('index', u'rst2pdf', u'Sample rst2pdf docs', u'Desk Qants'),]
 
 def setup(app):
     app.connect('autodoc-process-docstring', between('^.*Args.*$', exclude=True))
