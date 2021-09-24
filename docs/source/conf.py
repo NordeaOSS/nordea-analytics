@@ -45,14 +45,14 @@ def setup(app):
 autoapi_type = 'python'
 cd = os.getcwd()
 if 'readthedocs.org' in cd:
-    autoapi_dirs = ['/home/docs/checkouts/readthedocs.org/user_builds/nordea-analytics/checkouts/latest']
+    autoapi_dirs = ['/home/docs/checkouts/readthedocs.org/user_builds/nordea-analytics/checkouts/latest','nordea_analytics']
 else:
     autoapi_dirs = [na_analytics_src]
 
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']
-autoapi_ignore = ["*.py"]
+autoapi_ignore = ["*noxfile.py"]
 
 # add_function_parentheses = True
 
