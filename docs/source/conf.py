@@ -44,8 +44,12 @@ def setup(app):
 
 autoapi_type = 'python'
 cd = os.getcwd()
-os.chdir(na_analytics)
-autoapi_dirs = ['../src']
+if 'readthedocs.org' in cd:
+    os.chdir('/home/docs/checkouts/readthedocs.org/user_builds/nordea-analytics/checkouts/latest')
+    autoapi_dirs = ['../src']
+else:
+    os.chdir(na_analytics)
+    autoapi_dirs = [os.getcwd() + '\\src']
 os.chdir(cd)
 
 
