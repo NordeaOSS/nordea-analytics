@@ -43,16 +43,6 @@ def setup(app):
 
 
 autoapi_type = 'python'
-cd = os.getcwd()
-print(cd)
-if 'readthedocs.org' in cd:
-    os.chdir('/home/docs/checkouts/readthedocs.org/user_builds/nordea-analytics/checkouts/latest')
-    print(os.getcwd())
-    autoapi_dirs = ['../src']
-else:
-    os.chdir(na_analytics)
-    autoapi_dirs = [os.getcwd() + '\\src']
-os.chdir(cd)
 
 
 # Add any paths that contain templates here, relative to this directory.
