@@ -55,6 +55,8 @@ templates_path = ['_templates']
 autoapi_ignore = ["*tests*",
                   "*/noxfile.py"]
 
+exclude_patterns = ["**tests"]
+
 # add_function_parentheses = True
 
 # -- Options for HTML output -------------------------------------------------
