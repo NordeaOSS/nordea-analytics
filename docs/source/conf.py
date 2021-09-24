@@ -52,7 +52,8 @@ else:
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']
-# autoapi_ignore = ["/noxfile*"]
+autoapi_ignore = ["*/tests/*",
+                  "*noxfile.py"]
 
 # add_function_parentheses = True
 
