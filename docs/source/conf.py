@@ -45,7 +45,7 @@ def setup(app):
 autoapi_type = 'python'
 cd = os.getcwd()
 if 'readthedocs.org' in cd:
-    autoapi_dirs = ['/home/docs/checkouts/readthedocs.org/user_builds/nordea-analytics/checkouts/latest/nordea_analytics']
+    autoapi_dirs = ['/home/docs/checkouts/readthedocs.org/user_builds/nordea-analytics/checkouts/latest']
 else:
     autoapi_dirs = [na_analytics_src]
 
@@ -56,7 +56,7 @@ templates_path = ['_templates']
 # List of patterns, relative to source directory, that match files and
 # directories to ignore when looking for source files.
 # This pattern also affects html_static_path and html_extra_path.
-exclude_patterns = ['**nalib']
+exclude_patterns = ['**nalib', '**tests', '**noxfile', '**conf']
 
 # add_function_parentheses = True
 
