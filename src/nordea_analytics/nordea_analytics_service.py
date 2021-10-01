@@ -37,16 +37,16 @@ class NordeaAnalyticsService:
         keyfigures: Union[
             List[str], List[BondKeyFigureName], List[Union[str, BondKeyFigureName]]
         ],
-        value_date: datetime,
+        calc_date: datetime,
         as_df: bool = False,
     ) -> Any:
-        """Retrieves given set of kewy figures for given ISINs and value date.
+        """Retrieves given set of kewy figures for given ISINs and calc date.
 
         Args:
             isins: List of ISINs for which key figures want to be retrieved.
             keyfigures: List of bond key figures which should be retrieved.
                 Can be a list of BondKeyFigureName or string.
-            value_date: Date of valuation.
+            calc_date: Date of calculation.
             as_df: if True, the results are represented as pd.DataFrame,
                 else as dictionary.
 
@@ -55,19 +55,19 @@ class NordeaAnalyticsService:
                 the data is in form of a DataFrame.
         """
         if as_df:
-            return BondKeyFigures(self._client, isins, keyfigures, value_date).to_df()
+            return BondKeyFigures(self._client, isins, keyfigures, calc_date).to_df()
         else:
-            return BondKeyFigures(self._client, isins, keyfigures, value_date).to_dict()
+            return BondKeyFigures(self._client, isins, keyfigures, calc_date).to_dict()
 
     def get_index_composition(
-        self, indices: List[str], value_date: datetime, as_df: bool = False
+        self, indices: List[str], calc_date: datetime, as_df: bool = False
     ) -> Any:
-        """Retrieves index composition for a given set og indices and value date.
+        """Retrieves index composition for a given set og indices and calc date.
 
         Args:
             indices: List of Indices for which the
                 index composition should be retrieved.
-            value_date: Date of valuation.
+            calc_date: Date of calculation.
             as_df: if True, the results are represented
                 as pd.DataFrame, else as dictionary.
 
@@ -76,9 +76,9 @@ class NordeaAnalyticsService:
                 the data is in form of a DataFrame.
         """
         if as_df:
-            return IndexComposition(self._client, indices, value_date).to_df()
+            return IndexComposition(self._client, indices, calc_date).to_df()
         else:
-            return IndexComposition(self._client, indices, value_date).to_dict()
+            return IndexComposition(self._client, indices, calc_date).to_dict()
 
     def get_time_series(
         self,
@@ -97,8 +97,8 @@ class NordeaAnalyticsService:
             keyfigures: Key figure names for request. If symbol is
                 something else than a bond ISIN, "quote" should be chosen. Can be a
                  list of BondKeyFigureName or string.
-            from_date: The first date showing historical key figures.
-            to_date: The last date showing historical key figures.
+            from_date: The first date showing historical figures.
+            to_date: The last date showing historical figures.
             as_df: if True, the results are represented
                 as pd.DataFrame, else as dictionary.
 

@@ -52,8 +52,11 @@ python -m pip install --no-deps --index-url https://artifactory.itcm.oneadr.net/
 Development should be done on the develop branch. When new version of the library should be published, the version should
 be bumped and develop branch merged with master branch. This is done with the following steps:
 1. Go into nordea-analytics bitbucket and bump the version (see Versioning below) in src/nordea_analytics/__init__.py
+and in docs/source/conf.py
 2. Go into Pull request - Create Pull Request
 3. Select to merge develop branch to master. Make sure both branches are built in bamboo.
+4. Upload master branch to Github
+5. Create new documentation on Read the Docs with the new version
  
 ## Versioning
 Developers need to keep track of the library version.

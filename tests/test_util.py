@@ -54,7 +54,7 @@ def test_keyfigure_strings(
                 (TimeConvention.TC_30EP360, TimeConvention),
                 (SpotForward.Forward, SpotForward),
                 ("spot", SpotForward),
-                (SpotForward.ImpliedForward, SpotForward),
+                ("impliedforward", SpotForward),
             ],
             [
                 "par curve",
@@ -77,7 +77,7 @@ def test_curve_variables_name_string(
     ],
     expected_results: List[str],
 ) -> None:
-    """Test that function retruns strings that service understands."""
+    """Test that function returns strings that service understands."""
     result = [convert_to_variable_string(c[0], c[1]) for c in test_curve_variable_names]
     assert result == expected_results
 

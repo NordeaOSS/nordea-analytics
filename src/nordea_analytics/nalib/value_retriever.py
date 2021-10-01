@@ -62,7 +62,7 @@ class ValueRetriever(ABC):
 
 
 class BondKeyFigures(ValueRetriever):
-    """Retrieves and reformat given bond key figures for given ISINs and value date."""
+    """Retrieves and reformat given bond key figures for given ISINs and calc date."""
 
     def __init__(
         self,
@@ -71,7 +71,7 @@ class BondKeyFigures(ValueRetriever):
         keyfigures: Union[
             List[str], List[BondKeyFigureName], List[Union[str, BondKeyFigureName]]
         ],
-        value_date: datetime,
+        calc_date: datetime,
     ) -> None:
         """Initialization of class.
 
@@ -80,16 +80,16 @@ class BondKeyFigures(ValueRetriever):
                 or DataRetrievalServiceClientFile for testing
             isins: ISINs for requests.
             keyfigures: Bond key figure names for request.
-            value_date: value date for request.
+            calc_date: calculation date for request.
         """
         super(BondKeyFigures, self).__init__(client)
 
-        self.isins = isins
+        self.isins = ",".join(isins) if len(isins) > 1 else isins
         self.keyfigures = [
             convert_to_variable_string(keyfigure, BondKeyFigureName)
             for keyfigure in keyfigures
         ]
-        self.value_date = value_date
+        self.calc_date = calc_date
         self._data = self.get_bond_key_figures()
 
     def get_bond_key_figures(self) -> Dict:
@@ -104,11 +104,11 @@ class BondKeyFigures(ValueRetriever):
 
     @property
     def request(self) -> Dict:
-        """Request dictionary for a given set of ISINs, key figures and value date."""
+        """Request dictionary for a given set of ISINs, key figures and calc date."""
         return {
             "symbols": self.isins,
             "keyFigures": self.keyfigures,
-            "date": self.value_date.strftime("%Y-%m-%d"),
+            "date": self.calc_date.strftime("%Y-%m-%d"),
         }
 
     def to_dict(self) -> Dict:
@@ -152,12 +152,12 @@ class TimeSeries(ValueRetriever):
             symbol: Bonds ISINs, swaps, FX, FX swap point.
             keyfigures: Key figure names for request. If symbol is
                 something else than a bond ISIN, quote should be chosen.
-            from_date: From date for value date interval.
-            to_date: To date for value date interval.
+            from_date: From date for calc date interval.
+            to_date: To date for calc date interval.
         """
         super(TimeSeries, self).__init__(client)
         self._client = client
-        self.symbol = symbol
+        self.symbol = ",".join(symbol) if len(symbol) > 1 else symbol
         self.keyfigures = [
             convert_to_variable_string(keyfigure, BondKeyFigureName)
             for keyfigure in keyfigures
@@ -231,13 +231,13 @@ class TimeSeries(ValueRetriever):
 
 
 class IndexComposition(ValueRetriever):
-    """Retrieves and reformat index composition for a given indices and value date."""
+    """Retrieves and reformat index composition for a given indices and calc date."""
 
     def __init__(
         self,
         client: DataRetrievalServiceClient,
         indices: List[str],
-        value_date: datetime,
+        calc_date: datetime,
     ) -> None:
         """Initialization of class.
 
@@ -245,12 +245,12 @@ class IndexComposition(ValueRetriever):
             client: DataRetrievalServiceClient
                 or DataRetrievalServiceClientFile for testing.
             indices: Indices for request.
-            value_date: value date for request.
+            calc_date: calculation date for request.
         """
         super(IndexComposition, self).__init__(client)
         self._client = client
         self.indices = indices
-        self.value_date = value_date
+        self.calc_date = calc_date
         self._data = self.get_index_composition()
 
     def get_index_composition(self) -> Dict:
@@ -265,10 +265,10 @@ class IndexComposition(ValueRetriever):
 
     @property
     def request(self) -> Dict:
-        """Request dictionary for a given set of indices and value date."""
+        """Request dictionary for a given set of indices and calc date."""
         return {
             "symbols": self.indices,
-            "infodate": self.value_date.strftime("%Y-%m-%d"),
+            "infodate": self.calc_date.strftime("%Y-%m-%d"),
         }
 
     def to_dict(self) -> Dict:
@@ -333,8 +333,8 @@ class CurveTimeSeries(ValueRetriever):
             client: DataRetrievalServiceClient
                 or DataRetrievalServiceClientFile for testing.
             curve: Name of curve that should be retrieved.
-            from_date: From date for value date interval.
-            to_date: To date for value date interval.
+            from_date: From date for calc date interval.
+            to_date: To date for calc date interval.
             curve_type: What type of curve is retrieved.
             time_convention: Time convention used when curve is constructed.
             tenors: For what tenors should be curve be constructed.

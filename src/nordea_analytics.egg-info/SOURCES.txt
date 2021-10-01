@@ -1,3 +1,4 @@
+LICENCE.md
 MANIFEST.in
 README.md
 pyproject.toml
@@ -33,6 +34,7 @@ setup.cfg
 .nox/doctests-3-9/Lib/site-packages/nordea_analytics/nalib/config.yml
 .nox/e198d4e6/Lib/site-packages/nordea_analytics/nalib/config.yml
 .nox/ec80f658/Lib/site-packages/nordea_analytics/nalib/config.yml
+.nox/f201a242/Lib/site-packages/nordea_analytics/nalib/config.yml
 .nox/mypy-3-6/Lib/site-packages/nordea_analytics/nalib/config.yml
 .nox/mypy-3-9/Lib/site-packages/nordea_analytics/nalib/config.yml
 .nox/tests-3-6/Lib/site-packages/nordea_analytics/nalib/config.yml

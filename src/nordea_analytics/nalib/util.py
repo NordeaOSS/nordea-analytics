@@ -42,7 +42,7 @@ def convert_to_variable_string(
 
     Raises:
         ValueError: If string value is not valid for service or variable
-            input not suported
+            input not supported
 
     """
     if type(variable) in (BondKeyFigureName, CurveType, TimeConvention, SpotForward):

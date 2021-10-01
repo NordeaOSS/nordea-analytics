@@ -2,7 +2,7 @@ from datetime import datetime
 import json
 import os
 from pathlib import Path
-from typing import Any, List, Union
+from typing import List, Union
 
 import pytest
 
@@ -43,16 +43,16 @@ def isins() -> List[str]:
 
 
 @pytest.fixture
-def keyfigures() -> List[Any]:
+def keyfigures() -> List[Union[str, BondKeyFigureName]]:
     """Key Figures for BondKeyFigures and TimeSeries tests."""
     return [
         "Quote",
         "Yield",
         "Modduration",
-        "spread",
         "accint",
         BondKeyFigureName.BPVP,
         BondKeyFigureName.CVXP,
+        BondKeyFigureName.OAModifiedDuration,
     ]
 
 
@@ -83,9 +83,7 @@ class TestBondKeyFigures:
         anchor: datetime,
         result_path: str,
         isins: List[str],
-        keyfigures: Union[
-            List[str], List[BondKeyFigureName], List[Union[str, BondKeyFigureName]]
-        ],
+        keyfigures: List[Union[str, BondKeyFigureName]],
     ) -> None:
         """Check if dictionary results are correct."""
         bond_key_figures = na_service.get_bond_key_figures(isins, keyfigures, anchor)
@@ -194,9 +192,7 @@ class TestTimeSeries:
         from_date: datetime,
         result_path: str,
         isins: List[str],
-        keyfigures: Union[
-            List[str], List[BondKeyFigureName], List[Union[str, BondKeyFigureName]]
-        ],
+        keyfigures: List[Union[str, BondKeyFigureName]],
     ) -> None:
         """Check if dictionary results are correct."""
         time_series = na_service.get_time_series(isins, keyfigures, from_date, anchor)
@@ -407,3 +403,49 @@ class TestCurveTimeSeries:
             dump_data=DUMP_DATA,
             reset_index=True,
         )
+
+    @pytest.mark.parametrize(
+        "curve, curve_type, time_convention, spot_forward, forward_tenor",
+        [
+            (
+                "DKKSWAP",
+                CurveType.Bootstrap,
+                TimeConvention.Act365,
+                SpotForward.Forward,
+                None,
+            ),
+        ],
+    )
+    def test_check_forward(
+        self,
+        na_service: NordeaAnalyticsServiceFile,
+        anchor: datetime,
+        from_date: datetime,
+        result_path: str,
+        curve: str,
+        curve_type: Union[str, CurveType],
+        time_convention: Union[str, TimeConvention],
+        tenors: List[float],
+        spot_forward: Union[str, SpotForward],
+        forward_tenor: Union[float, None],
+    ) -> None:
+        """Check if dictionary results are correct."""
+        try:
+            na_service.get_curve_time_series(
+                curve,
+                from_date,
+                anchor,
+                curve_type,
+                time_convention,
+                tenors,
+                spot_forward,
+                forward_tenor,
+            )
+            expected_result = False
+        except ValueError as e:
+            expected_result = (
+                e.args[0] == "Forward tenor has to be chosen for forward and "
+                "implied forward curves"
+            )
+
+        assert expected_result
