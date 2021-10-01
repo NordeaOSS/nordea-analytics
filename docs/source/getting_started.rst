@@ -29,25 +29,20 @@ For variable names when getting curves;
 
     from nordea_analytics.curve_variable_names import CurveType, SpotForward, TimeConvention
 
-Authentication
-^^^^^^^^^^^^^^^^
-For internal users, the Windows login is used for authentication. The first time the library is used or when
-the password has changed, a pop-up asks for the password.
-
 Available methods
 ^^^^^^^^^^^^^^^^^^^^
 Currently 3 methods are available in the Nordea Analytics python tool. All methods
 can return results in the form of a dictionary(default) or as a pandas DataFrame.
 
-* :meth:`get_bond_key_figures() <nordea_analytics.nordea_analytics_service.NordeaAnalyticsService.get_key_figures>`.
+* :meth:`get_bond_key_figures() <nordea_analytics.nordea_analytics_service.NordeaAnalyticsService.get_bond_key_figures>`.
 * :meth:`get_time_series() <nordea_analytics.nordea_analytics_service.NordeaAnalyticsService.get_time_series>`.
 * :meth:`get_index_composition() <nordea_analytics.nordea_analytics_service.NordeaAnalyticsService.get_index_composition>`.
 * :meth:`get_curve_time_series() <nordea_analytics.nordea_analytics_service.NordeaAnalyticsService.get_curve_time_series>`
 
 Basic examples
---------------
+---------------
 Get Bond Key Figures
-^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^
 The following example retrieves Vega, BPV and CVX for a given set of ISINs and returns the results in a pandas DataFrame.
 
 .. code-block:: python

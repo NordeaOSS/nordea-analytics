@@ -6,99 +6,113 @@ are those that require Monte Carlo simulation of interest rate paths and resulti
 resulting from prepayments as predicted by the prepayment model. The deterministic ones are those that can be computed
 directly from the rate curves and use cash flow with no prepayments.
 
-Most key figures described below are and the stochastic key figures, but the deterministic version of the key figure can
-often be retrieved by adding "Det" as prefix to the key figure name, for example;
-
-:KeyFigureName.DetBPVP: `"detbpvp"`
-
 Danish Mortgage bonds with embedded optionality (Callable and Fixed Floaters) are modelled with the prepayment model,
 and thus have option adjusted(OA) key figures. In these cases the prepayment model cash flow and the option
-adjusted spread(OAS, estimation described below) is used for the estimation. This is embedded where relevant, and thus
+adjusted spread(OAS, described below) is used for the estimation. This is embedded where relevant, and thus
 does not need to be specified when retrieving the key figure values.
 
-Note, all key figures available in the library are listed in the :class:`KeyFigureName <nordea_analytics.key_figure_name.KeyFigureName>`
-class and can be retrieved with the function :meth:`get_key_figures() <nordea_analytics.nordea_analytics_service.NordeaAnalyticsService.get_key_figures>`.
+Note, all key figures available in the library are listed in the :class:`BondKeyFigureName <nordea_analytics.bond_key_figure_name.KeyFigureName>`
+class and can be retrieved with the function :meth:`get_bond_key_figures() <nordea_analytics.nordea_analytics_service.NordeaAnalyticsService.get_bond_key_figures>`.
+
+Present Value (PV)
+--------------------
+**BondKeyFigureName.PresentValue**
+
+The present value of a bond, with a spread of z.
+
+.. math::
+    PV(R, \sigma, z) = E^{Q}_{0}\left[\sum_{i} CF_{i}(R, \sigma) df_{i}(R, z)\right],
+
+where:
+
+:math:`E^{Q}_{0}` = Expected risk netural values given known information today information
+
+:math:`R` = sets of rate curves (both discounting and forward)
+
+:math:`\sigma` = represents the swaption volatility in the stochastic rate curve model
+
+:math:`z` = the option adjusted spread
+
+:math:`CF_{i}` = cash flow at time i
+
+:math:`df_{i}` = discount factor at time i
 
 Vega
 ------
+**BondKeyFigureName.Vega**
 
-:KeyFigureName.Vega: `"vega"`
-This key figure shows how much the present value of a bond changes if the
-volatility of the rates increase, measured per bond for a one percentage point
-volatility change (e.g. kroner per bond per percentage point).
+This approximation of vega shows how much the present value changes with respect to the swaption volatility.
 
 .. math::
     \nu = \frac{\delta}{\delta \sigma_{ATM}} PV
 
-BPV (Basis Point Value)
------
+where :math:`\sigma_{ATM}` is the at-the-money swaption volatility.
 
-:KeyFigureName.BPVP: `"bpvp"`
-This key figure shows how much the present value of a bond changes if the
-rates decrease, measured in currency unit per one percentage point (e.g. kroner per percentage point).
+BPV (Basis Point Value)
+------------------------
+**BondKeyFigureName.BPVP**
+
+This key figure shows how much the present value of a bond changes with respect to rates.
 
 .. math::
     BPV = - \frac{\delta}{\delta R} PV(R)
 
-where `R` is the bumped interest rate curve
-
 CVX (Convexity)
------
+------------------
+**BondKeyFigureName.CVXP**
 
-:KeyFigureName.CVXP: `"cvxp"`
-This key figure shows how much the BPV of a bond changes if the rates decrease, measured in currency unit per one
-percentage point squared (e.g. kroner per percentage point squared).
+This key figure shows how much the BPV of a bond changes if the rates decrease and increased by :math:`\Delta`
 
 .. math::
     CVX = \frac{\frac{\delta}{\delta R} PV(R+\Delta) - \frac{\delta}{\delta R} PV(R)}{\Delta}
 
-where `BPV` is the bumped BPV.
+where :math:`\Delta` is 30bp for Danish Mortgage Bonds and 20bp for Capped floaters.
 
 Modified duration
 ------------------
+**BondKeyFigureName.OAModifiedDuration**
 
-:KeyFigureName.ModifiedDuration: `"modduration"`
-This key figure shows how much the present value of a bond changes - per invested currency unit - if the rates decrease
-measured in currency unit per one percentage point (e.g. kroner per invested krone per percentage point).
+This key figure shows how much the present value of a bond changes with respect to changes in rates, per invested currency unit.
 
 .. math::
     ModDur = \frac{BPV}{\frac{price_{dirty}}{par}}
 
-where :math:`par` is the bond's notional (in most cases 100 DKK) and :math:`price_{dirty}` is bonds quote + accured interest.
+where :math:`par` is the bond's notional (in most cases 100 DKK) and :math:`price_{dirty}` is bonds quote + accrued interests.
 
 Theta
 ------
+**BondKeyFigureName.Theta**
 
-:KeyFigureName.Theta: `"theta"`
 This key figure measures the drift of the bond price due to the passage of time.
 
 .. math::
     \Theta = (r_{0} + spread) price_{dirty}
 
 Horizon Return
------------
+---------------
+**BondKeyFigureName.HorizonReturn3M**
 
-:KeyFigureName.Return3M: `"return3m"`
-:KeyFigureName.Return6M: `"return6m"`
-:KeyFigureName.Return12M: `"return12m"`
+**BondKeyFigureName.HorizonReturn6M**
+
+**BondKeyFigureName.HorizonReturn12M**
 
 Forward looking return of holding the bonds for x months while holding all other assumptions fixed.
 
-Historical Return (d/d)
+Historical Return
 ------------------
 
-:KeyFigureName.InternalPriceTotalReturn: `"dd_total_internal"`
+**BondKeyFigureName.HistoricalReturnAccumulated**
 
-The actual one day return of holding the bond.
+The accumulated one day return of holding the bond. Starting AccReturn at t=0 is 100%.
 
 .. math::
-    Retrun_{t(0)} = \frac{price_{dirty,t(1)} - price_{dirty,t(0)}}{price_{dirty,t(0)}}
+    AccReturn_{t(i)} = Return_{t(i-1)} + Retrun_{t(i)}
 
 
-Accured interest
+Accrued Interest
 -----------------
+**BondKeyFigureName.AccruedInterest**
 
-:KeyFigureName.AccruedInterest: `"accint"`
 This key figure shows how much interest a bond has accrued since the last coupon payment.
 
 .. math::
@@ -107,138 +121,95 @@ This key figure shows how much interest a bond has accrued since the last coupon
 where :math:`c_{term}` is the coupon for the term in question(e.g.3%=4), :math:`t_{i}` the time in years since last
 coupon payment and :math:`t_{p}` the time in years between the last payment and the next.
 
-Present Value (PV)
---------------------
-
-:KeyFigureName.PresentValue: `"present_value"`
-The present value of a bond, with a spread of z.
-
-.. math::
-    PV(z) = \sum_{t}{E[CF_{t}  exp(-(r_{t} + z)t]}
-
-Spreads
+OA Spreads
 --------
+**BondKeyFigureName.OASSWAP_OIS**
 
-:KeyFigureName.SPREAD: `"spread"`
 Difference between the theoretical price and market price, expressed in terms of a spread to the interest rate curve.
-The spread of the bond is the spread solving this equation:
-
-.. math::
-    PV (spread) = price_{dirty}
-
-replacing `spread` in the PV equation above. Similarly the OA spread is found by solving the equation:
-
-Where relevant, the option adjusted spread(OAS) is simply added to the relevant spread, and the solved for
-as above.
+The spread of the bond is solved in the following equation:
 
 .. math::
     PV (OAS) = price_{dirty}
 
-Below are listed other spread key figures, which are computed as described above using the relevant discount factor
+Below are listed other OA spread key figures, which are computed as described above using the relevant discount factor
 in the PV function.
 
-:KeyFigureName.GovSpread: `"gov_spread"`
+**BondKeyFigureName.OAGOV**
 
-:KeyFigureName.SwapSpread: `"swap_spread"`
+**BondKeyFigureName.OASWAP_3M**
 
-:KeyFigureName.LiborSpread: `"libor_spread`
+**BondKeyFigureName.OASWAP_6M**
 
-:KeyFigureName.Libor3mSpread: `"libor_3m_spread"`
 Yield Curve Spread (YCS)
 -------------------------
+**BondKeyFigureName.YCSSWAP_OIS_Deterministic**
 
-:KeyFigureName.YCS: `"ycs"`
+**BondKeyFigureName.YCSGOV_Deterministic**
 
 Yield curve spreads(YCS) are estimated without taking the prepayment model into account, thus it uses the deterministic
 PV for estimation:
 
 .. math::
-    PV(z)_{det} = \sum_{t}{E[CF_{t}^{PP=0}] exp(-(r_{t} + z)t}
+    PV(z)_{det} = \sum_{i} CF_{i}^{PP=0} e^{-(r_{i} + z)t_{i}}
 
-and as described above the the YCS is estimated as:
+As with OAS, the YCS is then estimated as:
 
 .. math::
     PV (YCS) = price_{dirty}
 
-Below are listed other spread key figures, which are computed as described above using the relevant discount factor
-in the PV function.
 
-:KeyFigureName.GovYCS: `"govycs"`
-
-:KeyFigureName.SwapYCS: `"swapycs"`
-
-Spread Over Libor (ASW)
+Asset Swap Spread
 ------------------------
-
-:KeyFigureName.SpreadOverLibor: `"asw"`
+**BondKeyFigureName.AssetSwapSpread_3M**
 
 The spread is the pick-up you obtain from swapping the fixed leg into a floating yield compared
-to an interbank offered rate. The prepayments are calculated as optimal prepayment behaviour. ASW is only calculated
-when the price of the bond is below 100.
+to an interbank offered rate. The prepayments are calculated as optimal prepayment behaviour. Asset swap spread is only
+calculated when the price of the bond is below 100.
 
+Payments
+----------
+Prepayment
+^^^^^^^^^^^
+**BondKeyFigureName.PrePayment**
 
-Pre-Published payment
-------------
-
-:PrePublishedPayment: `"prepublished_prepayment"`
-
-Pre-Published Payment, or prepayments, are extra ordinary payments that happen when a borrower decides to exercise the
+Prepayments are extra ordinary payments that happen when a borrower decides to exercise the
 prepayment optionality embedded in the Danish Mortgage bond. Prepayments are payed out on settlement date with other
 scheduled payments.
 
-The key figure name `PrePayment` represents the pre-published payment amount as a percentage of outstanding amount;
-
-:Prepayment: `"prepayment"`
+The bond key figure name **BondKeyFigureName.PrepaymentPercentage** represents the pre-published payment amount as a
+percentage of outstanding amount;
 
 Preliminary Prepayment
-------------------------
-
-:KeyFigureName.PreliminaryPrepayment: `"prelimprepayment"`
+^^^^^^^^^^^^^^^^^^^^^^^
+**BondKeyFigureName.PreliminaryPrepayment**
 
 The prepayment amount known for the upcoming settlement date. Published weekly, most often on Mondays.
 
-The key figure name `PreliminaryPrepaymentPercentage` represents the preliminary pre payment amount as a percentage
-of outstanding amount;
+The key figure name **BondKeyFigureName.PreliminaryPrepaymentPercentage** represents the preliminary pre payment
+amount as a percentage of outstanding amount.
 
-:PreliminaryPrepaymentPercentage: `"ppp"`
-
-Scheduled Payments
--------------------
-
-:KeyFigureName.ScheduledPayment: `"schedpayment"`
+Payment Scheduled
+^^^^^^^^^^^^^^^^^^^
+**BondKeyFigureName.PaymentScheduled**
 
 Ordinary payment at settlement date.
 
-Total Payment
----------------
-
-:KeyFigureName.TotalPaymentAmt: `"totpaymentamt"`
+Payment Total
+^^^^^^^^^^^^^^^
+**KeyFigureName.PaymentTotal**
 
 Total payment payed out at the settlement date.
 
 .. math::
     Scheduled Payment + Prepayment.
 
-Total Payment as percentage of outstanding amount
--------------------------------------------------
-
-:KeyFigureName.TotalPayment: `"totpayment"`
-
-.. math::
-    \frac{Total Payment}{Outstanding Amount}
-
 Outstanding Amount
 -------------------
-
-:KeyFigureName.OutstandingAmount: `"outstanding_amount"`
+**BondKeyFigureName.OutstandingAmount**
 
 Outstanding amount at the settlement date. Given no buy backs or issuance, this amount should decrease by the amount of
 the Total Payment every settlement date.
 
-Corrected Outstanding Amount
------------------------------
-
-:KeyFigureName.CorrectedOutstandingAmount: `"corrected_outstanding_amount"`
-
-Outstanding amount 2 business days before the settlement date.
+The key figure **BondKeyFigureName.OutstandingAmountCorrected** represents the outstanding amount 2 business days
+before the settlement date.
 

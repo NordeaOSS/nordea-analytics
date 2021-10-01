@@ -26,7 +26,7 @@ copyright = '2021, Desk Quants'
 author = 'Desk Quants'
 
 # The full version, including alpha/beta/rc tags
-release = '0.4.1'
+release = '0.5.0'
 
 
 # -- General configuration ---------------------------------------------------
@@ -45,7 +45,7 @@ def setup(app):
 autoapi_type = 'python'
 cd = os.getcwd()
 if 'readthedocs.org' in cd:
-    autoapi_dirs = ['/home/docs/checkouts/readthedocs.org/user_builds/nordea-analytics/checkouts/latest']
+    autoapi_dirs = ['/home/docs/checkouts/readthedocs.org/user_builds/nordea-analytics/checkouts/' + release]
 else:
     autoapi_dirs = [na_analytics_src]
 
