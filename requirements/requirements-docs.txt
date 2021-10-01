@@ -4,8 +4,6 @@
 #
 #    pip-compile --strip-extras 'requirements\py37\requirements-docs.in'
 #
---index-url https://artifactory.itcm.oneadr.net/api/pypi/QuantitativeResearch-python-v/simple
---extra-index-url https://artifactory.itcm.oneadr.net/api/pypi/pypi-remote/simple
 
 alabaster==0.7.12
     # via sphinx
