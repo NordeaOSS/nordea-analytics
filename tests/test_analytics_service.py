@@ -12,6 +12,7 @@ from nordea_analytics.curve_variable_names import (
     SpotForward,
     TimeConvention,
 )
+from nordea_analytics.nalib.data_retrieval_client import SERVICE_URL
 from tests import NordeaAnalyticsServiceFile
 from tests.util import load_and_compare_dfs
 
@@ -92,14 +93,23 @@ class TestBondKeyFigures:
             expected_file = open(
                 os.path.join(
                     result_path,
-                    anchor.strftime("%d%m%y") + "_key_figures.txt",
+                    anchor.strftime("%d%m%y")
+                    + "_key_figures_"
+                    + SERVICE_URL.replace(".", "_").replace("://", "_").replace("/", "")
+                    + ".txt",
                 ),
                 "w+",
             )
             json.dump(bond_key_figures, expected_file)
 
         expected_file = open(
-            os.path.join(result_path, anchor.strftime("%d%m%y") + "_key_figures.txt"),
+            os.path.join(
+                result_path,
+                anchor.strftime("%d%m%y")
+                + "_key_figures_"
+                + SERVICE_URL.replace(".", "_").replace("://", "_").replace("/", "")
+                + ".txt",
+            ),
             "r",
         )
         expected_result = json.load(expected_file)
@@ -120,7 +130,11 @@ class TestBondKeyFigures:
         load_and_compare_dfs(
             df,
             os.path.join(
-                result_path, anchor.strftime("%d%m%y") + "_key_figures_df.csv"
+                result_path,
+                anchor.strftime("%d%m%y")
+                + "_key_figures_df_"
+                + SERVICE_URL.replace(".", "_").replace("://", "_").replace("/", "")
+                + ".csv",
             ),
             index_col=0,
             dump_data=DUMP_DATA,
@@ -130,7 +144,7 @@ class TestBondKeyFigures:
 class TestIndexComposition:
     """Test class for retrieving index Composition."""
 
-    def test_get_index_comopsition_dict(
+    def test_get_index_composition_dict(
         self,
         na_service: NordeaAnalyticsServiceFile,
         anchor: datetime,
@@ -143,7 +157,10 @@ class TestIndexComposition:
             expected_file = open(
                 os.path.join(
                     result_path,
-                    anchor.strftime("%d%m%y") + "_index_composition.txt",
+                    anchor.strftime("%d%m%y")
+                    + "_index_composition_"
+                    + SERVICE_URL.replace(".", "_").replace("://", "_").replace("/", "")
+                    + ".txt",
                 ),
                 "w+",
             )
@@ -152,7 +169,10 @@ class TestIndexComposition:
         expected_file = open(
             os.path.join(
                 result_path,
-                anchor.strftime("%d%m%y") + "_index_composition.txt",
+                anchor.strftime("%d%m%y")
+                + "_index_composition_"
+                + SERVICE_URL.replace(".", "_").replace("://", "_").replace("/", "")
+                + ".txt",
             ),
             "r",
         )
@@ -174,7 +194,10 @@ class TestIndexComposition:
             df,
             os.path.join(
                 result_path,
-                anchor.strftime("%d%m%y") + "_index_composition_df.csv",
+                anchor.strftime("%d%m%y")
+                + "_index_composition_df_"
+                + SERVICE_URL.replace(".", "_").replace("://", "_").replace("/", "")
+                + ".csv",
             ),
             index_col=0,
             dump_data=DUMP_DATA,
@@ -210,7 +233,9 @@ class TestTimeSeries:
                     from_date.strftime("%d%m%y")
                     + "-"
                     + anchor.strftime("%d%m%y")
-                    + "_time_series.txt",
+                    + "_time_series_"
+                    + SERVICE_URL.replace(".", "_").replace("://", "_").replace("/", "")
+                    + ".txt",
                 ),
                 "w+",
             )
@@ -222,7 +247,9 @@ class TestTimeSeries:
                 from_date.strftime("%d%m%y")
                 + "-"
                 + anchor.strftime("%d%m%y")
-                + "_time_series.txt",
+                + "_time_series_"
+                + SERVICE_URL.replace(".", "_").replace("://", "_").replace("/", "")
+                + ".txt",
             ),
             "r",
         )
@@ -252,7 +279,9 @@ class TestTimeSeries:
                 from_date.strftime("%d%m%y")
                 + "-"
                 + anchor.strftime("%d%m%y")
-                + "_time_series.csv",
+                + "_time_series_"
+                + SERVICE_URL.replace(".", "_").replace("://", "_").replace("/", "")
+                + ".csv",
             ),
             index_col=0,
             dump_data=DUMP_DATA,
@@ -321,7 +350,9 @@ class TestCurveTimeSeries:
                     + from_date.strftime("%d%m%y")
                     + "-"
                     + anchor.strftime("%d%m%y")
-                    + "_curve_time_series.txt",
+                    + "_curve_time_series_"
+                    + SERVICE_URL.replace(".", "_").replace("://", "_").replace("/", "")
+                    + ".txt",
                 ),
                 "w+",
             )
@@ -335,7 +366,9 @@ class TestCurveTimeSeries:
                 + from_date.strftime("%d%m%y")
                 + "-"
                 + anchor.strftime("%d%m%y")
-                + "_curve_time_series.txt",
+                + "_curve_time_series_"
+                + SERVICE_URL.replace(".", "_").replace("://", "_").replace("/", "")
+                + ".txt",
             ),
             "r",
         )
@@ -397,7 +430,9 @@ class TestCurveTimeSeries:
                 + from_date.strftime("%d%m%y")
                 + "-"
                 + anchor.strftime("%d%m%y")
-                + "_curve_time_series.csv",
+                + "_curve_time_series_"
+                + SERVICE_URL.replace(".", "_").replace("://", "_").replace("/", "")
+                + ".csv",
             ),
             index_col=0,
             dump_data=DUMP_DATA,
