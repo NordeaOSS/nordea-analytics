@@ -1,0 +1,1 @@
+{"data": {"bondKeyfigures": [{"symbol": "DK0002030337", "data": "Spread;\n35.309844;", "values": [{"keyfigure": "Spread", "value": "35.309844"}]}]}, "meta": {"version": "1.20.8.1", "lastUpdate": "2021-10-12T13:13:24.0000000+00:00"}}

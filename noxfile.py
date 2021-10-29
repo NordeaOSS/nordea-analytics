@@ -13,22 +13,17 @@ HERE = Path(__file__).parent
 PROD_REQ = "requirements/{version}/requirements.txt"
 DEV_REQ = "requirements/{version}/requirements-dev.txt"
 
-PyPI = "https://artifactory.itcm.oneadr.net/api/pypi/pypi-remote/simple"
+PyPI = "https://pypi.org/simple"
 
-ARTIFACTORY_URL = (
-    "https://artifactory.itcm.oneadr.net/api/pypi/QuantitativeResearch-python"
-)
+ARTIFACTORY_URL = "testpypi"
 
 locations = "src", "tests", "noxfile.py"
 
 nox.options.sessions = "lint", "mypy", "tests", "valid_version"
 
-python_versions = "3.6", "3.7", "3.8", "3.9"
+python_versions = ["3.9"]
 
 version_folders = {
-    "3.6": "36",
-    "3.7": "37",
-    "3.8": "38",
     "3.9": "39",
 }
 
@@ -46,7 +41,12 @@ dependencies = {
 def black(session: Session) -> None:
     """Run black code formatter."""
     args = session.posargs or locations
-    session.install("--index-url", PyPI, "--upgrade", "pip")
+    session.install(
+        "-r",
+        PROD_REQ.format(version=f"py{version_folders[str(session.python)]}"),
+        "--index-url",
+        PyPI,
+    )
     _install_constrained(session, "black")
     session.run("black", *args)
 
@@ -55,7 +55,12 @@ def black(session: Session) -> None:
 def lint(session: Session) -> None:
     """Lint using flake8."""
     args = session.posargs or locations
-    session.install("--index-url", PyPI, "--upgrade", "pip")
+    session.install(
+        "-r",
+        PROD_REQ.format(version=f"py{version_folders[str(session.python)]}"),
+        "--index-url",
+        PyPI,
+    )
     _install_constrained(
         session,
         "flake8",
@@ -76,9 +81,13 @@ def mypy(
 ) -> None:
     """Type-check using mypy."""
     args = session.posargs or locations
-    session.install("--index-url", PyPI, "--upgrade", "pip")
     session.install(
-        "-r", PROD_REQ.format(version=f"py{version_folders[str(session.python)]}")
+        "-r",
+        PROD_REQ.format(
+            version=f"py{version_folders[str(session.python)]}",
+        ),
+        "--index-url",
+        PyPI,
     )
     _install_nordea_analytics(session)
     _install_constrained(session, "mypy", "types-PyYAML")
@@ -111,7 +120,12 @@ def pytest(
 ) -> None:
     """Run the test suite."""
     args = session.posargs or ["-m", "not e2e", "--cov", "--xdoctest"]
-    session.install("--index-url", PyPI, "--upgrade", "pip")
+    session.install(
+        "-r",
+        PROD_REQ.format(version=f"py{version_folders[str(session.python)]}"),
+        "--index-url",
+        PyPI,
+    )
     _install_nordea_analytics(session)
     session.install("-i", PyPI, f"easygui=={easygui}")
     session.install("-i", PyPI, f"keyring=={keyring}")
@@ -133,13 +147,6 @@ def pytest(
 
 
 @nox.session(python="3.9")
-def docs(session: Session) -> None:
-    """Build the documentation."""
-    _install_constrained(session, "sphinx")
-    session.run("sphinx-build", "docs", "docs/build")
-
-
-@nox.session(python="3.9")
 def valid_version(session: Session) -> None:
     """Check that the version makes sense.
 
@@ -151,7 +158,7 @@ def valid_version(session: Session) -> None:
     if not _runs_on_master():
         session.skip(f"{session.name} runs only on master branch")
 
-    _validate_version(session)
+    # _validate_version(session)
 
 
 @nox.session(python="3.9")
@@ -166,20 +173,16 @@ def publish(session: Session) -> None:
     if not _runs_on_master():
         session.skip(f"{session.name} runs only on master branch")
 
-    _validate_version(session)
-    session.install("--index-url", PyPI, "--upgrade", "build", "wheel", "twine")
+    # _validate_version(session)
+    session.install("--index-url", PyPI, "build", "wheel", "twine")
     session.run("pyproject-build", "--no-isolation")
     session.run(
         "python",
         "-m",
         "twine",
         "upload",
-        "--repository-url",
+        "-r",
         ARTIFACTORY_URL,
-        "-u",
-        "qtoolkit-bamboo",
-        "-p",
-        "Zaq12wsx",
         "dist\\*",
     )
 
@@ -209,7 +212,7 @@ def _install_nordea_analytics(session: Session) -> None:
     Args:
         session: Nox session.
     """
-    session.install("--index-url", PyPI, "--upgrade", "build")
+    session.install("--index-url", PyPI, "build")
     session.run("pyproject-build", "--no-isolation", "--wheel")
     wheel = HERE / "dist" / f"nordea_analytics-{_get_version()}-py3-none-any.whl"
     if not wheel.exists():
@@ -355,4 +358,4 @@ def _get_version() -> str:
 def _runs_on_master() -> bool:
     """Check if the branch is master."""
     repo = Repository(str(HERE))
-    return repo.head.name == "refs/heads/master"
+    return repo.head.name == "refs/heads/master_external"
