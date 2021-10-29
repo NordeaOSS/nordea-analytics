@@ -1,0 +1,34 @@
+Metadata-Version: 2.1
+Name: nordea-analytics
+Version: 0.6.0
+Summary: Nordea Analytics Python library
+Home-page: https://github.com/NordeaOSS/nordea-analytics
+Author: Nordea Desk Quants and Markets Advisory Tools
+Author-email: E-advisorySupport@nordea.com
+License: UNKNOWN
+Platform: UNKNOWN
+Classifier: Programming Language :: Python :: 3
+Classifier: Programming Language :: Python :: 3 :: Only
+Classifier: Programming Language :: Python :: 3.6
+Classifier: Programming Language :: Python :: 3.7
+Classifier: Programming Language :: Python :: 3.8
+Classifier: Programming Language :: Python :: 3.9
+Classifier: License :: GNU General Public License
+Classifier: Operating System :: Microsoft :: Windows
+Requires-Python: >=3.6
+Description-Content-Type: text/markdown
+License-File: LICENCE.md
+
+# Nordea Analytics
+This is the Nordea Analytics python library, which gives you  To use the library, you will need access to the underlying API.
+For further information please reach out to E-advisorySupport@nordea.com
+
+# Documentation:
+
+# License
+GPLv3 - GNU General Public License v3.0
+
+#Authers
+
+Nordea Desk Quants and Markets Advisory Tools
+

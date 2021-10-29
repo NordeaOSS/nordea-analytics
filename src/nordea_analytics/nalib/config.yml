@@ -1,0 +1,26 @@
+service_name: 'Nordea_analytics'
+service_url: 'https://api.nordeaopenbanking.com/analytics/'
+login: True
+get_proxy_information: True
+user_suffix: ""
+use_headers: True
+
+url_suffix:
+  bond_key_figures: "v1/bond/keyfigure"
+  time_series: "v1/timeseries"
+  index_composition: "v1/index-composition"
+  curve_time_series: "v1/curve/timeseries"
+
+results:
+  bond_key_figures:
+    - "data"
+    - "bondKeyfigures"
+  time_series:
+    - "data"
+    - "timeseries"
+  index_composition:
+    - "data"
+    - "underlyings"
+  curve_time_series:
+    - "data"
+    - "timeseries"

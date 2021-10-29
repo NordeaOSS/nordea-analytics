@@ -1,0 +1,9 @@
+easygui<1,>=0
+keyring<24,>=21
+pandas<2,>=1
+numpy<2,>=1
+requests<3,>=2
+pyaml<22,>=20
+
+[:python_version < "3.7"]
+pandas<1.3,>=1
