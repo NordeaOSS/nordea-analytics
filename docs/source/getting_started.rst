@@ -50,7 +50,7 @@ The following example retrieves Vega, BPV and CVX for a given set of ISINs and r
     import datetime
 
     from nordea_analytics.nordea_analytics_service import NordeaAnalyticsService
-    from nordea_analytics.key_figure_name import BondKeyFigureName
+    from nordea_analytics.bond_key_figure_name import BondKeyFigureName
 
     na_service = NordeaAnalyticsService()
     value_date = datetime.datetime.today() - datetime.timedelta(1)
