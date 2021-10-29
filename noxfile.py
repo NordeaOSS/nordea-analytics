@@ -13,9 +13,11 @@ HERE = Path(__file__).parent
 PROD_REQ = "requirements/{version}/requirements.txt"
 DEV_REQ = "requirements/{version}/requirements-dev.txt"
 
-PyPI = "https://pypi.org/simple"
+PyPI = "https://artifactory.itcm.oneadr.net/api/pypi/pypi-remote/simple"
 
-ARTIFACTORY_URL = "testpypi"
+ARTIFACTORY_URL = (
+    "https://artifactory.itcm.oneadr.net/api/pypi/QuantitativeResearch-python"
+)
 
 locations = "src", "tests", "noxfile.py"
 
@@ -158,7 +160,7 @@ def valid_version(session: Session) -> None:
     if not _runs_on_master():
         session.skip(f"{session.name} runs only on master branch")
 
-    # _validate_version(session)
+    _validate_version(session)
 
 
 @nox.session(python="3.9")
@@ -173,7 +175,7 @@ def publish(session: Session) -> None:
     if not _runs_on_master():
         session.skip(f"{session.name} runs only on master branch")
 
-    # _validate_version(session)
+    _validate_version(session)
     session.install("--index-url", PyPI, "build", "wheel", "twine")
     session.run("pyproject-build", "--no-isolation")
     session.run(
@@ -181,8 +183,12 @@ def publish(session: Session) -> None:
         "-m",
         "twine",
         "upload",
-        "-r",
+        "--repository-url",
         ARTIFACTORY_URL,
+        "-u",
+        "qtoolkit-bamboo",
+        "-p",
+        "Zaq12wsx",
         "dist\\*",
     )
 
@@ -358,4 +364,4 @@ def _get_version() -> str:
 def _runs_on_master() -> bool:
     """Check if the branch is master."""
     repo = Repository(str(HERE))
-    return repo.head.name == "refs/heads/master_external"
+    return repo.head.name == "refs/heads/master"
