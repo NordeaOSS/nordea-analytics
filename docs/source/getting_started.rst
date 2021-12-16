@@ -158,6 +158,7 @@ The following example retrieves the `DKKSWAP` spot par curve with a half-year te
 bootstrap method time convention Act/365.
 
 .. code-block:: python
+
     import datetime
     from nordea_analytics.nordea_analytics_service import NordeaAnalyticsService
     from nordea_analytics.curve_variable_names import CurveType, TimeConvention, SpotForward
@@ -179,6 +180,7 @@ The following example shows the curve definition (bonds, quotes, weights and mat
 to the curve) of the `EURGOV` curve for the value date of 1st of January 2021.
 
 .. code-block:: python
+
     import datetime
 
     from nordea_analytics.nordea_analytics_service import NordeaAnalyticsService
@@ -192,7 +194,9 @@ Search Bonds
 ^^^^^^^^^^^^^
 The following example returns list of ISINs and bond names for USD Fixed to Float Bond with annuity as amortisation
 type. The results are in a DataFrame format.
+
 .. code-block:: python
+
     import datetime
 
     from nordea_analytics.nordea_analytics_service import NordeaAnalyticsService
@@ -206,10 +210,12 @@ type. The results are in a DataFrame format.
     df = na_service.search_bonds(dmb=False, currency=currency, asset_types=asset_type,
                                   amortisation_type=amortisation_type, as_df=True)
 
-The following example returns list of ISINs and bond names for :underline:`only` Danish Mortgage Bonds (dmb=True), with DKK as currency and maturity between 9th
-of December 2021 to the day to day. Note that if dmb=False, the it would return :underline:`all` bonds with the same criteria,
+The following example returns list of ISINs and bond names for `only` Danish Mortgage Bonds (dmb=True), with DKK as currency and maturity between 9th
+of December 2021 to the day to day. Note that if dmb=False, the it would return `all` bonds with the same criteria,
 including Danish Mortgage Bonds. The results are in a DataFrame format.
+
 .. code-block:: python
+
     import datetime
 
     from nordea_analytics.nordea_analytics_service import NordeaAnalyticsService
@@ -225,3 +231,21 @@ including Danish Mortgage Bonds. The results are in a DataFrame format.
 
 Calculate Bond Key Figure
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+The following example calculates the spread for the ISIN `DK0002000421` at 15th of January 2021.
+The returned DataFrame shows results for both given discount curves, `DKKSWAP Disc OIS` and `DKKSWAP Libor`, where they
+are shifted up by 5 bps on the 6M, 1Y and 2Y tenor.
+
+.. code-block:: python
+
+    import datetime
+    from nordea_analytics.nordea_analytics_service import NordeaAnalyticsService
+    from nordea_analytics.bond_key_figure_name import CalculatedBondKeyFigureNames
+
+    na_service = NordeaAnalyticsService()
+    isin = 'DK0002000421'
+    bond_key_figure = CalculatedBondKeyFigureNames.Spread
+    calc_date = datetime.datetime(2021, 12, 15)
+    curves = ["DKKSWAP Disc OIS", "DKKSWAP Libor"]
+    rates_shifts = ["6M 5", "1Y 5", "2Y 5"]
+    df = na_service.calculate_bond_key_figure(isin, bond_key_figure, calc_date, curves=curves,
+                                              rates_shifts=rates_shifts, as_df=True)
