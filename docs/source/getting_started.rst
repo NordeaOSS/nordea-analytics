@@ -1,6 +1,10 @@
 Get started with Nordea Analytics python
 =========================================
 
+Getting access
+---------------
+Access is needed to retrieve the data in the Nordea Analytics python library. In order to get the access please reach out to market.data@nordea.com.
+
 Install
 -----------
 Run: `pip install nordea-analytics`
@@ -146,3 +150,78 @@ has to be given.
     spot_forward = SpotForward.Forward
     curve_time_series = na_service.get_curve_time_series(curve, from_date, to_date, curve_type,
         time_convention, tenors, spot_forward, forward_tenor=2, as_df=True)
+
+Get Curve
+^^^^^^^^^
+The following example retrieves the `DKKSWAP` spot par curve with a half-year tenor interval (0.5) for the value date
+1st January 2021 and returns the results in a pandas DataFrame. The curve is constructed using the
+bootstrap method time convention Act/365.
+
+.. code-block:: python
+    import datetime
+    from nordea_analytics.nordea_analytics_service import NordeaAnalyticsService
+    from nordea_analytics.curve_variable_names import CurveType, TimeConvention, SpotForward
+
+    na_service = NordeaAnalyticsService()
+    value_date = datetime.datetime(2021, 1, 1)
+    curve_name = 'DKKSWAP'
+    curve_type= CurveType.Bootstrap
+    time_convention = TimeConvention.Act365
+    spot_forward = SpotForward.Spot
+    tenor_frequency = 0.5
+    curve = na_service.get_curve(curve_name, value_date, tenor_frequency, curve_type,
+                                 time_convention, spot_forward, as_df=True)
+
+
+Get Curve Definition
+^^^^^^^^^^^^^^^^^^^^
+The following example shows the curve definition (bonds, quotes, weights and maturities contributing
+to the curve) of the `EURGOV` curve for the value date of 1st of January 2021.
+
+.. code-block:: python
+    import datetime
+
+    from nordea_analytics.nordea_analytics_service import NordeaAnalyticsService
+
+    na_service = NordeaAnalyticsService()
+    value_date = datetime.datetime(2021, 1, 1)
+    curve_name = 'EURGOV'
+    curve_def = na_service.get_curve_definition(curve_name, value_date, as_df=True)
+
+Search Bonds
+^^^^^^^^^^^^^
+The following example returns list of ISINs and bond names for USD Fixed to Float Bond with annuity as amortisation
+type. The results are in a DataFrame format.
+.. code-block:: python
+    import datetime
+
+    from nordea_analytics.nordea_analytics_service import NordeaAnalyticsService
+    from nordea_analytics.search_bond_names import AssetType, AmortisationType
+
+    na_service = NordeaAnalyticsService()
+    currency = "USD"
+    asset_type = AssetType.FixToFloatBond
+    amortisation_type = AmortisationType.Annuity
+
+    df = na_service.search_bonds(dmb=False, currency=currency, asset_types=asset_type,
+                                  amortisation_type=amortisation_type, as_df=True)
+
+The following example returns list of ISINs and bond names for :underline:`only` Danish Mortgage Bonds (dmb=True), with DKK as currency and maturity between 9th
+of December 2021 to the day to day. Note that if dmb=False, the it would return :underline:`all` bonds with the same criteria,
+including Danish Mortgage Bonds. The results are in a DataFrame format.
+.. code-block:: python
+    import datetime
+
+    from nordea_analytics.nordea_analytics_service import NordeaAnalyticsService
+    from nordea_analytics.search_bond_names import AssetType
+
+    na_service = NordeaAnalyticsService()
+    from_maturity = datetime.datetime(2021, 12, 9)
+    to_maturity = datetime.datetime.today()
+    currency = "DKK"
+
+    df = na_service.search_bonds(dmb=True, currency=currency, upper_maturity=to_maturity, lower_maturity=from_maturity,
+                                 as_df=True)
+
+Calculate Bond Key Figure
+^^^^^^^^^^^^^^^^^^^^^^^^^^^
