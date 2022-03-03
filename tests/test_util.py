@@ -3,8 +3,8 @@ from typing import Callable, List, Tuple, Union
 
 import pytest
 
-from nordea_analytics.bond_key_figure_name import BondKeyFigureName
 from nordea_analytics.curve_variable_names import CurveType, SpotForward, TimeConvention
+from nordea_analytics.key_figure_names import BondKeyFigureName
 from nordea_analytics.nalib.util import (
     convert_to_float_if_float,
     convert_to_variable_string,

@@ -8,7 +8,7 @@ def load_and_compare_dfs(
     index_col: float = None,
     check_order: bool = True,
     header: str = "infer",
-    tolerance: float = 1e-5,
+    tolerance: float = 1e-7,
     dump_data: bool = False,
     reset_index: bool = False,
 ) -> pytest:

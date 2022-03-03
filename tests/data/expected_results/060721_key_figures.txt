@@ -1,1 +1,1 @@
-{"DK0002030337": {"Spread": 35.309844}}
+{"DK0002044551": {"Quote": 96.775, "Yield_Deterministic": 0.0125502261, "ModifiedDuration_Deterministic": 12.946642702, "AccruedInterest": 0.019022, "BPVP": 8.46536, "CVXP": -3.13541, "OAModifiedDuration": 8.745746715639111}, "DE0001141794": {"Quote": 101.9385, "Yield_Deterministic": -0.0069759999999999996, "ModifiedDuration_Deterministic": 2.7644699999999998, "AccruedInterest": 0.0, "BPVP": 2.81806, "CVXP": 0.10628, "OAModifiedDuration": 2.7644707348057898}}
