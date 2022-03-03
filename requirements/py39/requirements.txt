@@ -10,7 +10,7 @@ importlib-metadata==4.8.1
     # via keyring
 keyring==23.2.1
     # via -r requirements\py39\requirements.in
-numpy==1.21.3
+numpy==1.22.2
     # via
     #   -r requirements\py39\requirements.in
     #   pandas
@@ -26,6 +26,7 @@ pywin32-ctypes==0.2.0
     # via keyring
 pyyaml==6.0
     # via pyaml
+python-certifi-win32
 requests==2.26.0
     # via -r requirements\py39\requirements.in
 six==1.16.0
