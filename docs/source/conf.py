@@ -22,11 +22,8 @@ sys.path.insert(0, na_analytics_src)
 # -- Project information -----------------------------------------------------
 
 project = 'Nordea Analytics python library'
-copyright = '2021, Desk Quants'
+copyright = '2022, Desk Quants'
 author = 'Desk Quants'
-
-# The full version, including alpha/beta/rc tags
-release = '0.6.1'
 
 
 # -- General configuration ---------------------------------------------------
@@ -34,12 +31,9 @@ release = '0.6.1'
 # Add any Sphinx extension module names here, as strings. They can be
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom
 # ones.
-extensions = ['sphinx.ext.autodoc', 'autoapi.extension', 'rst2pdf.pdfbuilder']
+extensions = ['sphinx.ext.autodoc', 'autoapi.extension']
 autodoc_typehints = 'description'
 pdf_documents = [('index', u'rst2pdf', u'Sample rst2pdf docs', u'Desk Qants'),]
-
-def setup(app):
-    app.connect('autodoc-process-docstring', between('^.*Args.*$', exclude=True))
 
 
 autoapi_type = 'python'

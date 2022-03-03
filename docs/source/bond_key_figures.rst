@@ -1,5 +1,5 @@
 Bond Key Figures
-============
+=================
 This section details the main key figures; what they mean and how they are calculated.
 There are fundamentally two different kinds of key figures; stochastic and deterministic ones. The stochastic key figures
 are those that require Monte Carlo simulation of interest rate paths and resulting prepayment behavior. The cash flow used is
@@ -122,7 +122,7 @@ where :math:`c_{term}` is the coupon for the term in question(e.g.3%=4), :math:`
 coupon payment and :math:`t_{p}` the time in years between the last payment and the next.
 
 OA Spreads
---------
+-----------
 **BondKeyFigureName.OASSWAP_OIS**
 
 Difference between the theoretical price and market price, expressed in terms of a spread to the interest rate curve.
