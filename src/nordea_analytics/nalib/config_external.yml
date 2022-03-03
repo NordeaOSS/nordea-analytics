@@ -1,0 +1,48 @@
+service_name: 'Nordea Analytics'
+service_url: 'https://open.test01.nordea.com/instrument-analytics/v1/'
+test_service_url: 'https://open.test01.nordea.com/instrument-analytics/v1/'
+login: True
+get_proxy_information: True
+user_suffix: ""
+use_headers: True
+max_isins: 300
+max_symbol_timeseries: 100
+max_keyfigures_timeseries: 1
+max_years_timeseries: 10
+
+url_suffix:
+  bond_key_figures: "bonds/keyfigure"
+  time_series: "timeseries"
+  index_composition: "index-composition"
+  curve_time_series: "curves/timeseries"
+  curve: "curves"
+  curve_definition: "curves/definition"
+  search_bonds: "search/bonds"
+  search_dmb_bonds: "search/danishmortgagebonds"
+  calculate: "bonds-calculation"
+  calculate_horizon: "bonds-horizoncalculation"
+  live_bond_key_figures: "bonds/live-keyfigures"
+
+results:
+  bond_key_figures:
+    - "data"
+    - "keyfigures"
+  time_series:
+    - "data"
+    - "timeseries"
+  index_composition:
+    - "data"
+    - "underlyings"
+  curve_time_series:
+    - "data"
+    - "response"
+    - "timeseries"
+  curve:
+    - "data"
+    - "curve"
+  curve_definition:
+    - "data"
+    - "definition"
+  search:
+    - "data"
+    - "search"

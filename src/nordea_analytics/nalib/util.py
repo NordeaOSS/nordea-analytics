@@ -1,12 +1,28 @@
 """Script for various methods for nordea analytics library."""
 from pathlib import Path
-from typing import Callable, Union
+from typing import Callable, Dict, Union
 
-from nordea_analytics.bond_key_figure_name import BondKeyFigureName
+import yaml
+
+
 from nordea_analytics.curve_variable_names import (
+    CurveName,
     CurveType,
     SpotForward,
     TimeConvention,
+)
+from nordea_analytics.key_figure_names import (
+    BondKeyFigureName,
+    CalculatedBondKeyFigureName,
+    HorizonCalculatedBondKeyFigureName,
+    LiveBondKeyFigureName,
+    TimeSeriesKeyFigureName,
+)
+from nordea_analytics.search_bond_names import (
+    AmortisationType,
+    AssetType,
+    CapitalCentres,
+    CapitalCentreTypes,
 )
 
 
@@ -27,7 +43,22 @@ def convert_to_float_if_float(string: str) -> Union[str, float]:
 
 
 def convert_to_variable_string(
-    variable: Union[str, BondKeyFigureName, CurveType, TimeConvention, SpotForward],
+    variable: Union[
+        str,
+        BondKeyFigureName,
+        TimeSeriesKeyFigureName,
+        CurveName,
+        CurveType,
+        TimeConvention,
+        SpotForward,
+        AmortisationType,
+        CalculatedBondKeyFigureName,
+        HorizonCalculatedBondKeyFigureName,
+        AssetType,
+        CapitalCentres,
+        CapitalCentreTypes,
+        LiveBondKeyFigureName,
+    ],
     variable_type: Callable,
 ) -> Union[str, ValueError]:
     """Convert of any variable name to string which is available in the service.
@@ -46,7 +77,21 @@ def convert_to_variable_string(
             input not supported
 
     """
-    if type(variable) in (BondKeyFigureName, CurveType, TimeConvention, SpotForward):
+    if type(variable) in (
+        BondKeyFigureName,
+        TimeSeriesKeyFigureName,
+        CurveName,
+        CurveType,
+        TimeConvention,
+        SpotForward,
+        AmortisationType,
+        CalculatedBondKeyFigureName,
+        HorizonCalculatedBondKeyFigureName,
+        AssetType,
+        CapitalCentres,
+        CapitalCentreTypes,
+        LiveBondKeyFigureName,
+    ):
         return variable.value  # type:ignore
     elif type(variable) is str:
         try:
@@ -54,6 +99,13 @@ def convert_to_variable_string(
                 return variable.title()
             elif variable.lower() == "impliedforward":
                 return "ImpliedForward"
+            elif (
+                variable_type == CurveName
+                or variable_type == CapitalCentres
+                or variable_type == CapitalCentreTypes
+            ):
+                variable_type(variable.upper())
+                return variable.upper()
             else:
                 variable_type(variable.lower())
             return variable.lower()
@@ -77,3 +129,21 @@ def get_user(user_path: Path) -> str:
         return user_info
     else:
         return ""
+
+
+def get_config() -> Dict:
+    """Find and return the config file."""
+    config_path = str(Path(__file__).parent / "config.yml")
+    with open(config_path) as file:
+        config = yaml.safe_load(file)
+    return config
+
+
+def check_string(string: str, substring: str) -> bool:
+    """Strictly checks if substring is in string."""
+    try:
+        string.index(substring)
+    except ValueError:
+        return False
+    else:
+        return True

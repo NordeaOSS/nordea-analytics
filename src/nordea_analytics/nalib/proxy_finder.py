@@ -39,7 +39,7 @@ class ProxyFinder:
             return ast.literal_eval(proxy_info)
         else:
             proxy_info = self.find_proxies(url)
-            if proxy_info == {} or proxy_info == {"": "://None"}:
+            if proxy_info == {} or proxy_info == {"": "http://None"}:
                 self.proxy_path.write_text(
                     str('{"http":"ENTER PROXY INFO HERE IN A STRING FORMAT"}')
                 )

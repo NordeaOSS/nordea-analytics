@@ -48,9 +48,7 @@ class Login(ABC):
         set_password(self._service_name, self.username, self.password)
         self.user_path.write_text(str(self.username))
         logger.info(
-            "Password set for service {} and user {}".format(
-                self._service_name, self.username
-            )
+            "Password set for {} and user {}".format(self._service_name, self.username)
         )
 
     def set_new_user_and_password(self) -> None:
@@ -59,12 +57,12 @@ class Login(ABC):
             title = "WRONG or EXPIRED USER or PASSWORD."
             msg = (
                 f"Wrong or expired user or password. Please enter your "
-                f"user and password for database {self._service_name}"
+                f"user and password for {self._service_name}"
             )
         else:
             title = "Enter password"
-            msg = f"Please enter your password for database {self._service_name}"
-        fields = ["Username", "Password"]
+            msg = f"Please enter your credentials for {self._service_name}"
+        fields = ["Username/Client ID", "Password/Client Secret"]
         defaults = ["", ""]
         self.username, self.password = easygui.multpasswordbox(
             msg, title=title, fields=fields, values=defaults
@@ -81,13 +79,13 @@ class Login(ABC):
         if password:
             logger.info(
                 f"Password retrieved from the credentials manager "
-                f"for database {self._service_name} and user {self.username}"
+                f"for {self._service_name} and user {self.username}"
             )
             self.password = password
         else:
             logger.info(
                 f"Could not retrieved password from the credentials manager"
-                f" for database {self._service_name} and user {self.username}."
+                f" for {self._service_name} and user {self.username}."
                 f" Trying to set new password."
             )
             self.set_new_user_and_password()
