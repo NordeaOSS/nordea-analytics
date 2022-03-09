@@ -1,10 +1,6 @@
 Get started with Nordea Analytics python
 =========================================
 
-Getting access
----------------
-Access is needed to retrieve the data in the Nordea Analytics python library. In order to get the access please reach out to market.data@nordea.com.
-
 Install
 -----------
 Run: `pip install nordea-analytics`
