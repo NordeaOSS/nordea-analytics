@@ -22,8 +22,8 @@ sys.path.insert(0, na_analytics_src)
 # -- Project information -----------------------------------------------------
 
 project = 'Nordea Analytics python library'
-copyright = '2022, Desk Quants'
-author = 'Desk Quants'
+copyright = '2022, Nordea'
+author = 'Nordea Desk Quants and Markets Advisory Tools'
 
 
 # -- General configuration ---------------------------------------------------

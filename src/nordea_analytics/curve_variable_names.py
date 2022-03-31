@@ -2,8 +2,9 @@ from enum import Enum
 
 
 class CurveName:
-    """Used to control which curves are available in the service."""
+    """Most common available curves. Availability not limit to this list."""
 
+    BEFGOV = "BEFGOV"
     CHFGOV = "CHFGOV"
     CHFSWAP_Disc_OIS = "CHFSWAP DISC OIS"
     CHFSWAP_Fix_1D_OIS = "CHFSWAP FIX 1D OIS"
@@ -11,7 +12,9 @@ class CurveName:
     CHFSWAP_Fix_3M_OIS = "CHFSWAP FIX 3M OIS"
     CHFSWAP_Fix_6M_OIS = "CHFSWAP FIX 6M OIS"
     CHFSWAP_Libor = "CHFSWAP LIBOR"
+    DEMGOV = "DEMGOV"
     DKKGOV = "DKKGOV"
+    DKKMTGNYK = "DKKMTGNYKSOFTBLT"
     DKKSWAP = "DKKSWAP"
     DKKSWAP_Disc_OIS = "DKKSWAP DISC OIS"
     DKKSWAP_Fix_1D_OIS = "DKKSWAP FIX 1D OIS"
@@ -21,6 +24,7 @@ class CurveName:
     DKKSWAP_Fix_6M_OIS = "DKKSWAP FIX 6M OIS"
     DKKSWAP_Libor = "DKKSWAP LIBOR"
     DKKSWAP_Libor_3M = "DKKSWAP LIBOR 3M"
+    ESPGOV = "ESPGOV"
     EURGOV = "EURGOV"
     EURSWAP = "EURSWAP"
     EURSWAP_Disc_ESTR = "EURSWAP DISC ESTR"
@@ -32,6 +36,8 @@ class CurveName:
     EURSWAP_Fix_3M_ESTR = "EURSWAP FIX 3M ESTR"
     EURSWAP_Fix_6M_ESTR = "EURSWAP FIX 6M ESTR"
     EURSWAP_Libor = "EURSWAP LIBOR"
+    FIMGOV = "FIMGOV"
+    FRFGOV = "FRFGOV"
     GBPGOV = "GBPGOV"
     GBPSWAP = "GBPSWAP"
     GBPSWAP_Disc_OIS = "GBPSWAP DISC OIS"
@@ -40,6 +46,7 @@ class CurveName:
     GBPSWAP_Fix_3M_OIS = "GBPSWAP FIX 3M OIS"
     GBPSWAP_Fix_6M_OIS = "GBPSWAP FIX 6M OIS"
     GBPSWAP_Libor = "GBPSWAP LIBOR"
+    ITLGOV = "ITLGOV"
     JPYGOV = "JPYGOV"
     JPYSWAP = "JPYSWAP"
     JPYSWAP_Disc_OIS = "JPYSWAP DISC OIS"
@@ -48,6 +55,7 @@ class CurveName:
     JPYSWAP_Fix_3M_OIS = "JPYSWAP FIX 3M OIS"
     JPYSWAP_Fix_6M_OIS = "JPYSWAP FIX 6M OIS"
     JPYSWAP_Libor = "JPYSWAP LIBOR"
+    NLGGOV = "NLGGOV"
     NOKGOV = "NOKGOV"
     NOKSWAP = "NOKSWAP"
     NOKSWAP_Disc_OIS = "NOKSWAP DISC OIS"
@@ -64,6 +72,11 @@ class CurveName:
     RUBSWAP_Fix_6M_OIS = "RUBSWAP FIX 6M OIS"
     RUBSWAP_Libor = "RUBSWAP LIBOR"
     SEKGOV = "SEKGOV"
+    SEKMTGBLEND = "SEKMTGBLEND"
+    SEKMTGNBH = "SEKMTGNBH"
+    SEKMTGSEB = "SEKMTGSEB"
+    SEKMTGSHYP = "SEKMTGSHYP"
+    SEKMTGSWED = "SEKMTGSWED"
     SEKSWAP = "SEKSWAP"
     SEKSWAP_Disc_OIS = "SEKSWAP DISC OIS"
     SEKSWAP_Fix_1D_OIS = "SEKSWAP FIX 1D OIS"
@@ -81,8 +94,44 @@ class CurveName:
     USDSWAP_Libor = "USDSWAP LIBOR"
 
 
+class CurveDefinitionName:
+    """Most common available curves definition. Availability not limit to this list."""
+
+    # Note that curve definition is limited to Infinity curves for externals.
+    BEFGOV = "BEFGOV"
+    CHFGOV = "CHFGOV"
+    DEMGOV = "DEMGOV"
+    DKKGOV = "DKKGOV"
+    DKKMTGNYK = "DKKMTGNYKSOFTBLT"
+    DKKSWAP = "DKKSWAP"
+    ESPGOV = "ESPGOV"
+    EURGOV = "EURGOV"
+    EURSWAP = "EURSWAP"
+    FIMGOV = "FIMGOV"
+    FRFGOV = "FRFGOV"
+    GBPGOV = "GBPGOV"
+    GBPSWAP = "GBPSWAP"
+    ITLGOV = "ITLGOV"
+    JPYGOV = "JPYGOV"
+    JPYSWAP = "JPYSWAP"
+    NLGGOV = "NLGGOV"
+    NOKGOV = "NOKGOV"
+    NOKSWAP = "NOKSWAP"
+    NOKSWAP_Libor = "NOKSWAP LIBOR"
+    RUBSWAP = "RUBSWAP"
+    SEKGOV = "SEKGOV"
+    SEKMTGBLEND = "SEKMTGBLEND"
+    SEKMTGNBH = "SEKMTGNBH"
+    SEKMTGSEB = "SEKMTGSEB"
+    SEKMTGSHYP = "SEKMTGSHYP"
+    SEKMTGSWED = "SEKMTGSWED"
+    SEKSWAP = "SEKSWAP"
+    USDGOV = "USDGOV"
+    USDSWAP = "USDSWAP"
+
+
 class CurveType(Enum):
-    """Used to control which curve types are available in the service."""
+    """Curve types available in the service."""
 
     Bootstrap = "bootstrap"
     NelsonSiegel = "nelsonsiegel"
@@ -95,7 +144,7 @@ class CurveType(Enum):
 
 
 class TimeConvention(Enum):
-    """Used to control which time conventions are available in the service."""
+    """Time conventions available in the service."""
 
     TC_30360 = "30360"
     TC_30E360 = "30e360"
@@ -109,7 +158,7 @@ class TimeConvention(Enum):
 
 
 class SpotForward(Enum):
-    """Used to control which spot/forward are available in the service."""
+    """Spot/forward available in the service."""
 
     Spot = "Spot"
     Forward = "Forward"

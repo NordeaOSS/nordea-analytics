@@ -3,15 +3,17 @@ import json
 import time
 from typing import Any, Callable, Dict
 from urllib.parse import urljoin
+import warnings
 
 import requests
+from requests import Response
 from requests.auth import HTTPBasicAuth
 
 from nordea_analytics.nalib.credentials import Login
 from nordea_analytics.nalib.proxy_finder import ProxyFinder
 from nordea_analytics.nalib.streaming_service import (
-    ExternalStreamListener,
-    InternalStreamListener,
+    LiveKeyfigureListener,
+    LiveKeyfigureStreamListener,
     StreamListener,
 )
 from nordea_analytics.nalib.util import check_string, get_config
@@ -32,6 +34,7 @@ class DataRetrievalServiceClient(Login, ABC):
         password: str = None,
         login: bool = None,
         service_url: str = None,
+        streaming: bool = False,
     ) -> None:
         """Initialization of class.
 
@@ -41,10 +44,12 @@ class DataRetrievalServiceClient(Login, ABC):
             password: Windows password or client secret(external users).
                 Asked for if None
             login: boolean if should login with credentials or not. for testing.
-            service_url: string to which service should be pointed to. Used for festing
+            service_url: string to which service should be pointed to. Used for testing.
+            streaming: boolean if should use streaming. Used for testing.
         """
         self._service_name = config["service_name"]
         self.service_url = service_url if service_url is not None else SERVICE_URL
+        self.streaming = streaming
         self._auth = None
         self.proxies = None
         self.live_data = None
@@ -81,30 +86,33 @@ class DataRetrievalServiceClient(Login, ABC):
             Response in the form of json.
 
         Raises:
-            ValueError: If error in request or takes to long to load.
+            ValueError: If request takes to long to load.
         """
         response = self._get_response(request, url_suffix)
-        if not response.ok:
-            if "error_description" in response.text:
-                raise ValueError(json.loads(response.text)["error_description"])
-            elif response.status_code == 503:
-                time.sleep(1)
-                response = self._get_response(request, url_suffix)
-            else:
-                response.raise_for_status()
 
         if "job_url" in response.text:
             response_info = json.loads(response.text)
             t_end = time.time() + 60 * 8
-            while not check_string(response.text, '"state":"completed"'):
+            while True:
+                if time.time() > t_end:
+                    raise ValueError("Took too long to retrieve values")
                 response = self._get_response(
                     {}, urljoin(self.service_url, "job/" + response_info["id"])
                 )
-                time.sleep(0.5)
-                if time.time() > t_end:
-                    raise ValueError("Took too long to retrieve values")
 
-        return response.json()
+                if check_string(response.text, '"state":"completed"'):
+                    break
+                else:
+                    time.sleep(0.2)
+
+            _response = self._check_errors(response)
+        else:
+            _response = response.json()["data"]
+            if "failed_queries" in _response.keys():
+                if not _response["failed_queries"] == []:
+                    warnings.warn(str(_response["failed_queries"]))
+
+        return _response
 
     def get_post_get_response(self, request: dict, url_suffix: str) -> dict:
         """Posts a requests and gets response.
@@ -117,46 +125,64 @@ class DataRetrievalServiceClient(Login, ABC):
             Response in the form of json.
 
         Raises:
-            ValueError: If error in request or request has been removed.
+            ValueError: If error in request or takes to long to load.
         """
-        post_response = self._post_response(
-            request, urljoin(self.service_url, url_suffix)
-        )
-        if not post_response.ok:
-            if "error_description" in post_response.text:
-                raise ValueError(json.loads(post_response.text)["error_description"])
-            elif post_response.status_code == 503:
-                time.sleep(1)
-                post_response = self._get_response(request, url_suffix)
-            else:
-                post_response.raise_for_status()
+        post_response = self._post_response(request, url_suffix)
 
-        get_response = self._get_response({}, "job/" + post_response.json()["id"])
         t_end = time.time() + 60 * 8
-        while not check_string(get_response.text, '"state":"completed"'):
-            get_response = self._get_response({}, "job/" + post_response.json()["id"])
-            time.sleep(0.5)
+        while True:
             if time.time() > t_end:
                 raise ValueError("Took too long to retrieve values")
 
-        if get_response.json()["data"]["info"]["state"] == "completed":
-            response = get_response.json()["data"]["response"]
-            if "error" in response.keys() and response["error"] != {}:
-                raise ValueError(response["error"])
+            get_response = self._get_response({}, "job/" + post_response.json()["id"])
+            if check_string(get_response.text, '"state":"completed"'):
+                break
+            else:
+                time.sleep(0.2)
+        _response = self._check_errors(get_response)
+        return _response
 
-        elif get_response.json()["data"]["info"]["state"] == "failed":  # some errors
-            raise ValueError("Calculation failed")
-        elif (
-            get_response.json()["data"]["info"]["state"] == "removed"
-        ):  # removed by server
-            raise ValueError("Calculation has been removed")
-        else:
-            raise ValueError(
-                "Calculation not completed. Stopped in state:"
-                + get_response.json()["data"]["info"]["state"]
-            )
+    @staticmethod
+    def _check_errors(get_response: Response) -> Dict:
 
-        return get_response.json()["data"]["response"]
+        _response = get_response.json()["data"]["response"]
+        if check_string(get_response.text, "error"):
+            if "error" in _response.keys() and _response["error"] == {}:
+                del _response["error"]
+            elif _response["data"]["error"] == {}:
+                _response = _response["data"]
+                del _response["error"]
+            else:
+                raise ValueError(
+                    _response["data"]["failed_calculation"]["calculation_info"]
+                )
+
+        if check_string(get_response.text, "failed_calculation"):
+            if (
+                "failed_calculation" in _response.keys()
+                and _response["failed_calculation"] == {}
+            ):
+                del _response["failed_calculation"]
+            elif (
+                "data" in _response.keys()
+                and _response["data"]["failed_calculation"]["calculation_info"] == ""
+            ):
+                _response = _response["data"]
+                del _response["failed_calculation"]
+            elif (
+                "failed_calculation" in _response
+                and _response["failed_calculation"]["calculation_info"] == ""
+            ):
+                del _response["failed_calculation"]
+            else:
+                raise ValueError(
+                    _response["data"]["failed_calculation"]["calculation_info"]
+                )
+
+        if "data" in _response.keys():
+            _response = _response["data"]
+
+        return _response
 
     def get_live_streamer(
         self, request: dict, url_suffix: str, update_method: Callable
@@ -173,25 +199,41 @@ class DataRetrievalServiceClient(Login, ABC):
 
         Returns:
              Response object.
+
+        Raises:
+            ValueError: If error in request.
+            raise_for_status: If error in request.
         """
-        if config["use_headers"]:
-            response = requests.get(
-                urljoin(self.service_url, url_suffix),
-                headers={
-                    "X-IBM-client-id": self.username,
-                    "X-IBM-client-secret": self.password,
-                },
-                params=request,
-                proxies=self.proxies,
-            )
-        else:
-            response = requests.get(
-                urljoin(self.service_url, url_suffix),
-                params=request,
-                auth=self._auth,
-                proxies=self.proxies,
-            )
-        return response
+        max_retries = 10
+        while max_retries != 0:
+            max_retries = max_retries - 1
+            if config["use_headers"]:
+                response = requests.get(
+                    urljoin(self.service_url, url_suffix),
+                    headers={
+                        "X-IBM-client-id": self.username,
+                        "X-IBM-client-secret": self.password,
+                    },
+                    params=request,
+                    proxies=self.proxies,
+                )
+            else:
+                response = requests.get(
+                    urljoin(self.service_url, url_suffix),
+                    params=request,
+                    auth=self._auth,
+                    proxies=self.proxies,
+                )
+
+            if response.ok:  # status_code == 200
+                return response
+            if max_retries != 0 and response.status_code == 503:
+                time.sleep(0.2)
+            else:
+                if "error_description" in response.text:
+                    raise ValueError(json.loads(response.text)["error_description"])
+                else:
+                    raise response.raise_for_status()
 
     def _post_response(self, request: dict, url_suffix: str) -> Any:
         """Gets the post response from the service given a request.
@@ -202,26 +244,43 @@ class DataRetrievalServiceClient(Login, ABC):
 
         Returns:
              Post Response object with job information.
-        """
-        if config["use_headers"]:
-            post_response = requests.post(
-                urljoin(self.service_url, url_suffix),
-                headers={
-                    "X-IBM-client-id": self.username,
-                    "X-IBM-client-secret": self.password,
-                },
-                params=request,
-                proxies=self.proxies,
-            )
 
-        else:
-            post_response = requests.post(
-                urljoin(self.service_url, url_suffix),
-                data=request,
-                auth=self._auth,
-                proxies=self.proxies,
-            )
-        return post_response
+        Raises:
+            ValueError: If error in request.
+            raise_for_status: If error in request.
+        """
+        max_retries = 10
+        while max_retries != 0:
+            max_retries = max_retries - 1
+            if config["use_headers"]:
+                post_response = requests.post(
+                    urljoin(self.service_url, url_suffix),
+                    headers={
+                        "X-IBM-client-id": self.username,
+                        "X-IBM-client-secret": self.password,
+                    },
+                    params=request,
+                    proxies=self.proxies,
+                )
+
+            else:
+                post_response = requests.post(
+                    urljoin(self.service_url, url_suffix),
+                    data=request,
+                    auth=self._auth,
+                    proxies=self.proxies,
+                )
+            if post_response.ok:  # status_code == 200
+                return post_response
+            if max_retries != 0 and post_response.status_code == 503:
+                time.sleep(0.2)
+            else:
+                if "error_description" in post_response.text:
+                    raise ValueError(
+                        json.loads(post_response.text)["error_description"]
+                    )
+                else:
+                    raise post_response.raise_for_status()
 
     def _check_credentials(self) -> Any:
         response = self._get_response(
@@ -278,7 +337,12 @@ class LiveDataRetrievalServiceClient(DataRetrievalServiceClient):
     """Logs in and sends requests to the live streaming service."""
 
     def __init__(
-        self, username: str = None, password: str = None, login: bool = None
+        self,
+        username: str = None,
+        password: str = None,
+        login: bool = None,
+        service_url: str = None,
+        streaming: bool = False,
     ) -> None:
         """Initialization of class.
 
@@ -288,8 +352,12 @@ class LiveDataRetrievalServiceClient(DataRetrievalServiceClient):
             password: Windows password or client secret(external users).
                 Asked for if None
             login: boolean if should login with credentials or not. for testing.
+            service_url: string to which service should be pointed to. Used for testing.
+            streaming: boolean if should use streaming. Used for testing.
         """
-        super(LiveDataRetrievalServiceClient, self).__init__(username, password, login)
+        super(LiveDataRetrievalServiceClient, self).__init__(
+            username, password, login, service_url, streaming
+        )
         self.streamListener = None
         self.live_data = None
 
@@ -309,12 +377,12 @@ class LiveDataRetrievalServiceClient(DataRetrievalServiceClient):
 
         """
         isins = [request[x] for x in request]
-        if "stream" in config["url_suffix"]["live_bond_key_figures"]:
-            return InternalStreamListener(
+        if "stream" in url_suffix:
+            return LiveKeyfigureStreamListener(
                 urljoin(self.service_url, url_suffix), isins, update_method, self._auth
             )
         else:
-            return ExternalStreamListener(
+            return LiveKeyfigureListener(
                 urljoin(self.service_url, url_suffix),
                 isins,
                 update_method,

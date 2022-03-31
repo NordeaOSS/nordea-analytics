@@ -5,6 +5,8 @@ Install
 -----------
 Run: `pip install nordea-analytics`
 
+Note that in order to retrieve data from the package, access is required.
+
 Start coding with Nordea Analytics python
 ------------------------------------------
 
@@ -31,6 +33,8 @@ From NordeaAnalyticsService:
 * :meth:`search_bonds() <nordea_analytics.nordea_analytics_service.NordeaAnalyticsService.search_bonds>`
 * :meth:`calculate_bond_key_figure() <nordea_analytics.nordea_analytics_service.NordeaAnalyticsService.calculate_bond_key_figure>`
 * :meth:`calculate_horizon_bond_key_figure() <nordea_analytics.nordea_analytics_service.NordeaAnalyticsService.calculate_horizon_bond_key_figure>`
+* :meth:`get_fx_forecasts() <nordea_analytics.nordea_analytics_service.NordeaAnalyticsService.get_fx_forecasts>`
+* :meth:`get_yield_forecasts() <nordea_analytics.nordea_analytics_service.NordeaAnalyticsService.get_yield_forecasts>`
 
 From NordeaAnalyticsService:
 
@@ -50,7 +54,8 @@ From `nordea_analytics.key_figure_name`
 
 From `nordea_analytics.curve_variable_names`
 
-* :meth:`CurveName <nordea_analytics.curve_variable_names.CurveName>`
+* :meth:`CurveName <nordea_analytics.curve_variable_names.CurveName>` Note, availability not limited to list
+* :meth:`CurveDefinitionNamee <nordea_analytics.curve_variable_names.CurveDefinitionName>` Note, availability not limited to list
 * :meth:`CurveType <nordea_analytics.curve_variable_names.CurveType>`
 * :meth:`TimeConvention <nordea_analytics.curve_variable_names.TimeConvention>`
 * :meth:`SpotForward <nordea_analytics.curve_variable_names.SpotForward>`
@@ -61,7 +66,13 @@ from `nordea_analytics.search_bond_names`
 * :meth:`AssetType <nordea_analytics.search_bond_names.AssetType>`
 * :meth:`CapitalCentres <nordea_analytics.search_bond_names.CapitalCentres>`
 * :meth:`CapitalCentreTypes <nordea_analytics.search_bond_names.CapitalCentreTypes>`
-* :meth:`Issuers <nordea_analytics.search_bond_names.Issuers>`
+* :meth:`Issuers <nordea_analytics.search_bond_names.Issuers>` Note, availability not limited to list
+
+from `nordea_analytics.forecast_names`
+
+* :meth:`YieldCountry <nordea_analytics.forecast_names.YieldCountry>`
+* :meth:`YieldType <nordea_analytics.forecast_names.YieldType>`
+* :meth:`YieldHorizon <nordea_analytics.forecast_names.YieldHorizon>`
 
 
 Basic examples
@@ -80,7 +91,7 @@ The following example retrieves Vega, BPV and CVX for a given set of ISINs and r
     na_service = NordeaAnalyticsService()
     value_date = datetime.datetime.today() - datetime.timedelta(1)
     isins =['DK0002000421', 'DK0002004092', 'DK0002013408', 'DK0006344171']
-    bond_key_figure_name = [BondKeyFigureName.Vega, BondKeyFigureName.BPVP, BondKeyFigureName.CVXP]
+    bond_key_figure_name = [BondKeyFigureName.Vega, BondKeyFigureName.BPV, BondKeyFigureName.CVX]
 
     bond_key_figures = na_service.get_bond_key_figures(isins, bond_key_figure_name,
                                                    value_date, as_df=True)
@@ -103,14 +114,14 @@ can also retrieve time series for swaps, FX, FX swap point, then the key figure 
     from_date = datetime.datetime(2021, 1, 1)
     to_date = datetime.datetime.today()
     symbols = ['DK0002000421', 'DK0002004092', 'DK0002013408', 'DK0006344171']
-    key_figure_name = [TimeSeriesKeyFigureName.Vega, TimeSeriesKeyFigureName.BPVP,
-                       TimeSeriesKeyFigureName.CVXP]
+    key_figure_name = [TimeSeriesKeyFigureName.Vega, TimeSeriesKeyFigureName.BPV,
+                       TimeSeriesKeyFigureName.CVX]
 
     time_Series = na_service.get_time_series(symbols, key_figure_name, from_date, to_date)
 
 Get Index Composition
 ^^^^^^^^^^^^^^^^^^^^^^
-The following example retrieves index composition for a set of Indices for the value date today, and returns the result
+The following example retrieves index composition for a set of Indices for the value date yesterday, and returns the result
 in a pandas DataFrame.
 
 .. code-block:: python
@@ -219,23 +230,24 @@ Nelson Siegel method and time convention Act/365.
                                  time_convention=time_convention, spot_forward=spot_forward,
                                  forward_tenor=forward_tenor, as_df=True)
 
-Note that tenor frequency input will not have affect unless a certain curve_type are chosen like Nelson or Hybrid.
+Note that tenor frequency input will not have affect unless a specific curve_type are chosen like Nelson or Hybrid.
 
 Get Curve Definition
 ^^^^^^^^^^^^^^^^^^^^
 The following example shows the curve definition (bonds, quotes, weights and maturities contributing
-to the curve) of the `EURGOV` curve for the value date of 1st of January 2021.
+to the curve) of the `EURGOV` curve for the value date of 1st of January 2021. Note, it is limited for what curves the
+curve definition can be retrieved, therefore we have a special enumeration class; CurveDefinitionName.
 
 .. code-block:: python
 
     import datetime
 
     from nordea_analytics.nordea_analytics_service import NordeaAnalyticsService
-    from nordea_analytics.curve_variable_names import CurveName
+    from nordea_analytics.curve_variable_names import CurveDefinitionName
 
     na_service = NordeaAnalyticsService()
     calc_date = datetime.datetime(2021, 1, 1)
-    curve_name = CurveName.EURGOV
+    curve_name = CurveDefinitionName.EURGOV
     curve_def = na_service.get_curve_definition(curve_name, calc_date, as_df=True)
 
 Search Bonds
@@ -325,8 +337,8 @@ Other optional input variables can be found in :meth:`calculate_bond_key_figure(
 
 Calculate Horizon Bond Key Figure
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-The following example calculates the BPV, CVX and Spread for the future date 18th of February 2022, given information
-at 14th of February 2022 for the ISIN `DK0002000421`. Key figure "Price" shows the price at
+The following example calculates the BPV, CVX, Spread and Clean Price for the future date 18th of February 2022, given information
+at 14th of February 2022 for the ISIN `DK0002000421`. Key figure "CleanPrice" shows the clean price at
 14th of February 2022.
 
 .. code-block:: python
@@ -338,7 +350,7 @@ at 14th of February 2022 for the ISIN `DK0002000421`. Key figure "Price" shows t
     na_service = NordeaAnalyticsService()
     isin = 'DK0002000421'
     bond_key_figure = [HorizonCalculatedBondKeyFigureName.BPV, HorizonCalculatedBondKeyFigureName.CVX,
-               HorizonCalculatedBondKeyFigureName.Spread, HorizonCalculatedBondKeyFigureName.Price]
+               HorizonCalculatedBondKeyFigureName.Spread, HorizonCalculatedBondKeyFigureName.CleanPrice]
     calc_date = datetime.datetime(2022, 2, 14)
     horizon_date = datetime.datetime(2022, 2, 18)
     df = na_service.calculate_horizon_bond_key_figure(isin,
@@ -347,6 +359,32 @@ at 14th of February 2022 for the ISIN `DK0002000421`. Key figure "Price" shows t
 
 Other optional input variables can be found in :meth:`calculate_horizon_bond_key_figure()
 <nordea_analytics.nordea_analytics_service.NordeaAnalyticsService.calculate_horizon_bond_key_figure>`
+
+Get FX Forecast
+^^^^^^^^^^^^^^^^
+The following example retrieves Nordea's latest FX forecast for the EUR/DKK cross currency pair.
+
+.. code-block:: python
+
+    from nordea_analytics.nordea_analytics_service import NordeaAnalyticsService
+
+    na_service = NordeaAnalyticsService()
+
+    df = na_service.get_fx_forecasts("EURDKK", as_df=True)
+
+Get Yield Forecast
+^^^^^^^^^^^^^^^^^^^^
+The following retrieves Nordea's latest yield forecast for CIBOR 3M
+
+.. code-block:: python
+
+    from nordea_analytics.nordea_analytics_service import NordeaAnalyticsService
+    from nordea_analytics.forecast_names import YieldCountry, YieldHorizon, YieldType
+
+    na_service = NordeaAnalyticsService()
+
+    df = na_service.get_yield_forecasts(YieldCountry.DK, YieldType.Libor,
+                                    YieldHorizon.Horizon_3M, as_df=True)
 
 Get Live Key Figure
 ^^^^^^^^^^^^^^^^^^^^^^
@@ -359,7 +397,7 @@ The following example returns live Quotes and CVX in a pandas DataFrame format a
     import time
 
     live_service = NordeaAnalyticsLiveService()
-    live_bond_keyfigure = live_service.get_live_bond_key_figures(['HU0000523980', 'SGXZ94462934'],
+    live_bond_keyfigure = live_service.get_live_bond_key_figures(["DK0009398620"],
                                                              [LiveBondKeyFigureName.Quote,
                                                               LiveBondKeyFigureName.CVX],
                                                              as_df=True)
@@ -371,3 +409,283 @@ The following example returns live Quotes and CVX in a pandas DataFrame format a
             if time.time() > t_end:
                 live_streamer.stop()
 
+
+
+Advanced examples
+-------------------
+
+Plot time series key figure
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+.. code-block:: python
+
+    import matplotlib.pyplot as plt
+    from datetime import datetime
+
+    from nordea_analytics.nordea_analytics_service import NordeaAnalyticsService
+    from nordea_analytics.key_figure_names import TimeSeriesKeyFigureName as kf_ts
+
+    analytics_api = NordeaAnalyticsService()
+    analytics_api.get_time_series(symbol=["NDA 1 01oct50 (2)"], keyfigures=[kf_ts.PriceClean],
+    from_date=datetime(2019, 1, 2), to_date=datetime.now(), as_df=True).set_index('Date').plot(grid=True)
+    plt.show()
+
+.. image:: images/ts_plot.png
+
+
+Plot and crisp charts for time series key figure
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+.. code-block:: python
+
+    import pandas as pd
+    import matplotlib.pyplot as plt
+    from datetime import datetime
+
+    from nordea_analytics.nordea_analytics_service import NordeaAnalyticsService
+    from nordea_analytics.key_figure_names import TimeSeriesKeyFigureName as kf_ts
+
+    analytics_api = NordeaAnalyticsService()
+    from_date = datetime(2019, 5, 2)
+
+    df_swap = analytics_api.get_time_series(symbol=["DKK SWAP 10Y"],
+                                            keyfigures=[kf_ts.Quote],
+                                           from_date=from_date, to_date=datetime.now(),
+                                           as_df=True).set_index('Date')
+
+    df_price = analytics_api.get_time_series(symbol=["NDA 1 01oct50 (2)"],
+                                            keyfigures=[kf_ts.PriceClean],
+                                            from_date=from_date, to_date=datetime.now(),
+                                            as_df=True).set_index('Date')
+
+    f, ax = plt.subplots(figsize=(9,5))
+    ax.plot(df_price['PriceClean'], color='blue', label="bond price")
+
+    ax2 = ax.twinx()
+    ax2.plot(df_swap['Quote'], color='red', label="swap")
+
+    ax.set_title("Price and swap rates ", fontsize=16)
+    ax.legend(loc=2)
+    ax.set_xlabel("date", fontsize=12)
+    ax.set_ylabel("price", fontsize=12, color='blue')
+    ax2.set_ylabel("swap rate", fontsize=12, color='red')
+    ax2.legend(loc=1)
+    ax.grid()
+
+
+    df_plot = pd.DataFrame()
+    df_plot['swap'] = df_swap['Quote']
+    df_plot['bond'] = df_price['PriceClean']
+
+    df_plot = df_plot.dropna()
+
+    f, ax = plt.subplots(figsize=(9,5))
+    ax.scatter(df_plot['swap'], df_plot['bond'], color='blue', s=5)
+    ax.plot(df_plot['swap'][-20:], df_plot['bond'][-20:], color='green', linewidth=0.5)
+    ax.scatter(df_plot['swap'][-1], df_plot['bond'][-1], color='red', s=200)
+
+    ax.set_title("Price vs swap rates", fontsize=14)
+    ax.set_xlabel("swap rate", fontsize=12)
+    ax.set_ylabel(f"price of bond", fontsize=12)
+    ax2.set_ylabel("swap rate", fontsize=12)
+    ax.grid()
+    plt.show()
+
+.. image:: images/ts_plot2.png
+.. image:: images/crisp.png
+
+Make key figure report on portfolio or index (or both)
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+.. code-block:: python
+
+    import pandas as pd
+    from datetime import datetime
+
+    from nordea_analytics.nordea_analytics_service import NordeaAnalyticsService
+    from nordea_analytics.key_figure_names import BondKeyFigureName as kf_db
+
+    analytics_api = NordeaAnalyticsService()
+    df_index = analytics_api.get_index_composition("DK0IX0000014", datetime(2022, 2, 28),
+                                                    as_df=True).set_index('ISIN')
+
+    df_key_fig = analytics_api.get_bond_key_figures(isins=df_index.index,
+                                                    calc_date=datetime(2022, 2, 28),
+                                                    keyfigures=[kf_db.BPV, kf_db.CVX], as_df=True)
+
+    df_kf_report = pd.concat([df_index, df_key_fig], axis=1)
+
+    print(f"BPV is {(df_kf_report['Nominal Weight'] * df_kf_report['BPV']).sum()}")
+    print(f"CVX is {(df_kf_report['Nominal Weight'] * df_kf_report['CVX']).sum()}")
+
+
+Plot Curve
+^^^^^^^^^^^^^
+
+.. code-block:: python
+
+    import matplotlib.pyplot as plt
+    from datetime import datetime
+
+    from nordea_analytics.nordea_analytics_service import NordeaAnalyticsService
+    from nordea_analytics.curve_variable_names import CurveType, TimeConvention, SpotForward, CurveName
+
+    analytics_api = NordeaAnalyticsService()
+
+    df = analytics_api.get_curve(curve=CurveName.DKKGOV, calc_date=datetime.now(),
+                            curve_type=CurveType.YTMCurve,
+                            time_convention = TimeConvention.Act365,
+                            spot_forward = SpotForward.Spot,
+                            tenor_frequency=1, as_df=True)
+
+    f, ax = plt.subplots(figsize=(9,5))
+    ax.plot(df['Tenor'], df['Value'].mul(10_000), color='blue', dashes=(5,5))
+    ax.scatter(df['Tenor'], df['Value'].mul(10_000), color='blue')
+    ax.set_xlabel("Tenor", fontsize=12)
+    ax.set_ylabel(f"Yield (bp)", fontsize=12)
+    ax.grid()
+    plt.show()
+
+.. image:: images/curve_plot.png
+
+Plot Curve Time series
+^^^^^^^^^^^^^^^^^^^^^^^
+
+.. code-block:: python
+
+    import matplotlib.pyplot as plt
+    from datetime import datetime
+
+    from nordea_analytics.nordea_analytics_service import NordeaAnalyticsService
+    from nordea_analytics.curve_variable_names import CurveType, TimeConvention, SpotForward, CurveName
+
+    analytics_api = NordeaAnalyticsService()
+    analytics_api.get_curve_time_series(curve=CurveName.DKKGOV, from_date=datetime(2020, 1, 2),
+                                        to_date=datetime(2022, 2, 28),
+                                        curve_type=CurveType.YTMCurve,
+                                        time_convention = TimeConvention.Act365, tenors=[5, 10],
+                                        spot_forward = SpotForward.Spot,
+                                        as_df=True).set_index('Date').mul(10_000).plot(grid=True)
+    plt.show()
+
+.. image:: images/curve_ts.png
+
+Showing why buybacks are making bonds more rich
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+2.5%53 vs 1%50
+
+.. code-block:: python
+
+    import pandas as pd
+    import matplotlib.pyplot as plt
+    from datetime import datetime
+
+    from nordea_analytics.nordea_analytics_service import NordeaAnalyticsService
+    from nordea_analytics.key_figure_names import TimeSeriesKeyFigureName as kf_ts
+    from nordea_analytics.key_figure_names import CalculatedBondKeyFigureName as kf_calc
+    from nordea_analytics.curve_variable_names import CurveName
+
+    analytics_api = NordeaAnalyticsService()
+
+    from_date = datetime(2022, 1, 3)
+
+    isin_1 = "NDA 2.5 01oct53 (2)"
+    isin_2 = "NDA 1 01oct50 (2)"
+    df_25_53 = analytics_api.get_time_series(symbol=[isin_1],
+                                             keyfigures=[kf_ts.PriceClean, kf_ts.OAS_GOV],
+                                             from_date=from_date, to_date=datetime.now(),
+                                             as_df=True).set_index('Date')
+    df_1_50 = analytics_api.get_time_series(symbol=[isin_2],
+                                            keyfigures=[kf_ts.PriceClean, kf_ts.OAS_GOV],
+                                            from_date=from_date, to_date=datetime.now(),
+                                            as_df=True).set_index('Date')
+
+    df_calc_oas = analytics_api.calculate_bond_key_figure(calc_date=datetime.now(), isin=isin_1,
+                                                          keyfigures=[kf_calc.Spread],
+                                                          curves=[CurveName.DKKGOV], as_df=True)
+    df_25_53.loc[df_25_53.index[-1], 'OAS_GOV'] = df_calc_oas.loc[isin_1, 'Spread']
+
+    df_calc_oas = analytics_api.calculate_bond_key_figure(calc_date=datetime.now(), isin=isin_2,
+                                                          keyfigures=[kf_calc.Spread],
+                                                          curves=[CurveName.DKKGOV], as_df=True)
+    df_1_50.loc[df_25_53.index[-1], 'OAS_GOV'] = df_calc_oas.loc[isin_2, 'Spread']
+
+
+    df_plot = pd.DataFrame()
+
+    df_plot['price_diff'] = df_25_53['PriceClean'] - df_1_50['PriceClean']
+    df_plot['oas_diff'] = df_25_53['OAS_GOV'] - df_1_50['OAS_GOV']
+
+    f, ax = plt.subplots(figsize=(12, 5))
+    ax.plot(df_plot['price_diff'], color='blue', label="price")
+
+    ax2 = ax.twinx()
+    ax2.plot(df_plot['oas_diff'], color='red', label="OAS (rhs)")
+
+    ax.set_title(f"Development in price diff and OAS \n{isin_1} vs {isin_2}", fontsize=16)
+    ax.legend(loc=2)
+    ax.set_xlabel("date", fontsize=12)
+    ax.set_ylabel("price", fontsize=12, color='blue')
+    ax2.set_ylabel("OAS diff", fontsize=12, color='red')
+    ax2.legend(loc=1)
+    ax.grid()
+    plt.show()
+
+.. image:: images/buyback.png
+
+
+Live Dash board
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+.. code-block:: python
+
+    from datetime import datetime
+    from dash import Dash, dash_table
+    from dash.dependencies import Input, Output
+    from dash import html
+    from dash import dcc
+
+    from nordea_analytics.nordea_analytics_service import NordeaAnalyticsLiveService
+    from nordea_analytics.key_figure_names import LiveBondKeyFigureName
+
+    live_service = NordeaAnalyticsLiveService()
+    live_bond_keyfigure = live_service.get_live_bond_key_figures(["DK0009398620"],
+                                                                 [LiveBondKeyFigureName.Quote,
+                                                                 LiveBondKeyFigureName.Spread],
+                                                                 as_df=True)
+    with live_bond_keyfigure as live_streamer:
+        df = live_streamer.run()
+        app = Dash(__name__)
+        app.layout = html.Div([
+            dcc.Interval(
+                id='graph-update',
+                interval=1000
+            ),
+            html.H5(children=f'Last refreshed:', id='header'),
+            dash_table.DataTable(data=df.to_dict(orient='records'),
+                                 columns=[{"name": i, "id": i} for i in df.columns],
+                                 id='table',
+                                 )
+        ])
+
+        @app.callback(
+            [
+                Output(component_id='table', component_property='data'),
+                Output(component_id='table', component_property='columns'),
+                Output(component_id='header', component_property='children'),
+            ],
+            [
+                Input(component_id='graph-update', component_property='n_intervals')
+            ]
+        )
+        def update_table(n_interval):
+            df_data = live_streamer.run()
+            return df_data.to_dict(orient='records'), \
+                   [{"name": i, "id": i} for i in df_data.columns], \
+                   f'Last refreshed: {datetime.now().strftime("%H:%M:%S")}'
+
+    def main():
+        app.run_server(debug=False)
+
+    if __name__ == '__main__':
+        main()

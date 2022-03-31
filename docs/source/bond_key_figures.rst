@@ -11,7 +11,7 @@ and thus have option adjusted(OA) key figures. In these cases the prepayment mod
 adjusted spread(OAS, described below) is used for the estimation. This is embedded where relevant, and thus
 does not need to be specified when retrieving the key figure values.
 
-Note, all key figures available in the library are listed in the :class:`BondKeyFigureName <nordea_analytics.bond_key_figure_name.KeyFigureName>`
+Note, all bond key figures available in the library are listed in the :class:`BondKeyFigureName <nordea_analytics.key_figure_names.KeyFigureName>`
 class and can be retrieved with the function :meth:`get_bond_key_figures() <nordea_analytics.nordea_analytics_service.NordeaAnalyticsService.get_bond_key_figures>`.
 
 Present Value (PV)
@@ -50,7 +50,7 @@ where :math:`\sigma_{ATM}` is the at-the-money swaption volatility.
 
 BPV (Basis Point Value)
 ------------------------
-**BondKeyFigureName.BPVP**
+**BondKeyFigureName.BPV**
 
 This key figure shows how much the present value of a bond changes with respect to rates.
 
@@ -59,7 +59,7 @@ This key figure shows how much the present value of a bond changes with respect 
 
 CVX (Convexity)
 ------------------
-**BondKeyFigureName.CVXP**
+**BondKeyFigureName.CVX**
 
 This key figure shows how much the BPV of a bond changes if the rates decrease and increased by :math:`\Delta`
 
@@ -123,7 +123,7 @@ coupon payment and :math:`t_{p}` the time in years between the last payment and 
 
 OA Spreads
 -----------
-**BondKeyFigureName.OASSWAP_OIS**
+**BondKeyFigureName.OAS_OIS**
 
 Difference between the theoretical price and market price, expressed in terms of a spread to the interest rate curve.
 The spread of the bond is solved in the following equation:
@@ -134,17 +134,21 @@ The spread of the bond is solved in the following equation:
 Below are listed other OA spread key figures, which are computed as described above using the relevant discount factor
 in the PV function.
 
-**BondKeyFigureName.OAGOV**
+**BondKeyFigureName.OAS_GOV**
 
-**BondKeyFigureName.OASWAP_3M**
+**BondKeyFigureName.OAS_3M**
 
-**BondKeyFigureName.OASWAP_6M**
+**BondKeyFigureName.OAS_6M**
 
 Yield Curve Spread (YCS)
 -------------------------
-**BondKeyFigureName.YCSSWAP_OIS_Deterministic**
+**BondKeyFigureName.YCS_OIS**
 
-**BondKeyFigureName.YCSGOV_Deterministic**
+**BondKeyFigureName.YCS_GOV**
+
+**BondKeyFigureName.YCS_3M**
+
+**BondKeyFigureName.YCS_6M**
 
 Yield curve spreads(YCS) are estimated without taking the prepayment model into account, thus it uses the deterministic
 PV for estimation:
@@ -160,7 +164,7 @@ As with OAS, the YCS is then estimated as:
 
 Asset Swap Spread
 ------------------------
-**BondKeyFigureName.AssetSwapSpread_3M**
+**BondKeyFigureName.AssetSwapSpread**
 
 The spread is the pick-up you obtain from swapping the fixed leg into a floating yield compared
 to an interbank offered rate. The prepayments are calculated as optimal prepayment behaviour. Asset swap spread is only

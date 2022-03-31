@@ -2,7 +2,7 @@ from enum import Enum
 
 
 class AmortisationType(Enum):
-    """Used to control which Amortisation Type available when searching bonds."""
+    """Amortisation Type available when searching bonds."""
 
     Annuity = "annuity"
     Bullet = "bullet"
@@ -11,7 +11,7 @@ class AmortisationType(Enum):
 
 
 class AssetType(Enum):
-    """Used to control which Asset Type available when searching bonds."""
+    """Asset Type available when searching bonds."""
 
     BenchmarkBond = "Benchmark Bond"
     DanishCappedFloaters = "Danish Capped Floater"
@@ -25,13 +25,13 @@ class AssetType(Enum):
 
 
 class CapitalCentres(Enum):
-    """Used to control which capital cebtres available when searching bonds."""
+    """Capital centres available when searching bonds."""
 
     BRF_B = "B (BRF)"
     BRF_E = "E (BRF)"
     BRF_General = "GENERAL (BRF)"
     NDA_1 = "1 (NDA)"
-    NDA_2 = "1 (NDA)"
+    NDA_2 = "2 (NDA)"
     NYK_C = "C (NYK)"
     NYK_D = "D (NYK)"
     NYK_E = "E (NYK)"
@@ -46,7 +46,7 @@ class CapitalCentres(Enum):
 
 
 class CapitalCentreTypes(Enum):
-    """Used to control which capital cebtre types available when searching bonds."""
+    """Capital centre types available when searching bonds."""
 
     JCB = "JCB"
     RO = "RO"

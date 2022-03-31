@@ -2,11 +2,13 @@ from datetime import datetime
 from typing import Any, Dict, List, Union
 
 from nordea_analytics.curve_variable_names import (
+    CurveDefinitionName,
     CurveName,
     CurveType,
     SpotForward,
     TimeConvention,
 )
+from nordea_analytics.forecast_names import YieldCountry, YieldHorizon, YieldType
 from nordea_analytics.key_figure_names import (
     BondKeyFigureName,
     CalculatedBondKeyFigureName,
@@ -30,7 +32,9 @@ from nordea_analytics.nalib.value_retriever import (
     FXForecast,
     IndexComposition,
     LiveBondKeyFigures,
+    ShiftDays,
     TimeSeries,
+    YieldForecast,
 )
 from nordea_analytics.search_bond_names import (
     AmortisationType,
@@ -91,10 +95,10 @@ class NordeaAnalyticsService:
     def get_index_composition(
         self, indices: Union[List[str], str], calc_date: datetime, as_df: bool = False
     ) -> Any:
-        """Retrieves index composition for a given set og indices and calc date.
+        """Retrieves index composition for a given set of indices and calc date.
 
         Args:
-            indices: List of Indices for which the
+            indices: List of indices for which the
                 index composition should be retrieved.
             calc_date: Date of calculation.
             as_df: Default False. If True, the results are represented
@@ -129,7 +133,7 @@ class NordeaAnalyticsService:
             symbol: Bonds ISINs, swaps, FX, FX swap point.
             keyfigures: Key figure names for request. If symbol is
                 something else than a bond ISIN, "quote" should be chosen. Can be a
-                 list of BondKeyFigureName or string.
+                 list of TimeSeriesKeyFigureName or string.
             from_date: The first date showing historical figures.
             to_date: The last date showing historical figures.
             as_df: if True, the results are represented
@@ -218,14 +222,14 @@ class NordeaAnalyticsService:
         forward_tenor: float = None,
         as_df: bool = False,
     ) -> Any:
-        """Retrieves a curve for a given tenor frequency.
+        """Retrieves a curve for a given calculation date.
 
         Args:
             curve: Name of curve that should be retrieved.
             calc_date: calculation date for request.
             curve_type: Optional. What type of curve is retrieved.
             tenor_frequency: Optional. Frequency between tenors as a fraction of a year.
-                Will not have affect unless a certain curve_type are chosen
+                Will not have affect unless a specific curve_type are chosen
                 like Nelson or Hybrid.
             time_convention: Optional. Time convention used when curve is constructed.
             spot_forward: Optional. Should the curve be spot, spot forward
@@ -265,7 +269,7 @@ class NordeaAnalyticsService:
 
     def get_curve_definition(
         self,
-        curve: Union[str, CurveName],
+        curve: Union[str, CurveDefinitionName, CurveName],
         calc_date: datetime,
         as_df: bool = False,
     ) -> Any:
@@ -296,6 +300,8 @@ class NordeaAnalyticsService:
         asset_types: Union[List[AssetType], List[str], AssetType, str] = None,
         lower_maturity: datetime = None,
         upper_maturity: datetime = None,
+        lower_closing_date: datetime = None,
+        upper_closing_date: datetime = None,
         lower_coupon: float = None,
         upper_coupon: float = None,
         amortisation_type: Union[AmortisationType, str] = None,
@@ -319,14 +325,16 @@ class NordeaAnalyticsService:
             asset_types: Optional. Type of asset.
             lower_maturity: Optional. Minimum(from) maturity.
             upper_maturity: Optional. Maximum(to) maturity.
+            lower_closing_date: Optional. Minimum(from) closing date.
+            upper_closing_date: Optional. Maximum(to) closing date.
             lower_coupon: Optional. Minimum coupon.
             upper_coupon: Optional. maximum coupon.
             amortisation_type: Optional. amortisation type of bond.
-            is_io: Optional. Is Interest Only - only relevant for DMB.
-            capital_centres: Optional. capital centres names
-                - only relevant for DMB.
-            capital_centre_types: Optional. capital centres types
-                - only relevant for DMB.
+            is_io: Optional. Is Interest Only. Only relevant for DMB=True.
+            capital_centres: Optional. capital centres names.
+                Only relevant for DMB=True.
+            capital_centre_types: Optional. capital centres types.
+                Only relevant for DMB=True.
             as_df: Default False. If True, the results are represented
                 as pandas DataFrame, else as dictionary
 
@@ -345,6 +353,8 @@ class NordeaAnalyticsService:
                 asset_types,
                 lower_maturity,
                 upper_maturity,
+                lower_closing_date,
+                upper_closing_date,
                 lower_coupon,
                 upper_coupon,
                 amortisation_type,
@@ -362,6 +372,8 @@ class NordeaAnalyticsService:
                 asset_types,
                 lower_maturity,
                 upper_maturity,
+                lower_closing_date,
+                upper_closing_date,
                 lower_coupon,
                 upper_coupon,
                 amortisation_type,
@@ -372,7 +384,7 @@ class NordeaAnalyticsService:
 
     def calculate_bond_key_figure(
         self,
-        isin: str,
+        isins: Union[str, List[str]],
         keyfigures: Union[
             str,
             CalculatedBondKeyFigureName,
@@ -387,14 +399,15 @@ class NordeaAnalyticsService:
         price: float = None,
         spread: float = None,
         spread_curve: Union[str, CurveName] = None,
+        yield_input: float = None,
         asw_fix_frequency: str = None,
         ladder_definition: List[str] = None,
         as_df: bool = False,
     ) -> Any:
-        """Calculate bond key figure for given isin.
+        """Calculate bond key figure for given ISIN and calculation date.
 
         Args:
-            isin: ISIN of bond that should be valued.
+            isins: ISINs of bond that should be valued.
             keyfigures: Bond key figure that should be valued.
             calc_date: Date of calculation
             curves: Optional. Discount curves for calculation
@@ -406,10 +419,12 @@ class NordeaAnalyticsService:
                 spread_curve also as an input.
             spread_curve: Optional. Spread curve to calculate the
                 key figures when a fixed spread is given.
+            yield_input: Optional. Fixed yield for ISIN.
             asw_fix_frequency: Optional. Fixing frequency of swap in ASW calculation.
-                Mandatory input in all ASW calculations.
+                Mandatory input in all ASW calculations. "3M", "6M" and "1Y"
+                are supported.
             ladder_definition: Optional. What tenors should be included in
-                BPV ladder calculation.
+                BPV ladder calculation. For example ["1Y", "2Y", "3Y"].
             as_df: Default False. If True, the results are represented
                 as pandas DataFrame, else as dictionary
 
@@ -421,7 +436,7 @@ class NordeaAnalyticsService:
         if as_df:
             return BondKeyFigureCalculator(
                 self._client,
-                isin,
+                isins,
                 keyfigures,
                 calc_date,
                 curves,
@@ -430,13 +445,14 @@ class NordeaAnalyticsService:
                 price,
                 spread,
                 spread_curve,
+                yield_input,
                 asw_fix_frequency,
                 ladder_definition,
             ).to_df()
         else:
             return BondKeyFigureCalculator(
                 self._client,
-                isin,
+                isins,
                 keyfigures,
                 calc_date,
                 curves,
@@ -445,13 +461,14 @@ class NordeaAnalyticsService:
                 price,
                 spread,
                 spread_curve,
+                yield_input,
                 asw_fix_frequency,
                 ladder_definition,
             ).to_dict()
 
     def calculate_horizon_bond_key_figure(
         self,
-        isin: str,
+        isins: Union[str, List[str]],
         keyfigures: Union[
             str,
             HorizonCalculatedBondKeyFigureName,
@@ -471,10 +488,10 @@ class NordeaAnalyticsService:
         spread_change_horizon: float = None,
         as_df: bool = False,
     ) -> Any:
-        """Calculate future bond key figure for given isin.
+        """Calculate future bond key figure for given ISIN.
 
         Args:
-            isin: ISIN of bond that should be valued.
+            isins: ISINs of bond that should be valued.
             keyfigures: Bond key figure that should be valued.
             calc_date: date of calculation.
             horizon_date: future date of calculation.
@@ -494,7 +511,7 @@ class NordeaAnalyticsService:
                     reinvest_in_series is False, or horizon date is
                     further out than maturity of the bond.
             spread_change_horizon: bump the spread between calc date
-                and horizon date. Values should be in bps.
+                and horizon date. Value should be in bps.
             as_df: Default False. If True, the results are represented
                 as pandas DataFrame, else as dictionary
 
@@ -506,7 +523,7 @@ class NordeaAnalyticsService:
         if as_df:
             return BondKeyFigureHorizonCalculator(
                 self._client,
-                isin,
+                isins,
                 keyfigures,
                 calc_date,
                 horizon_date,
@@ -522,7 +539,7 @@ class NordeaAnalyticsService:
         else:
             return BondKeyFigureHorizonCalculator(
                 self._client,
-                isin,
+                isins,
                 keyfigures,
                 calc_date,
                 horizon_date,
@@ -541,7 +558,7 @@ class NordeaAnalyticsService:
         currency_pair: str,
         as_df: bool = False,
     ) -> Any:
-        """Retrieves given set of key figures for given ISINs and calc date.
+        """Retrieves Nordea's latest FX forecasts.
 
         Args:
             currency_pair: The currency cross for which forecast is retrieved.
@@ -556,6 +573,66 @@ class NordeaAnalyticsService:
             return FXForecast(self._client, currency_pair).to_df()
         else:
             return FXForecast(self._client, currency_pair).to_dict()
+
+    def get_yield_forecasts(
+        self,
+        country: Union[str, YieldCountry],
+        yield_type: Union[str, YieldType],
+        yield_horizon: Union[str, YieldHorizon],
+        as_df: bool = False,
+    ) -> Any:
+        """Retrieves Nordea's latest yield forecasts.
+
+        Args:
+            country: The country for which forecast is retrieved.
+            yield_type: The type of yield for which forecast is retrieved.
+            yield_horizon: The horizon for which forecast is retrieved.
+            as_df: Default False. If True, the results are represented
+                as pandas DataFrame, else as dictionary.
+
+        Returns:
+            Dictionary containing requested data. If as_df is True,
+                the data is in form of a DataFrame.
+        """
+        if as_df:
+            return YieldForecast(
+                self._client, country, yield_type, yield_horizon
+            ).to_df()
+        else:
+            return YieldForecast(
+                self._client, country, yield_type, yield_horizon
+            ).to_dict()
+
+    def get_shift_days(
+        self,
+        date: datetime,
+        days: int,
+        exchange: str = None,
+        day_count_convention: str = None,
+        date_roll_convention: str = None,
+    ) -> datetime:
+        """Shifts a date using internal holiday calendars.
+
+        Args:
+            date: The date that will be shifted.
+            days: The number of days to shift 'date' with.
+                Negative values move date back in time.
+            exchange: The exchange's holiday calendar will be used.
+            day_count_convention: The convention to use for counting days.
+            date_roll_convention: The convention to use for rolling
+                when a holiday is encountered.
+
+        Returns:
+            The shifted datetime is returned.
+        """
+        return ShiftDays(
+            self._client,
+            date,
+            days,
+            exchange,
+            day_count_convention,
+            date_roll_convention,
+        ).to_datetime()
 
 
 class NordeaAnalyticsLiveService:

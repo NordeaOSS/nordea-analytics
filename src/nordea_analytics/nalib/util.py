@@ -1,6 +1,6 @@
 """Script for various methods for nordea analytics library."""
 from pathlib import Path
-from typing import Callable, Dict, Union
+from typing import Callable, Dict, List, Mapping, Union
 
 import yaml
 
@@ -11,6 +11,7 @@ from nordea_analytics.curve_variable_names import (
     SpotForward,
     TimeConvention,
 )
+from nordea_analytics.forecast_names import YieldCountry, YieldHorizon, YieldType
 from nordea_analytics.key_figure_names import (
     BondKeyFigureName,
     CalculatedBondKeyFigureName,
@@ -57,6 +58,9 @@ def convert_to_variable_string(
         AssetType,
         CapitalCentres,
         CapitalCentreTypes,
+        YieldCountry,
+        YieldType,
+        YieldHorizon,
         LiveBondKeyFigureName,
     ],
     variable_type: Callable,
@@ -90,9 +94,16 @@ def convert_to_variable_string(
         AssetType,
         CapitalCentres,
         CapitalCentreTypes,
+        YieldCountry,
+        YieldType,
+        YieldHorizon,
         LiveBondKeyFigureName,
     ):
-        return variable.value  # type:ignore
+        try:
+            variable_type(variable.value)  # type:ignore
+            return variable.value  # type:ignore
+        except ValueError as e:
+            raise e
     elif type(variable) is str:
         try:
             if variable.lower() == "forward" or variable.lower() == "spot":
@@ -103,6 +114,8 @@ def convert_to_variable_string(
                 variable_type == CurveName
                 or variable_type == CapitalCentres
                 or variable_type == CapitalCentreTypes
+                or variable_type == YieldCountry
+                or variable_type == YieldHorizon
             ):
                 variable_type(variable.upper())
                 return variable.upper()
@@ -147,3 +160,24 @@ def check_string(string: str, substring: str) -> bool:
         return False
     else:
         return True
+
+
+def float_to_tenor_string(float_tenor: Union[str, float]) -> str:
+    """Convert float year fraction to tenor string."""
+    if float(float_tenor) < 1:
+        return str(int(round(float(float_tenor) * 12, 0))) + "M"
+    elif float(float_tenor).is_integer():
+        return str(int(float_tenor)) + "Y"
+    else:
+        return str(round(float(float_tenor), 1)) + "Y"
+
+
+def check_json_response(json_response: Union[List, Mapping]) -> None:
+    """Check if json_response is empty and throw an error."""
+    if not json_response or (
+        type(json_response) == dict and all(not json_response[d] for d in json_response)
+    ):
+        raise ValueError(
+            "No data was retrieved! Please look if you have further "
+            "warning messages to identify the issue."
+        )

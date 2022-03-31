@@ -131,7 +131,7 @@ class StreamListener(object):
         self.update_method = update_method
 
 
-class InternalStreamListener(StreamListener):
+class LiveKeyfigureStreamListener(StreamListener):
     """Retrieves and Controls the internal live stream."""
 
     def __init__(
@@ -146,7 +146,7 @@ class InternalStreamListener(StreamListener):
                 transformed into a presentable format.
             auth: Authentication to service if needed.
         """
-        super(InternalStreamListener, self).__init__(baseurl, isins, update_method)
+        super(LiveKeyfigureStreamListener, self).__init__(baseurl, isins, update_method)
         self._live_stream: Any = None
         self._heartbeat_url = ""
         self._subscription_id = ""
@@ -213,7 +213,7 @@ class InternalStreamListener(StreamListener):
             self._heartbeat_stream_thread.join()
 
 
-class ExternalStreamListener(StreamListener):
+class LiveKeyfigureListener(StreamListener):
     """Retrieves and Controls the external live stream."""
 
     def __init__(
@@ -229,7 +229,7 @@ class ExternalStreamListener(StreamListener):
             get_response: get response function from data_retrieval_client which
                 handles requests in the right way for internal and external users.
         """
-        super(ExternalStreamListener, self).__init__(baseurl, isins, update_method)
+        super(LiveKeyfigureListener, self).__init__(baseurl, isins, update_method)
         self._sleep_event = Event()
         self._sleep_event.clear()
         self._timeoutInSec = 10
@@ -238,17 +238,15 @@ class ExternalStreamListener(StreamListener):
 
     def __enter__(self) -> "StreamListener":
         """Enter the stream."""
-        self.run()
+        self.start()
         return self
 
     def __exit__(self, exc_type: None, exc_val: None, exc_tb: None) -> None:
-        """Exit the stream."""
-        self.stop()
+        """Exit the stream. Nothing here, so that dashboards work."""
 
     def run(self) -> str:
         """Keeps the stream running."""
-        if hasattr(self, "_live_stream"):
-            self.start()
+        self._live_stream = self._stream_iter()
         return next(self._live_stream)
 
     def stop(self) -> None:
@@ -261,7 +259,6 @@ class ExternalStreamListener(StreamListener):
         self._sleep_event.clear()
         self.url = f'{self.baseurl}?bonds={",".join(self.isins)}'
         self.is_working = True
-        self._live_stream = self._stream_iter()
 
     def _stream_iter(self) -> Generator[str, None, None]:
         """Iterates the the request to continue the stream."""

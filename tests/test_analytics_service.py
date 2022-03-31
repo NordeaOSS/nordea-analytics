@@ -7,14 +7,18 @@ from typing import List, Union
 import pytest
 
 from nordea_analytics.curve_variable_names import (
+    CurveDefinitionName,
     CurveName,
     CurveType,
     SpotForward,
     TimeConvention,
 )
+from nordea_analytics.forecast_names import YieldCountry, YieldHorizon, YieldType
 from nordea_analytics.key_figure_names import (
     BondKeyFigureName,
     CalculatedBondKeyFigureName,
+    HorizonCalculatedBondKeyFigureName,
+    LiveBondKeyFigureName,
     TimeSeriesKeyFigureName,
 )
 from nordea_analytics.search_bond_names import (
@@ -24,7 +28,7 @@ from nordea_analytics.search_bond_names import (
     CapitalCentreTypes,
     Issuers,
 )
-from tests import NordeaAnalyticsServiceTest
+from tests import NordeaAnalyticsLiveServiceTest, NordeaAnalyticsServiceTest
 from tests.util import load_and_compare_dfs
 
 DUMP_DATA = False
@@ -62,8 +66,8 @@ def keyfigures() -> List[Union[str, BondKeyFigureName]]:
         "Yield",
         "Modduration",
         "accint",
-        BondKeyFigureName.BPVP,
-        BondKeyFigureName.CVXP,
+        BondKeyFigureName.BPV,
+        BondKeyFigureName.CVX,
         BondKeyFigureName.OAModifiedDuration,
     ]
 
@@ -76,9 +80,9 @@ def timeseries_keyfigures() -> List[Union[str, TimeSeriesKeyFigureName]]:
         "Yield",
         "Modduration",
         "accint",
-        TimeSeriesKeyFigureName.BPVP,
-        TimeSeriesKeyFigureName.CVXP,
-        TimeSeriesKeyFigureName.ModifiedDuration,
+        TimeSeriesKeyFigureName.BPV,
+        TimeSeriesKeyFigureName.CVX,
+        TimeSeriesKeyFigureName.OAModifiedDuration,
     ]
 
 
@@ -156,7 +160,6 @@ class TestBondKeyFigures:
         )
 
 
-# @pytest.mark.skip("skip until I figure out why market value changes daily")
 class TestIndexComposition:
     """Test class for retrieving index Composition."""
 
@@ -305,13 +308,13 @@ class TestCurveTimeSeries:
                 SpotForward.Forward,
                 2,
             ),
-            (
-                "DKKGOV",
-                CurveType.ParCurve,
-                TimeConvention.TC_30360,
-                SpotForward.Spot,
-                None,
-            ),
+            # (
+            #     "DKKGOV",
+            #     CurveType.ParCurve,
+            #     TimeConvention.TC_30360,
+            #     SpotForward.Spot,
+            #     None,
+            # ),
         ],
     )
     def test_get_curve_time_series_dict(
@@ -386,13 +389,13 @@ class TestCurveTimeSeries:
                 SpotForward.Forward,
                 2,
             ),
-            (
-                CurveName.DKKGOV,
-                CurveType.ParCurve,
-                TimeConvention.TC_30360,
-                SpotForward.Spot,
-                None,
-            ),
+            # (
+            #     CurveName.DKKGOV,
+            #     CurveType.ParCurve,
+            #     TimeConvention.TC_30360,
+            #     SpotForward.Spot,
+            #     None,
+            # ),
         ],
     )
     def test_get_curve_time_series_df(
@@ -623,7 +626,7 @@ class TestCurveDefinition:
         "curve_name",
         [
             ("DKKSWAP"),
-            (CurveName.EURSWAP),
+            (CurveDefinitionName.EURSWAP),
         ],
     )
     def test_get_curve_definition_dict(
@@ -631,7 +634,7 @@ class TestCurveDefinition:
         na_service: NordeaAnalyticsServiceTest,
         anchor: datetime,
         result_path: str,
-        curve_name: Union[str, CurveName],
+        curve_name: Union[str, CurveDefinitionName],
     ) -> None:
         """Check if dictionary results are correct."""
         curve_definition = na_service.get_curve_definition(curve_name, anchor)
@@ -672,8 +675,8 @@ class TestCurveDefinition:
     @pytest.mark.parametrize(
         "curve_name",
         [
-            (CurveName.DKKSWAP_Fix_1D_OIS),
-            (CurveName.SEKGOV),
+            (CurveDefinitionName.DKKMTGNYK),
+            (CurveDefinitionName.SEKGOV),
         ],
     )
     def test_get_curve_definition_df(
@@ -681,7 +684,7 @@ class TestCurveDefinition:
         na_service: NordeaAnalyticsServiceTest,
         anchor: datetime,
         result_path: str,
-        curve_name: Union[str, CurveName],
+        curve_name: Union[str, CurveDefinitionName],
     ) -> None:
         """Check if dictionary results are correct."""
         df = na_service.get_curve_definition(curve_name, anchor, as_df=True)
@@ -800,7 +803,6 @@ class TestSearchBonds:
     @pytest.mark.parametrize(
         "dmb, currency, issuers",
         [
-            (True, "DKK", [Issuers.UniCredit_Bank_AG]),
             (False, "EUR", [Issuers.Stadshypotek_AB]),
         ],
     )
@@ -872,15 +874,53 @@ class TestCalculateBondKeyFigure:
     """Test class for calculate key figure."""
 
     @pytest.mark.parametrize(
-        "isin, bond_key_figure, curves, rates_shift, pp_speed",
+        "isin, key_figure, curves, rates_shift, pp_speed, price, spread, "
+        "spread_curve, asw_fix_frequency, ladder_definition",
         [
             (
                 "DK0002000421",
-                [CalculatedBondKeyFigureName.Spread, CalculatedBondKeyFigureName.Price],
-                CurveName.DKKSWAP_Disc_OIS,
+                [CalculatedBondKeyFigureName.Spread, CalculatedBondKeyFigureName.BPV],
+                [CurveName.DKKSWAP, CurveName.DKKSWAP_Disc_OIS],
                 ["0Y 5", "30Y -5"],
                 0.5,
-            )
+                None,
+                100,
+                CurveName.DKKSWAP,
+                None,
+                None,
+            ),
+            (
+                "DE0001102424",
+                [
+                    CalculatedBondKeyFigureName.PriceClean,
+                    CalculatedBondKeyFigureName.AssetSwapSpread,
+                    CalculatedBondKeyFigureName.ASW_PP,
+                    CalculatedBondKeyFigureName.ASW_MM,
+                ],
+                CurveName.DEMGOV,
+                None,
+                None,
+                100,
+                None,
+                None,
+                "3M",
+                None,
+            ),
+            (
+                "DE0001102424",
+                [
+                    CalculatedBondKeyFigureName.BPV,
+                    CalculatedBondKeyFigureName.BPV_Ladder,
+                ],
+                None,
+                None,
+                None,
+                None,
+                None,
+                None,
+                None,
+                ["6M", "2Y", "3Y"],
+            ),
         ],
     )
     def test_calculate_bond_key_figure_dict(
@@ -889,21 +929,37 @@ class TestCalculateBondKeyFigure:
         anchor: datetime,
         result_path: str,
         isin: str,
-        bond_key_figure: List[CalculatedBondKeyFigureName],
-        curves: str,
+        key_figure: List[CalculatedBondKeyFigureName],
+        curves: Union[List[str], str, CurveName, List[CurveName]],
         rates_shift: List[str],
         pp_speed: float,
+        price: float,
+        spread: float,
+        spread_curve: Union[str, CurveName],
+        asw_fix_frequency: str,
+        ladder_definition: List[str],
     ) -> None:
         """Check if dictionary results are correct."""
         calc_key_figure = na_service.calculate_bond_key_figure(
-            isin, bond_key_figure, anchor, pp_speed=pp_speed
+            isin,
+            key_figure,
+            anchor,
+            curves=curves,
+            rates_shifts=rates_shift,
+            pp_speed=pp_speed,
+            price=price,
+            spread=spread,
+            spread_curve=spread_curve,
+            asw_fix_frequency=asw_fix_frequency,
+            ladder_definition=ladder_definition,
         )
-        bond_key_figure_names = "_".join([name.name for name in bond_key_figure])
+        key_figure_names = "_".join([name.name for name in key_figure])
+
         if DUMP_DATA:
             expected_file = open(
                 os.path.join(
                     result_path,
-                    bond_key_figure_names
+                    key_figure_names
                     + "-"
                     + anchor.strftime("%d%m%y")
                     + "_calc_keyfigure.txt",
@@ -915,7 +971,7 @@ class TestCalculateBondKeyFigure:
         expected_file = open(
             os.path.join(
                 result_path,
-                "_".join([name.name for name in bond_key_figure])
+                key_figure_names
                 + "-"
                 + anchor.strftime("%d%m%y")
                 + "_calc_keyfigure.txt",
@@ -930,8 +986,11 @@ class TestCalculateBondKeyFigure:
         "isin, bond_key_figure, curves, rates_shift, pp_speed",
         [
             (
-                "DK0002000421",
-                [CalculatedBondKeyFigureName.Spread, CalculatedBondKeyFigureName.Price],
+                ["DK0002000421", "DK0002044551"],
+                [
+                    CalculatedBondKeyFigureName.Spread,
+                    CalculatedBondKeyFigureName.PriceClean,
+                ],
                 "DKKSWAP Disc OIS",
                 ["0Y 5", "30Y -5"],
                 0.5,
@@ -943,7 +1002,7 @@ class TestCalculateBondKeyFigure:
         na_service: NordeaAnalyticsServiceTest,
         anchor: datetime,
         result_path: str,
-        isin: str,
+        isin: List[str],
         bond_key_figure: List[CalculatedBondKeyFigureName],
         curves: str,
         rates_shift: List[str],
@@ -968,3 +1027,433 @@ class TestCalculateBondKeyFigure:
             dump_data=DUMP_DATA,
             reset_index=True,
         )
+
+
+class TestCalculateHorizonBondKeyFigure:
+    """Test class for calculate key figure."""
+
+    @pytest.mark.parametrize(
+        "isin, keyfigures, horizon_date, curves, rates_shifts, pp_speed, price,"
+        "fixed_prepayments, spread_change_horizon",
+        [
+            (
+                "DK0002046259",
+                [
+                    HorizonCalculatedBondKeyFigureName.PriceClean,
+                    HorizonCalculatedBondKeyFigureName.Spread,
+                    HorizonCalculatedBondKeyFigureName.ReturnInterestAmount,
+                ],
+                datetime(2022, 1, 3),
+                CurveName.DKKSWAP_Disc_OIS,
+                ["0Y 5", "30Y -5"],
+                0.5,
+                70,
+                0.01,
+                50.0,
+            )
+        ],
+    )
+    def test_calculate_horizon_bond_key_figure_dict(
+        self,
+        na_service: NordeaAnalyticsServiceTest,
+        anchor: datetime,
+        result_path: str,
+        isin: str,
+        keyfigures: List[HorizonCalculatedBondKeyFigureName],
+        horizon_date: datetime,
+        curves: CurveName,
+        rates_shifts: Union[List[str], str],
+        pp_speed: float,
+        price: float,
+        fixed_prepayments: float,
+        spread_change_horizon: float,
+    ) -> None:
+        """Check if dictionary results are correct."""
+        calc_key_figure = na_service.calculate_horizon_bond_key_figure(
+            isin,
+            keyfigures,
+            anchor,
+            horizon_date,
+            curves=curves,
+            rates_shifts=rates_shifts,
+            pp_speed=pp_speed,
+            price=price,
+            fixed_prepayments=fixed_prepayments,
+            spread_change_horizon=spread_change_horizon,
+        )
+        bond_key_figure_names = "_".join([name.name for name in keyfigures])
+
+        if DUMP_DATA:
+            expected_file = open(
+                os.path.join(
+                    result_path,
+                    bond_key_figure_names
+                    + "-"
+                    + anchor.strftime("%d%m%y")
+                    + "_calc_horizon_keyfigure.txt",
+                ),
+                "w+",
+            )
+            json.dump(calc_key_figure, expected_file)
+
+        expected_file = open(
+            os.path.join(
+                result_path,
+                bond_key_figure_names
+                + "-"
+                + anchor.strftime("%d%m%y")
+                + "_calc_horizon_keyfigure.txt",
+            ),
+            "r",
+        )
+        expected_result = json.load(expected_file)
+
+        assert calc_key_figure == expected_result
+
+    @pytest.mark.parametrize(
+        "isin, keyfigures, horizon_date, curves, reinvest_in_series, reinvestment_rate",
+        [
+            (
+                ["DE0001141794", "DK0002044551"],
+                [
+                    HorizonCalculatedBondKeyFigureName.BPV,
+                    HorizonCalculatedBondKeyFigureName.CVX,
+                    HorizonCalculatedBondKeyFigureName.ReturnPrincipal,
+                ],
+                datetime(2022, 1, 3),
+                [CurveName.DKKSWAP_Libor, CurveName.DKKSWAP],
+                False,
+                0.025,
+            )
+        ],
+    )
+    def test_calculate_horizon_bond_key_figure_df(
+        self,
+        na_service: NordeaAnalyticsServiceTest,
+        anchor: datetime,
+        result_path: str,
+        isin: List[str],
+        keyfigures: List[HorizonCalculatedBondKeyFigureName],
+        horizon_date: datetime,
+        curves: List[CurveName],
+        reinvest_in_series: bool,
+        reinvestment_rate: float,
+    ) -> None:
+        """Check if dataframe results are correct."""
+        df = na_service.calculate_horizon_bond_key_figure(
+            isin,
+            keyfigures,
+            anchor,
+            horizon_date,
+            curves=curves,
+            reinvest_in_series=reinvest_in_series,
+            reinvestment_rate=reinvestment_rate,
+            as_df=True,
+        )
+
+        bond_key_figure_names = "_".join([name.name for name in keyfigures])
+
+        load_and_compare_dfs(
+            df,
+            os.path.join(
+                result_path,
+                bond_key_figure_names
+                + "-"
+                + anchor.strftime("%d%m%y")
+                + "_calc_horizon_keyfigure.csv",
+            ),
+            index_col=0,
+            dump_data=DUMP_DATA,
+            reset_index=True,
+        )
+
+
+class TestFXForecast:
+    """Test class for retrieving fx forecast."""
+
+    @pytest.mark.parametrize(
+        "currency_pair",
+        [
+            ("EURUSD"),
+        ],
+    )
+    def test_get_fx_forecast_dict(
+        self,
+        na_service: NordeaAnalyticsServiceTest,
+        result_path: str,
+        currency_pair: str,
+    ) -> None:
+        """Check if dictionary results are correct."""
+        fx_forecast = na_service.get_fx_forecasts(currency_pair)
+
+        fx_forecast_keys = list(fx_forecast[currency_pair].keys())
+
+        if DUMP_DATA:
+            expected_file = open(
+                os.path.join(
+                    result_path,
+                    currency_pair + "_fx_forecast_keys.txt",
+                ),
+                "w+",
+            )
+            json.dump(fx_forecast_keys, expected_file)
+
+        expected_file = open(
+            os.path.join(
+                result_path,
+                currency_pair + "_fx_forecast_keys.txt",
+            ),
+            "r",
+        )
+        expected_result = json.load(expected_file)
+
+        assert fx_forecast_keys == expected_result
+        for key in fx_forecast_keys:
+            assert fx_forecast[currency_pair][key] != {}
+
+    @pytest.mark.parametrize(
+        "currency_pair",
+        [
+            ("USDDKK"),
+        ],
+    )
+    def test_fx_forecast_df(
+        self,
+        na_service: NordeaAnalyticsServiceTest,
+        anchor: datetime,
+        result_path: str,
+        currency_pair: str,
+    ) -> None:
+        """Check if dictionary results are correct."""
+        fx_forecast_df = na_service.get_fx_forecasts(currency_pair, as_df=True)
+        fx_forecast_columns = list(fx_forecast_df.columns.values)
+
+        if DUMP_DATA:
+            expected_file = open(
+                os.path.join(
+                    result_path,
+                    currency_pair + "_fx_forecast_columns.txt",
+                ),
+                "w+",
+            )
+            json.dump(fx_forecast_columns, expected_file)
+
+        expected_file = open(
+            os.path.join(
+                result_path,
+                currency_pair + "_fx_forecast_columns.txt",
+            ),
+            "r",
+        )
+
+        expected_result = json.load(expected_file)
+        assert fx_forecast_columns == expected_result
+        assert fx_forecast_df.values.size != 0
+
+
+class TestYieldForecast:
+    """Test class for retrieving fx forecast."""
+
+    @pytest.mark.parametrize(
+        "country, yield_type, yield_horizon",
+        [
+            (YieldCountry.DK, YieldType.Govt, YieldHorizon.Horizon_2Y),
+        ],
+    )
+    def test_get_yield_forecast_dict(
+        self,
+        na_service: NordeaAnalyticsServiceTest,
+        result_path: str,
+        country: YieldCountry,
+        yield_type: YieldType,
+        yield_horizon: YieldHorizon,
+    ) -> None:
+        """Check if dictionary results are correct."""
+        yield_forecast = na_service.get_yield_forecasts(
+            country, yield_type, yield_horizon
+        )
+        symbol = country.value + " " + yield_horizon.value
+        yield_forecast_keys = list(yield_forecast[symbol].keys())
+
+        if DUMP_DATA:
+            expected_file = open(
+                os.path.join(
+                    result_path,
+                    symbol + "_yield_forecast_keys.txt",
+                ),
+                "w+",
+            )
+            json.dump(yield_forecast_keys, expected_file)
+
+        expected_file = open(
+            os.path.join(
+                result_path,
+                symbol + "_yield_forecast_keys.txt",
+            ),
+            "r",
+        )
+        expected_result = json.load(expected_file)
+
+        assert yield_forecast_keys == expected_result
+        # It seems that sometimes Nordea forecast or implied
+        # are returned empty, which results failing of this test.
+        # Needs to be investigated on the API side - until then,
+        # skip this test so we can run bamboo
+        # for key in yield_forecast_keys:
+        #     assert yield_forecast[symbol][key] != {}
+
+    @pytest.mark.parametrize(
+        "country, yield_type, yield_horizon",
+        [
+            ("EU", "libor", "3M"),
+        ],
+    )
+    def test_yield_forecast_df(
+        self,
+        na_service: NordeaAnalyticsServiceTest,
+        anchor: datetime,
+        result_path: str,
+        country: str,
+        yield_type: str,
+        yield_horizon: str,
+    ) -> None:
+        """Check if dictionary results are correct."""
+        yield_forecast_df = na_service.get_yield_forecasts(
+            country, yield_type, yield_horizon, as_df=True
+        )
+        yield_forecast_columns = list(yield_forecast_df.columns.values)
+        symbol = country + "_" + yield_horizon
+
+        if DUMP_DATA:
+            expected_file = open(
+                os.path.join(
+                    result_path,
+                    symbol + "_yield_forecast_columns.txt",
+                ),
+                "w+",
+            )
+            json.dump(yield_forecast_columns, expected_file)
+
+        expected_file = open(
+            os.path.join(
+                result_path,
+                symbol + "_yield_forecast_columns.txt",
+            ),
+            "r",
+        )
+
+        expected_result = json.load(expected_file)
+        assert yield_forecast_columns == expected_result
+        assert yield_forecast_df.values.size != 0
+
+
+@pytest.mark.skip("test not robust enough")
+class TestNordeaAnalyticsLiveService:
+    """Test class for live streaming service."""
+
+    @pytest.mark.parametrize(
+        "isin, live_key_figure, streaming",
+        [
+            (
+                ["DK0009295065", "DK0009527376"],
+                [LiveBondKeyFigureName.Quote, LiveBondKeyFigureName.CVX],
+                False,
+            ),
+            # (
+            #     ["DK0009295065", "DK0009527376"],
+            #     [LiveBondKeyFigureName.Spread, LiveBondKeyFigureName.Yield],
+            #     True,
+            # ),
+        ],
+    )
+    def test_live_streaming_dict(
+        self,
+        isin: List[str],
+        live_key_figure: Union[List[LiveBondKeyFigureName], List[str]],
+        streaming: bool,
+    ) -> None:
+        """Test live streaming returned as a dict."""
+        na_live_service = NordeaAnalyticsLiveServiceTest(streaming=streaming)
+
+        live_bond_keyfigure = na_live_service.get_live_bond_key_figures(
+            isin, live_key_figure
+        )
+        i = 0
+        with live_bond_keyfigure as live_streamer:  # type: ignore
+            while i < 5:
+                live_dict = live_streamer.run()
+                i = i + 1
+        list(live_dict.keys()).sort()
+        isin.sort()
+        assert list(live_dict.keys()) == isin
+        assert len(live_dict[isin[0]]) == len(live_key_figure) + 1
+
+    @pytest.mark.parametrize(
+        "isin, live_key_figure, streaming",
+        [
+            (
+                ["DK0009398620", "DK0009527376"],
+                [LiveBondKeyFigureName.SwapSpread, LiveBondKeyFigureName.OAS_6M],
+                False,
+            ),
+            # (
+            #     ["DK0009398620", "DK0009527376"],
+            #     [LiveBondKeyFigureName.OAS_3M, LiveBondKeyFigureName.GovSpread],
+            #     True,
+            # ),
+        ],
+    )
+    def test_live_streaming_df(
+        self,
+        isin: List[str],
+        live_key_figure: Union[List[LiveBondKeyFigureName], List[str]],
+        streaming: bool,
+    ) -> None:
+        """Test live streaming returned as a dict."""
+        na_live_service = NordeaAnalyticsLiveServiceTest(streaming=streaming)
+
+        live_bond_keyfigure = na_live_service.get_live_bond_key_figures(
+            isin, live_key_figure, as_df=True
+        )
+        i = 0
+        with live_bond_keyfigure as live_streamer:  # type: ignore
+            while i < 5:
+                live_df = live_streamer.run()
+                i = i + 1
+        isin.sort()
+        list(live_df["ISIN"]).sort()
+        assert list(live_df["ISIN"]) == isin
+        assert live_df.columns.size == len(live_key_figure) + 2
+
+
+@pytest.mark.skip("Skip until works on Test")
+class TestShiftDays:
+    """Test class for shift days."""
+
+    @pytest.mark.parametrize(
+        "date, days, exchange, day_count_convention, date_roll_convention",
+        [(datetime(2022, 3, 18), 1, "None", "Bank days", "None")],
+    )
+    def test_shift_days_datetime(
+        self,
+        na_service: NordeaAnalyticsServiceTest,
+        anchor: datetime,
+        result_path: str,
+        date: datetime,
+        days: int,
+        exchange: str,
+        day_count_convention: str,
+        date_roll_convention: str,
+    ) -> None:
+        """Check if dictionary results are correct."""
+        shifted_date = na_service.get_shift_days(
+            date,
+            days,
+            exchange,
+            day_count_convention,
+            date_roll_convention,
+        )
+
+        expected_result = datetime(2022, 3, 21).date()
+
+        assert shifted_date == expected_result

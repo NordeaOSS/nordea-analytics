@@ -1,13 +1,17 @@
 from pathlib import Path
-from typing import Callable, List, Tuple, Union
+from typing import Callable, Dict, List, Tuple, Union
 
 import pytest
 
 from nordea_analytics.curve_variable_names import CurveType, SpotForward, TimeConvention
 from nordea_analytics.key_figure_names import BondKeyFigureName
 from nordea_analytics.nalib.util import (
+    check_json_response,
+    check_string,
     convert_to_float_if_float,
     convert_to_variable_string,
+    float_to_tenor_string,
+    get_config,
     get_user,
 )
 
@@ -31,7 +35,7 @@ def test_convert_to_float(test_float: str, expected_results: float) -> None:
     "test_key_figure, expected_results",
     [
         (
-            ["Quote", "Modduration", BondKeyFigureName.BPVP, BondKeyFigureName.CVXP],
+            ["Quote", "Modduration", BondKeyFigureName.BPV, BondKeyFigureName.CVX],
             ["quote", "modduration", "bpvp", "cvxp"],
         )
     ],
@@ -113,3 +117,43 @@ def test_get_user_not_exists() -> None:
     )
     username = get_user(test_path)
     assert username == ""
+
+
+def test_get_config() -> None:
+    """Test that config is received."""
+    config = get_config()
+    assert type(config) == dict
+
+
+@pytest.mark.parametrize(
+    "string, substring, expected_results",
+    [
+        ('"state":"completed", "type":', '"state":"completed"', True),
+        ('"state":"processing", completed at:', '"state":"completed"', False),
+    ],
+)
+def test_check_string(string: str, substring: str, expected_results: bool) -> None:
+    """Test that returns True when exactly the right substring is given."""
+    assert check_string(string, substring) == expected_results
+
+
+@pytest.mark.parametrize(
+    "float_tenor, expected_results", [(0.5, "6M"), ("1.5", "1.5Y"), (2.0, "2Y")]
+)
+def test_float_to_tenor_string(
+    float_tenor: Union[str, float], expected_results: str
+) -> None:
+    """Test that float value is correctly returned to string tenor."""
+    float_to_tenor_string(float_tenor)
+
+
+@pytest.mark.parametrize("input", [([]), ({"error": {}})])
+def test_check_json_response(input: Union[List, Dict]) -> None:
+    """Check if the function throws an error when it receives an empty list."""
+    try:
+        check_json_response(input)
+        expected_results = False
+    except ValueError:
+        expected_results = True
+
+    assert expected_results
