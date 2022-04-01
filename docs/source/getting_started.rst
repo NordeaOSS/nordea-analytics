@@ -635,7 +635,7 @@ Showing why buybacks are making bonds more rich
 
 
 Live Dash board
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^
 
 .. code-block:: python
 
@@ -689,3 +689,66 @@ Live Dash board
 
     if __name__ == '__main__':
         main()
+
+
+Live Time Series Plot
+^^^^^^^^^^^^^^^^^^^^^^^
+Live plot with the time series for Spread from 1st of March 2022 to the most recent live value. The graph updates
+when new live key figures are in.
+
+.. code-block:: python
+
+    from datetime import datetime, timedelta
+    from dash import Dash
+    from dash.dependencies import Input, Output
+    from dash import html
+    from dash import dcc
+    import plotly.express as px
+
+    from nordea_analytics.nordea_analytics_service import (
+    NordeaAnalyticsService,
+    NordeaAnalyticsLiveService)
+    from nordea_analytics.key_figure_names import TimeSeriesKeyFigureName as kf_ts
+    from nordea_analytics.key_figure_names import LiveBondKeyFigureName as kf_live
+
+    analytics_api = NordeaAnalyticsService()
+    from_date = datetime(2022, 3, 1)
+    yesterday = datetime.today() - timedelta(1)
+    key_figure_name_ts = [kf_ts.Spread]
+    key_figure_name_live = [kf_live.Spread]
+
+    isin = ["DK0009527376", "DK0009527293", "DK0009527103"]
+
+    time_Series = analytics_api.get_time_series(isin, key_figure_name_ts, from_date, yesterday,
+                                                as_df=True)
+    live_service = NordeaAnalyticsLiveService()
+    live_bond_keyfigure = live_service.get_live_bond_key_figures(isin,
+                                                                 key_figure_name_live,
+                                                                 as_df=True)
+
+    with live_bond_keyfigure as live_streamer:
+        app = Dash(__name__)
+
+        app.layout = html.Div([
+            dcc.Interval(
+                id='graph-update',
+                interval=1000),
+            html.H5(children=f'Last refreshed:', id='header'),
+            dcc.Graph(id="graph"),
+        ])
+
+
+        @app.callback(
+            Output("graph", "figure"),
+            Output(component_id='header', component_property='children'),
+            Input(component_id='graph-update', component_property='n_intervals'))
+        def update_bar_chart(n_interval):
+            live_df = live_streamer.run()
+            live_df = live_df.rename(columns={"timestamp": "Date", "ISIN": "Symbol"})
+            df = time_Series.append(live_df)
+            fig = px.line(df, x="Date", y="Spread", symbol="Symbol", color="Symbol")
+            return fig, f'Last refreshed: {datetime.now().strftime("%H:%M:%S")}'
+
+        app.run_server(debug=False)
+
+.. image:: images/live_timeseries_plot.jpg
