@@ -1426,7 +1426,6 @@ class TestNordeaAnalyticsLiveService:
         assert live_df.columns.size == len(live_key_figure) + 2
 
 
-@pytest.mark.skip("Skip until works on Test")
 class TestShiftDays:
     """Test class for shift days."""
 
@@ -1454,6 +1453,82 @@ class TestShiftDays:
             date_roll_convention,
         )
 
-        expected_result = datetime(2022, 3, 21).date()
+        expected_result = datetime(2022, 3, 21, 0, 0)
 
         assert shifted_date == expected_result
+
+
+@pytest.mark.skip("Throws AttributionError")
+class TestYearFraction:
+    """Test class for year fraction."""
+
+    @pytest.mark.parametrize(
+        "from_date, to_date, time_convention",
+        [(datetime(2022, 3, 18), datetime(2022, 6, 18), "30360")],
+    )
+    def test_year_fraction(
+        self,
+        na_service: NordeaAnalyticsServiceTest,
+        anchor: datetime,
+        result_path: str,
+        from_date: datetime,
+        to_date: datetime,
+        time_convention: str,
+    ) -> None:
+        """Check if dictionary results are correct."""
+        year_fraction = na_service.get_year_fraction(
+            from_date, to_date, time_convention
+        )
+
+        expected_result = 0.25
+
+        assert year_fraction == expected_result
+
+
+@pytest.mark.skip("retrieval_date field should be removed from response")
+class TestBondStaticData:
+    """Test class for bond static data."""
+
+    @pytest.mark.parametrize(
+        "symbols", [(["DK0002030337", "DE0001102424", "DK0030505805", "NO0012493941"])]
+    )
+    def test_bond_static_data(
+        self,
+        na_service: NordeaAnalyticsServiceTest,
+        anchor: datetime,
+        result_path: str,
+        symbols: List[str],
+    ) -> None:
+        """Check if dictionary results are correct."""
+        static_data = na_service.get_bond_static_data(
+            symbols,
+        )
+
+        bond_static_data_names = "_".join([name for name in symbols])
+
+        if DUMP_DATA:
+            expected_file = open(
+                os.path.join(
+                    result_path,
+                    bond_static_data_names
+                    + "-"
+                    + anchor.strftime("%d%m%y")
+                    + "_bond_static_data.txt",
+                ),
+                "w+",
+            )
+            json.dump(static_data, expected_file)
+
+        expected_file = open(
+            os.path.join(
+                result_path,
+                bond_static_data_names
+                + "-"
+                + anchor.strftime("%d%m%y")
+                + "_bond_static_data.txt",
+            ),
+            "r",
+        )
+        expected_result = json.load(expected_file)
+
+        assert static_data == expected_result

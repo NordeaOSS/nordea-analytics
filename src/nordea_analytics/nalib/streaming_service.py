@@ -1,8 +1,9 @@
 # -*- coding: utf-8 -*-
 
 """Server Events client for DataRetrieval Service."""
-from threading import Event, Thread
+from threading import Event
 from typing import Any, Callable, Dict, Generator, Iterator, List
+import warnings
 
 import requests
 from requests import Response
@@ -17,13 +18,10 @@ class ServerEventMessage(object):
     def __init__(self) -> None:
         """Initialization of class."""
         self.eventId = -1
+        self.eventType = ""
         self.channel = ""
         self.data = ""
-        self.selector = ""
         self.json = ""
-        self.op = ""
-        self.target = ""
-        self.cssSelector = ""
         self.json_obj: Dict[Any, Any] = {}
 
 
@@ -73,27 +71,8 @@ def to_json(e: ServerEventMessage) -> None:
     """Transform ServiceEventMessage to json format."""
     import json
 
-    e.selector = _left_part(e.data, " ")
-    if _index_of(e.data, "@") >= 0:
-        e.channel = _left_part(e.selector, "@")
-        e.selector = _right_part(e.selector, "@")
-
-    e.json = _right_part(e.data, " ")
-
-    if not len(e.selector) == 0:
-        if _index_of(e.selector, ".") == -1:
-            raise Exception(f"Invalid selector: {e.selector}")
-
-        e.op = _left_part(e.selector, ".")
-        sanitize_selector = _right_part(e.selector, ".").replace("%20", " ")
-        e.target = _right_part(sanitize_selector, "$")
-        if e.op == "cmd":
-            if e.target == "onConnect":
-                e.json_obj = json.loads(e.json)
-            elif e.target == "onUpdate":
-                e.json_obj = json.loads(e.json)
-            elif e.target == "onHeartbeat":
-                e.json_obj = json.loads(e.json)
+    e.json = e.data
+    e.json_obj = json.loads(e.json)
 
 
 def process_line_to_msg(lines: List) -> ServerEventMessage:
@@ -104,8 +83,8 @@ def process_line_to_msg(lines: List) -> ServerEventMessage:
         data = _right_part(line, _FIELD_SEPARATOR).lstrip()
         if len(data) > 0 and data[0] == " ":
             data = data[1:]
-        if label == "id":
-            msg.eventId = int(data)
+        if label == "event":
+            msg.eventType = data
         elif label == "data":
             msg.data = data
 
@@ -148,13 +127,8 @@ class LiveKeyfigureStreamListener(StreamListener):
         """
         super(LiveKeyfigureStreamListener, self).__init__(baseurl, isins, update_method)
         self._live_stream: Any = None
-        self._heartbeat_url = ""
         self._subscription_id = ""
-        self._sleep_event = Event()
-        self._timeout = 0.0
         self._event_stream: Response
-        self._heartbeat_stream_thread = Thread(target=self._send_heartbeat)
-        self._heartbeat_stream_thread.daemon = True
         self.auth = auth
 
     def __enter__(self) -> "StreamListener":
@@ -165,10 +139,6 @@ class LiveKeyfigureStreamListener(StreamListener):
     def __exit__(self, exc_type: None, exc_val: None, exc_tb: None) -> None:
         """Exit the stream. Nothing here, so that dashboards work."""
 
-    def _send_heartbeat(self) -> None:
-        while not self._sleep_event.wait(self._timeout):
-            requests.get(self._heartbeat_url, verify=True)
-
     def _start_stream(self) -> Generator[None, None, None]:
         for chunk_data in _read(self._event_stream):
             if not self.is_working:
@@ -176,13 +146,9 @@ class LiveKeyfigureStreamListener(StreamListener):
             all_lines = list(non_empty_lines(chunk_data))
             server_msg = process_line_to_msg(all_lines)
             to_json(server_msg)
-            if server_msg.target == "onConnect":
-                self._heartbeat_url = server_msg.json_obj["heartbeatUrl"]
-                self._subscription_id = server_msg.json_obj["id"]
-                self._timeout = int(server_msg.json_obj["heartbeatIntervalMs"]) / 1000
-                if not self._heartbeat_stream_thread.is_alive():
-                    self._heartbeat_stream_thread.start()
-            elif server_msg.target == "UpdateLiveKeyfigureDto":
+            if server_msg.eventType == "connected":
+                continue
+            elif server_msg.eventType == "UpdateLiveKeyfigureDto":
                 yield self.update_method(server_msg.json)
 
     def run(self) -> str:
@@ -193,7 +159,6 @@ class LiveKeyfigureStreamListener(StreamListener):
         """Callable method to start the stream."""
         self.url = f'{self.baseurl}?channels={",".join(self.isins)}'
         if not self.is_working:
-            self._sleep_event.clear()
             self._event_stream = requests.get(
                 self.url,
                 stream=True,
@@ -209,8 +174,6 @@ class LiveKeyfigureStreamListener(StreamListener):
         if self.is_working:
             self.is_working = False
             self._event_stream.close()
-            self._sleep_event.set()
-            self._heartbeat_stream_thread.join()
 
 
 class LiveKeyfigureListener(StreamListener):
@@ -235,6 +198,7 @@ class LiveKeyfigureListener(StreamListener):
         self._timeoutInSec = 10
         self._live_stream: Iterator[Any] = self.empty_iterator()
         self.get_response: Callable = get_response
+        self.warnings_sent: bool = False
 
     def __enter__(self) -> "StreamListener":
         """Enter the stream."""
@@ -243,6 +207,7 @@ class LiveKeyfigureListener(StreamListener):
 
     def __exit__(self, exc_type: None, exc_val: None, exc_tb: None) -> None:
         """Exit the stream. Nothing here, so that dashboards work."""
+        pass
 
     def run(self) -> str:
         """Keeps the stream running."""
@@ -267,11 +232,35 @@ class LiveKeyfigureListener(StreamListener):
             if not response.ok:
                 break
 
+            self.send_warning(response.json())
             yield self.update_method(response.json())
 
             if not self.is_working or self._sleep_event.wait(self._timeoutInSec):
                 self.is_working = False
                 break
+
+    def send_warning(self, json_response: dict) -> None:
+        """Handle data when warnings should be sent."""
+        if not self.warnings_sent:
+            if json_response["data"]["data_not_available"] != []:
+                warnings.warn(
+                    "Live data not available for "
+                    + ",".join(json_response["data"]["data_not_available"])
+                )
+
+            if json_response["data"]["access_restricted"] != []:
+                warnings.warn(
+                    "Access to live data restricted for "
+                    + ",".join(json_response["data"]["access_restricted"])
+                )
+
+            if json_response["data"]["keyfigure_values"] == []:
+                raise ValueError(
+                    "No data was retrieved! Please look if you have further "
+                    "warning messages to identify the issue."
+                )
+
+            self.warnings_sent = True
 
     @staticmethod
     def empty_iterator() -> Iterator:

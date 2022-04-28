@@ -20,7 +20,7 @@ class ProxyFinder:
         self.proxy_path = (
             Path(__file__).parent / ".proxy_info" if proxy_path is None else proxy_path
         )
-        self.proxies = self.get_proxies(url)
+        self.proxies: Union[Dict, str] = self.get_proxies(url)
 
     def get_proxies(self, url: str) -> Union[Dict, str]:
         """Find proxy information either from pre-saved place or searched for it.
@@ -39,7 +39,7 @@ class ProxyFinder:
             return ast.literal_eval(proxy_info)
         else:
             proxy_info = self.find_proxies(url)
-            if proxy_info == {} or proxy_info == {"": "http://None"}:
+            if proxy_info == {} or "http://None" in proxy_info.values():  # type:ignore
                 self.proxy_path.write_text(
                     str('{"http":"ENTER PROXY INFO HERE IN A STRING FORMAT"}')
                 )
@@ -74,13 +74,11 @@ class ProxyFinder:
                 return {}
 
             current_user_ie_proxy_config = ctypes_struct.current_user_ie_proxy_config
-            auto_proxy_settings = (
-                current_user_ie_proxy_config.fAutoDetect == 1
-                or current_user_ie_proxy_config.lpszAutoConfigUrl
-            )
-            if not auto_proxy_settings:
+
+            if not current_user_ie_proxy_config.fAutoDetect == 1:
                 return {}
 
+            auto_proxy_settings = current_user_ie_proxy_config.lpszAutoConfigUrl
             proxy_info = ctypes_struct.proxy_info
             # parse protocol
             parsed_url = urllib.parse.urlparse(url)
