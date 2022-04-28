@@ -164,12 +164,10 @@ def check_string(string: str, substring: str) -> bool:
 
 def float_to_tenor_string(float_tenor: Union[str, float]) -> str:
     """Convert float year fraction to tenor string."""
-    if float(float_tenor) < 1:
-        return str(int(round(float(float_tenor) * 12, 0))) + "M"
-    elif float(float_tenor).is_integer():
+    if float(float_tenor).is_integer():
         return str(int(float_tenor)) + "Y"
     else:
-        return str(round(float(float_tenor), 1)) + "Y"
+        return str(float(float_tenor)) + "Y"
 
 
 def check_json_response(json_response: Union[List, Mapping]) -> None:

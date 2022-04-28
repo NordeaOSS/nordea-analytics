@@ -193,6 +193,84 @@ class BondKeyFigures(ValueRetriever):
         return pd.DataFrame.from_dict(self.to_dict(), orient="index")
 
 
+class BondStaticData(ValueRetriever):
+    """Retrieves and reformat latest bond static data for given ISINs."""
+
+    def __init__(
+        self,
+        client: DataRetrievalServiceClient,
+        isins: Union[List[str], str],
+    ) -> None:
+        """Initialization of class.
+
+        Args:
+            client:  DataRetrievalServiceClient
+                or DataRetrievalServiceClientTest for testing
+            isins: ISINs for requests.
+        """
+        super(BondStaticData, self).__init__(client)
+
+        self.isins: List = [isins] if type(isins) != list else isins
+        self._data = self.get_bond_static_data()
+
+    def get_bond_static_data(self) -> List:
+        """Calls the client and retrieves response with static data from the service."""
+        json_response: List[Any] = []
+        for request_dict in self.request:
+            _json_response = self.get_response(request_dict)
+            json_map = _json_response[config["results"]["bond_static_data"]]
+            json_response = list(json_map) + json_response
+
+        check_json_response(json_response[0])
+        return json_response
+
+    @property
+    def url_suffix(self) -> str:
+        """Url suffix suffix for a given method."""
+        return config["url_suffix"]["bond_static_data"]
+
+    @property
+    def request(self) -> List[Dict]:
+        """Request dictionary for a given set of ISINs."""
+        if len(self.isins) > config["max_isins"]:
+            split_isins = np.array_split(
+                self.isins, math.ceil(len(self.isins) / config["max_isins"])
+            )
+            request_dict = [
+                {
+                    "symbols": list(isins),
+                }
+                for isins in split_isins
+            ]
+        else:
+            request_dict = [
+                {
+                    "symbols": self.isins,
+                }
+            ]
+
+        return request_dict
+
+    def to_dict(self) -> Dict:
+        """Reformat the json response to a dictionary."""
+        _dict = {}
+        for isin_data in self._data:
+            _isin_dict = {}
+            _isin_dict["name"] = isin_data["name"]
+
+            for static_data_key in isin_data["static_data"]:
+                key_value_pair = isin_data["static_data"][static_data_key]
+                _isin_dict[key_value_pair["key"]] = key_value_pair["value"]
+
+            _dict[isin_data["symbol"]] = _isin_dict
+
+        return _dict
+
+    def to_df(self) -> pd.DataFrame:
+        """Reformat the json response to a pandas DataFrame."""
+        return pd.DataFrame.from_dict(self.to_dict(), orient="index")
+
+
 class TimeSeries(ValueRetriever):
     """Retrieves and reformat time series."""
 
@@ -1627,7 +1705,7 @@ class ShiftDays(ValueRetriever):
         self._data = self.shift_days()
 
     def shift_days(self) -> Dict:
-        """Retrieves response with yield forecast."""
+        """Retrieves response with shifted date."""
         json_response = self.get_response(self.request)
 
         return json_response[config["results"]["shift_days"]]
@@ -1664,6 +1742,73 @@ class ShiftDays(ValueRetriever):
             shifted_date_string, "%Y-%m-%dT%H:%M:%S.0000000"
         )
         return shifted_date
+
+    def to_dict(self) -> Dict:
+        """Reformat the json response to a dictionary."""
+        pass
+
+    def to_df(self) -> pd.DataFrame:
+        """Reformat the json response to a pandas DataFrame."""
+        pass
+
+
+class YearFraction(ValueRetriever):
+    """Calculate the time between two dates in terms of years."""
+
+    def __init__(
+        self,
+        client: DataRetrievalServiceClient,
+        from_date: datetime,
+        to_date: datetime,
+        time_convention: str,
+    ) -> None:
+        """Initialization of class.
+
+        Args:
+            client: DataRetrievalServiceClient
+                or DataRetrievalServiceClientTest for testing.
+            from_date: The start date of the time calculation.
+            to_date: The end date of the time calculation.
+            time_convention: The convention to use for counting time.
+        """
+        super(YearFraction, self).__init__(client)
+        self._client = client
+        self.from_date = from_date
+        self.to_date = to_date
+        self.time_convention = time_convention
+        self._data = self.year_fraction()
+
+    def year_fraction(self) -> Dict:
+        """Retrieves response with year fraction."""
+        json_response = self.get_response(self.request)
+
+        return json_response[config["results"]["year_fraction"]]
+
+    @property
+    def url_suffix(self) -> str:
+        """Url suffix for a given method."""
+        return config["url_suffix"]["year_fraction"]
+
+    @property
+    def request(self) -> dict:
+        """Request year fraction."""
+        from_date = self.from_date
+        to_date = self.to_date
+        time_convention = self.time_convention
+
+        request_dict = {
+            "from": from_date,
+            "to": to_date,
+            "time-convention": time_convention,
+        }
+
+        return request_dict
+
+    def to_str(self) -> str:
+        """Reformat the json response to a datetime."""
+        year_fraction = typing.cast(str, self._data["year_fraction"])
+
+        return year_fraction
 
     def to_dict(self) -> Dict:
         """Reformat the json response to a dictionary."""
@@ -1718,13 +1863,7 @@ class LiveBondKeyFigures(ValueRetriever):
     @property
     def url_suffix(self) -> str:
         """Url suffix suffix for a given method."""
-        if "open" in self._client.service_url or not self._client.streaming:
-            return config["url_suffix"]["live_bond_key_figures"]
-        elif self._client.streaming:
-            return config["url_suffix"]["live_bond_key_figures_stream"]
-        else:
-            # If we change back to streaming, this needs to be changed
-            return config["url_suffix"]["live_bond_key_figures"]
+        return config["url_suffix"]["live_bond_key_figures"]
 
     @property
     def request(self) -> Dict:

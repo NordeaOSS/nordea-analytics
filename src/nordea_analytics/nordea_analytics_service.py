@@ -26,6 +26,7 @@ from nordea_analytics.nalib.value_retriever import (
     BondKeyFigureCalculator,
     BondKeyFigureHorizonCalculator,
     BondKeyFigures,
+    BondStaticData,
     Curve,
     CurveDefinition,
     CurveTimeSeries,
@@ -34,6 +35,7 @@ from nordea_analytics.nalib.value_retriever import (
     LiveBondKeyFigures,
     ShiftDays,
     TimeSeries,
+    YearFraction,
     YieldForecast,
 )
 from nordea_analytics.search_bond_names import (
@@ -290,6 +292,27 @@ class NordeaAnalyticsService:
             return CurveDefinition(self._client, curve, calc_date).to_df()
         else:
             return CurveDefinition(self._client, curve, calc_date).to_dict()
+
+    def get_bond_static_data(
+        self,
+        isins: Union[List, str],
+        as_df: bool = False,
+    ) -> Any:
+        """Retrieves latest static data for given ISINs.
+
+        Args:
+            isins: List of ISINs for which key figures want to be retrieved.
+            as_df: Default False. If True, the results are represented as
+                pandas DataFrame, else as dictionary.
+
+        Returns:
+            Dictionary containing requested data. If as_df is True,
+                the data is in form of a DataFrame.
+        """
+        if as_df:
+            return BondStaticData(self._client, isins).to_df()
+        else:
+            return BondStaticData(self._client, isins).to_dict()
 
     def search_bonds(
         self,
@@ -633,6 +656,29 @@ class NordeaAnalyticsService:
             day_count_convention,
             date_roll_convention,
         ).to_datetime()
+
+    def get_year_fraction(
+        self,
+        from_date: datetime,
+        to_date: datetime,
+        time_convention: str,
+    ) -> str:
+        """Calculate the time between two dates in terms of years.
+
+        Args:
+            from_date: The start date of the time calculation.
+            to_date: The end date of the time calculation.
+            time_convention: The convention to use for counting time.
+
+        Returns:
+            The time in decimal years between the start and end date.
+        """
+        return YearFraction(
+            self._client,
+            from_date,
+            to_date,
+            time_convention,
+        ).to_str()
 
 
 class NordeaAnalyticsLiveService:

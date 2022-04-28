@@ -49,7 +49,7 @@ class DataRetrievalServiceClient(Login, ABC):
         """
         self._service_name = config["service_name"]
         self.service_url = service_url if service_url is not None else SERVICE_URL
-        self.streaming = streaming
+        self.streaming = True
         self._auth = None
         self.proxies = None
         self.live_data = None
@@ -153,9 +153,7 @@ class DataRetrievalServiceClient(Login, ABC):
                 _response = _response["data"]
                 del _response["error"]
             else:
-                raise ValueError(
-                    _response["data"]["failed_calculation"]["calculation_info"]
-                )
+                raise ValueError(_response["data"]["failed_calculation"]["info"])
 
         if check_string(get_response.text, "failed_calculation"):
             if (
@@ -165,19 +163,17 @@ class DataRetrievalServiceClient(Login, ABC):
                 del _response["failed_calculation"]
             elif (
                 "data" in _response.keys()
-                and _response["data"]["failed_calculation"]["calculation_info"] == ""
+                and _response["data"]["failed_calculation"]["info"] == ""
             ):
                 _response = _response["data"]
                 del _response["failed_calculation"]
             elif (
                 "failed_calculation" in _response
-                and _response["failed_calculation"]["calculation_info"] == ""
+                and _response["failed_calculation"]["info"] == ""
             ):
                 del _response["failed_calculation"]
             else:
-                raise ValueError(
-                    _response["data"]["failed_calculation"]["calculation_info"]
-                )
+                raise ValueError(_response["data"]["failed_calculation"]["info"])
 
         if "data" in _response.keys():
             _response = _response["data"]
@@ -190,12 +186,17 @@ class DataRetrievalServiceClient(Login, ABC):
         """Method for LiveDataRetrievalServiceClient."""
         pass
 
-    def _get_response(self, request: dict, url_suffix: str) -> Any:
+    def _get_response(
+        self, request: dict, url_suffix: str, return_invalid_request: bool = False
+    ) -> Any:
         """Gets the response from the service for a given request.
 
         Args:
             request: Request in the form of dictionary
             url_suffix: Url suffix for a given method
+            return_invalid_request: When True, invalid requests are returned.
+                Only used in _check_credentials to see if error message
+                includes unauthorized string
 
         Returns:
              Response object.
@@ -226,6 +227,8 @@ class DataRetrievalServiceClient(Login, ABC):
                 )
 
             if response.ok:  # status_code == 200
+                return response
+            if return_invalid_request and response.status_code == 400:
                 return response
             if max_retries != 0 and response.status_code == 503:
                 time.sleep(0.2)
@@ -284,7 +287,9 @@ class DataRetrievalServiceClient(Login, ABC):
 
     def _check_credentials(self) -> Any:
         response = self._get_response(
-            {"": ""}, config["url_suffix"]["index_composition"]
+            {"": ""},
+            config["url_suffix"]["index_composition"],
+            return_invalid_request=True,
         )
         if not response.ok:
             if "Unauthorized" in response.text:
