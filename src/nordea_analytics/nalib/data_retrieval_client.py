@@ -9,6 +9,7 @@ import requests
 from requests import Response
 from requests.auth import HTTPBasicAuth
 
+from nordea_analytics.nalib import auth
 from nordea_analytics.nalib.credentials import Login
 from nordea_analytics.nalib.proxy_finder import ProxyFinder
 from nordea_analytics.nalib.streaming_service import (
@@ -19,7 +20,6 @@ from nordea_analytics.nalib.streaming_service import (
 from nordea_analytics.nalib.util import check_string, get_config
 
 config = get_config()
-
 
 SERVICE_URL = config["service_url"]
 GET_PROXY_INFO = config["get_proxy_information"]
@@ -74,6 +74,8 @@ class DataRetrievalServiceClient(Login, ABC):
             self._check_proxies()
         if self._auth is not None:
             self._check_credentials()
+
+        self._session: Dict[str, Any] = {}
 
     def get_response(self, request: dict, url_suffix: str) -> dict:
         """Gets the response from _get_response function for a given request.
@@ -142,6 +144,12 @@ class DataRetrievalServiceClient(Login, ABC):
         _response = self._check_errors(get_response)
         return _response
 
+    def get_live_streamer(
+        self, request: dict, url_suffix: str, update_method: Callable
+    ) -> StreamListener:
+        """Method for LiveDataRetrievalServiceClient."""
+        pass
+
     @staticmethod
     def _check_errors(get_response: Response) -> Dict:
 
@@ -180,12 +188,6 @@ class DataRetrievalServiceClient(Login, ABC):
 
         return _response
 
-    def get_live_streamer(
-        self, request: dict, url_suffix: str, update_method: Callable
-    ) -> StreamListener:
-        """Method for LiveDataRetrievalServiceClient."""
-        pass
-
     def _get_response(
         self, request: dict, url_suffix: str, return_invalid_request: bool = False
     ) -> Any:
@@ -205,6 +207,7 @@ class DataRetrievalServiceClient(Login, ABC):
             ValueError: If error in request.
             raise_for_status: If error in request.
         """
+        self._check_auth()
         max_retries = 10
         while max_retries != 0:
             max_retries = max_retries - 1
@@ -217,6 +220,7 @@ class DataRetrievalServiceClient(Login, ABC):
                     },
                     params=request,
                     proxies=self.proxies,
+                    **self._session,
                 )
             else:
                 response = requests.get(
@@ -224,7 +228,13 @@ class DataRetrievalServiceClient(Login, ABC):
                     params=request,
                     auth=self._auth,
                     proxies=self.proxies,
+                    **self._session,
                 )
+
+            if response.status_code == 401:
+                self._check_auth(True)
+                max_retries = max_retries + 1
+                continue
 
             if response.ok:  # status_code == 200
                 return response
@@ -234,9 +244,13 @@ class DataRetrievalServiceClient(Login, ABC):
                 time.sleep(0.2)
             else:
                 if "error_description" in response.text:
-                    raise ValueError(json.loads(response.text)["error_description"])
-                else:
-                    raise response.raise_for_status()
+                    raise ValueError(
+                        json.loads(response.text)["error_description"]
+                        + "\n Error_code: "
+                        + json.loads(response.text)["error_code"]
+                    )
+
+                raise response.raise_for_status()
 
     def _post_response(self, request: dict, url_suffix: str) -> Any:
         """Gets the post response from the service given a request.
@@ -252,6 +266,7 @@ class DataRetrievalServiceClient(Login, ABC):
             ValueError: If error in request.
             raise_for_status: If error in request.
         """
+        self._check_auth()
         max_retries = 10
         while max_retries != 0:
             max_retries = max_retries - 1
@@ -262,17 +277,24 @@ class DataRetrievalServiceClient(Login, ABC):
                         "X-IBM-client-id": self.username,
                         "X-IBM-client-secret": self.password,
                     },
-                    params=request,
+                    json=request,
                     proxies=self.proxies,
+                    **self._session,
                 )
-
             else:
                 post_response = requests.post(
                     urljoin(self.service_url, url_suffix),
-                    data=request,
+                    json=request,
                     auth=self._auth,
                     proxies=self.proxies,
+                    **self._session,
                 )
+
+            if post_response.status_code == 401:
+                self._check_auth(True)
+                max_retries = max_retries + 1
+                continue
+
             if post_response.ok:  # status_code == 200
                 return post_response
             if max_retries != 0 and post_response.status_code == 503:
@@ -281,9 +303,11 @@ class DataRetrievalServiceClient(Login, ABC):
                 if "error_description" in post_response.text:
                     raise ValueError(
                         json.loads(post_response.text)["error_description"]
+                        + "\n Error_code: "
+                        + json.loads(post_response.text)["error_code"]
                     )
-                else:
-                    raise post_response.raise_for_status()
+
+                raise post_response.raise_for_status()
 
     def _check_credentials(self) -> Any:
         response = self._get_response(
@@ -336,6 +360,17 @@ class DataRetrievalServiceClient(Login, ABC):
                     self.proxies = proxy_info
                 except Exception as e:
                     raise e
+
+    def _check_auth(self, refresh: bool = False) -> None:
+        if refresh and "cookies" in self._session:
+            del self._session["cookies"]
+
+        if "cookies" not in self._session:
+            cookies = auth.authenticate()
+            if not cookies:
+                raise ValueError("Authentication not supported!")
+
+            self._session["cookies"] = cookies
 
 
 class LiveDataRetrievalServiceClient(DataRetrievalServiceClient):

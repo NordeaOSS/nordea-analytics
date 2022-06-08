@@ -25,7 +25,9 @@ certifi==2021.10.8
     #   -c requirements\py39\requirements.txt
     #   requests
 cffi==1.15.0
-    # via pygit2
+    # via
+    #   -c requirements\py39\requirements.txt
+    #   pygit2
 charset-normalizer==2.0.7
     # via
     #   -c requirements\py39\requirements.txt
@@ -133,8 +135,10 @@ pycodestyle==2.8.0
     #   flake8
     #   flake8-bandit
     #   flake8-import-order
-pycparser==2.20
-    # via cffi
+pycparser==2.21
+    # via
+    #   -c requirements\py39\requirements.txt
+    #   cffi
 pydocstyle==6.1.1
     # via flake8-docstrings
 pyflakes==2.4.0
@@ -170,7 +174,6 @@ regex==2021.10.23
 requests==2.26.0
     # via
     #   -c requirements\py39\requirements.txt
-    #   -r requirements\py39\requirements-dev.in
     #   sphinx
 six==1.16.0
     # via
@@ -211,11 +214,11 @@ toml==0.10.2
     # via
     #   flake8-black
     #   mypy
-    #   pytest
 tomli==1.2.1
     # via
     #   black
     #   coverage
+    #   pytest
 types-pyyaml==6.0.0
     # via -r requirements\py39\requirements-dev.in
 types-requests==2.25.11

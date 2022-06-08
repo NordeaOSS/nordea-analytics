@@ -6,7 +6,7 @@ class AmortisationType(Enum):
 
     Annuity = "annuity"
     Bullet = "bullet"
-    Explicit = "explicit"
+    Irregular = "irregular"
     Serial = "serial"
 
 

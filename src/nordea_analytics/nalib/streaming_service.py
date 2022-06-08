@@ -9,6 +9,8 @@ import requests
 from requests import Response
 from requests.auth import HTTPBasicAuth
 
+from nordea_analytics.nalib import auth
+
 _FIELD_SEPARATOR = ":"
 
 
@@ -128,7 +130,7 @@ class LiveKeyfigureStreamListener(StreamListener):
         super(LiveKeyfigureStreamListener, self).__init__(baseurl, isins, update_method)
         self._live_stream: Any = None
         self._subscription_id = ""
-        self._event_stream: Response
+        self._http_stream: Response = None
         self.auth = auth
 
     def __enter__(self) -> "StreamListener":
@@ -139,8 +141,8 @@ class LiveKeyfigureStreamListener(StreamListener):
     def __exit__(self, exc_type: None, exc_val: None, exc_tb: None) -> None:
         """Exit the stream. Nothing here, so that dashboards work."""
 
-    def _start_stream(self) -> Generator[None, None, None]:
-        for chunk_data in _read(self._event_stream):
+    def _iterate_stream(self) -> Generator[None, None, None]:
+        for chunk_data in _read(self._http_stream):
             if not self.is_working:
                 raise StopIteration("Live feed has been stopped.")
             all_lines = list(non_empty_lines(chunk_data))
@@ -159,21 +161,31 @@ class LiveKeyfigureStreamListener(StreamListener):
         """Callable method to start the stream."""
         self.url = f'{self.baseurl}?channels={",".join(self.isins)}'
         if not self.is_working:
-            self._event_stream = requests.get(
-                self.url,
-                stream=True,
-                headers={"Accept": "text/event-stream"},
-                verify=True,
-                auth=self.auth,
-            )
-            self._live_stream = self._start_stream()
+            self._http_stream = self._start_http_stream()
+            self._live_stream = self._iterate_stream()
         self.is_working = True
+
+    def _start_http_stream(self) -> Response:
+        auth_cookies = auth.authenticate()
+        if auth_cookies is None:
+            raise ValueError("Authentication is not supported")
+
+        response = requests.get(
+            self.url,
+            stream=True,
+            headers={"Accept": "text/event-stream"},
+            verify=True,
+            auth=self.auth,
+            cookies=auth_cookies,
+        )
+        response.raise_for_status()
+        return response
 
     def stop(self) -> None:
         """Callable method to stop the stream."""
         if self.is_working:
             self.is_working = False
-            self._event_stream.close()
+            self._http_stream.close()
 
 
 class LiveKeyfigureListener(StreamListener):
@@ -242,19 +254,19 @@ class LiveKeyfigureListener(StreamListener):
     def send_warning(self, json_response: dict) -> None:
         """Handle data when warnings should be sent."""
         if not self.warnings_sent:
-            if json_response["data"]["data_not_available"] != []:
+            if json_response["data"]["data_not_available"]:
                 warnings.warn(
                     "Live data not available for "
                     + ",".join(json_response["data"]["data_not_available"])
                 )
 
-            if json_response["data"]["access_restricted"] != []:
+            if json_response["data"]["access_restricted"]:
                 warnings.warn(
                     "Access to live data restricted for "
                     + ",".join(json_response["data"]["access_restricted"])
                 )
 
-            if json_response["data"]["keyfigure_values"] == []:
+            if not json_response["data"]["keyfigure_values"]:
                 raise ValueError(
                     "No data was retrieved! Please look if you have further "
                     "warning messages to identify the issue."

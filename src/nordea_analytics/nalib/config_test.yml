@@ -1,12 +1,9 @@
-service_name: 'Nordea Analytics'
-service_url: 'https://open.nordea.com/instrument-analytics/v1/'
-login: True
-#get_proxy_information is used for getting outside firewall. Must be True in config_external.yml when releasing.
-#find_proxy function is a Python function for finding proxy auto-config (PAC) files and making HTTP requests that respect them.
-#PAC files are often used in organizations that need fine-grained and centralized control of proxy settings.
+service_name: 'Nordea Analytics Internal'
+test_service_url: 'https://analytics-api-test.oneadr.net/v1/'
+login: False
 get_proxy_information: False
 user_suffix: ""
-use_headers: True
+use_headers: False
 
 max_isins: 50
 max_symbol_timeseries: 50
@@ -17,6 +14,7 @@ url_suffix:
   bond_key_figures: "bonds/keyfigure"
   calculate: "bonds-calculation"
   calculate_horizon: "bonds-horizoncalculation"
+  bond_static_data: "bonds/static-data"
   curve: "curves"
   curve_definition: "curves/definition"
   curve_time_series: "curves/timeseries"
@@ -24,17 +22,19 @@ url_suffix:
   index_composition: "index-composition"
   search_bonds: "search/bonds"
   search_dmb_bonds: "search/danishmortgagebonds"
+  live_bond_key_figures_stream: "bonds/live-keyfigures-stream"
+  live_bond_key_figures: "bonds/live-keyfigures"
   shift_days: "shift-days"
   time_series: "timeseries"
   year_fraction: "year-fraction"
   yield_forecast: "yield-forecasts"
-  #Same as live_bond_key_figures since externals don't have stream available due to Open Banking
-  live_bond_key_figures_stream: "bonds/live-keyfigures"
-  live_bond_key_figures: "bonds/live-keyfigures"
+  auth: "ninaa/auth"
+
 
 #Squashes json response layers
 results:
   bond_key_figures: "keyfigures"
+  bond_static_data: "static_data"
   curve: "curve"
   curve_definition: "definition"
   curve_time_series: "timeseries"
@@ -45,3 +45,4 @@ results:
   time_series: "timeseries"
   year_fraction: "year_fraction"
   yield_forecast: "yield_forecast"
+

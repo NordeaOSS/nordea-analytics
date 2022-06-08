@@ -1,7 +1,7 @@
 from enum import Enum
 
 
-class CurveName:
+class CurveName(Enum):
     """Most common available curves. Availability not limit to this list."""
 
     BEFGOV = "BEFGOV"

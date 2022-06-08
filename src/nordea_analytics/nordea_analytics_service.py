@@ -21,23 +21,27 @@ from nordea_analytics.nalib.data_retrieval_client import (
     LiveDataRetrievalServiceClient,
 )
 from nordea_analytics.nalib.streaming_service import StreamListener
-from nordea_analytics.nalib.value_retriever import (
-    BondFinder,
+from nordea_analytics.nalib.value_retrievers.BondFinder import BondFinder
+from nordea_analytics.nalib.value_retrievers.BondKeyFigureCalculator import (
     BondKeyFigureCalculator,
-    BondKeyFigureHorizonCalculator,
-    BondKeyFigures,
-    BondStaticData,
-    Curve,
-    CurveDefinition,
-    CurveTimeSeries,
-    FXForecast,
-    IndexComposition,
-    LiveBondKeyFigures,
-    ShiftDays,
-    TimeSeries,
-    YearFraction,
-    YieldForecast,
 )
+from nordea_analytics.nalib.value_retrievers.BondKeyFigureHorizonCalculator import (
+    BondKeyFigureHorizonCalculator,
+)
+from nordea_analytics.nalib.value_retrievers.BondKeyFigures import BondKeyFigures
+from nordea_analytics.nalib.value_retrievers.BondStaticData import BondStaticData
+from nordea_analytics.nalib.value_retrievers.Curve import Curve
+from nordea_analytics.nalib.value_retrievers.CurveDefinition import CurveDefinition
+from nordea_analytics.nalib.value_retrievers.CurveTimeSeries import CurveTimeSeries
+from nordea_analytics.nalib.value_retrievers.FXForecast import FXForecast
+from nordea_analytics.nalib.value_retrievers.IndexComposition import IndexComposition
+from nordea_analytics.nalib.value_retrievers.LiveBondKeyFigures import (
+    LiveBondKeyFigures,
+)
+from nordea_analytics.nalib.value_retrievers.ShiftDays import ShiftDays
+from nordea_analytics.nalib.value_retrievers.TimeSeries import TimeSeries
+from nordea_analytics.nalib.value_retrievers.YearFraction import YearFraction
+from nordea_analytics.nalib.value_retrievers.YieldForecast import YieldForecast
 from nordea_analytics.search_bond_names import (
     AmortisationType,
     AssetType,
@@ -328,7 +332,6 @@ class NordeaAnalyticsService:
         lower_coupon: float = None,
         upper_coupon: float = None,
         amortisation_type: Union[AmortisationType, str] = None,
-        is_io: bool = None,
         capital_centres: Union[
             List[str], str, List[CapitalCentres], CapitalCentres
         ] = None,
@@ -353,7 +356,6 @@ class NordeaAnalyticsService:
             lower_coupon: Optional. Minimum coupon.
             upper_coupon: Optional. maximum coupon.
             amortisation_type: Optional. amortisation type of bond.
-            is_io: Optional. Is Interest Only. Only relevant for DMB=True.
             capital_centres: Optional. capital centres names.
                 Only relevant for DMB=True.
             capital_centre_types: Optional. capital centres types.
@@ -381,7 +383,6 @@ class NordeaAnalyticsService:
                 lower_coupon,
                 upper_coupon,
                 amortisation_type,
-                is_io,
                 capital_centres,
                 capital_centre_types,
             ).to_df()
@@ -400,7 +401,6 @@ class NordeaAnalyticsService:
                 lower_coupon,
                 upper_coupon,
                 amortisation_type,
-                is_io,
                 capital_centres,
                 capital_centre_types,
             ).to_dict()
@@ -703,6 +703,7 @@ class NordeaAnalyticsLiveService:
         keyfigures: Union[
             List[LiveBondKeyFigureName], List[str], LiveBondKeyFigureName, str
         ],
+        stream: bool = True,
         as_df: bool = False,
     ) -> StreamListener:
         """Stream live bond key figures for a given ISINs.
@@ -711,6 +712,8 @@ class NordeaAnalyticsLiveService:
             isins: ISINs of bond that should be retrieved live.
             keyfigures: List of bond key figures which should be streamed.
                 Can be a list of LiveBondKeyFigureNames or string.
+            stream: Internal input only. Default True.
+                If True, returns a stream, if False, returns a snapshot of latest key figures
             as_df: Default False. If True, the results are represented
                 as pandas DataFrame, else as dictionary
 
@@ -719,5 +722,5 @@ class NordeaAnalyticsLiveService:
 
         """
         return LiveBondKeyFigures(
-            self._client, isins, keyfigures, self.dict, as_df
+            self._client, isins, keyfigures, self.dict, stream, as_df
         ).get_live_streamer()

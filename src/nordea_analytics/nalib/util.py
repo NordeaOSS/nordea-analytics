@@ -1,11 +1,12 @@
 """Script for various methods for nordea analytics library."""
+import os
 from pathlib import Path
 from typing import Callable, Dict, List, Mapping, Union
 
 import yaml
 
-
 from nordea_analytics.curve_variable_names import (
+    CurveDefinitionName,
     CurveName,
     CurveType,
     SpotForward,
@@ -48,6 +49,7 @@ def convert_to_variable_string(
         str,
         BondKeyFigureName,
         TimeSeriesKeyFigureName,
+        CurveDefinitionName,
         CurveName,
         CurveType,
         TimeConvention,
@@ -84,6 +86,7 @@ def convert_to_variable_string(
     if type(variable) in (
         BondKeyFigureName,
         TimeSeriesKeyFigureName,
+        CurveDefinitionName,
         CurveName,
         CurveType,
         TimeConvention,
@@ -112,6 +115,7 @@ def convert_to_variable_string(
                 return "ImpliedForward"
             elif (
                 variable_type == CurveName
+                or variable_type == CurveDefinitionName
                 or variable_type == CapitalCentres
                 or variable_type == CapitalCentreTypes
                 or variable_type == YieldCountry
@@ -120,8 +124,9 @@ def convert_to_variable_string(
                 variable_type(variable.upper())
                 return variable.upper()
             else:
+                # to cause ValueError when incorrect key figure is passed, e.g. "Quotes"
                 variable_type(variable.lower())
-            return variable.lower()
+                return variable.lower()
         except ValueError as e:
             raise e
     else:
@@ -146,7 +151,17 @@ def get_user(user_path: Path) -> str:
 
 def get_config() -> Dict:
     """Find and return the config file."""
-    config_path = str(Path(__file__).parent / "config.yml")
+    config_file_name = os.environ.get("ANALYTICS_API_CONFIG", "config.yml")
+    config_path = str(Path(__file__).parent / config_file_name)
+    with open(config_path) as file:
+        config = yaml.safe_load(file)
+    return config
+
+
+def get_config_test() -> Dict:
+    """Find and return the config file."""
+    config_file_name = "config_test.yml"
+    config_path = str(Path(__file__).parent / config_file_name)
     with open(config_path) as file:
         config = yaml.safe_load(file)
     return config
@@ -170,11 +185,19 @@ def float_to_tenor_string(float_tenor: Union[str, float]) -> str:
         return str(float(float_tenor)) + "Y"
 
 
-def check_json_response(json_response: Union[List, Mapping]) -> None:
-    """Check if json_response is empty and throw an error."""
+def check_json_response(json_response: Union[List, Mapping]) -> bool:
+    """Check if json_response is empty and returns False, else True."""
     if not json_response or (
         type(json_response) == dict and all(not json_response[d] for d in json_response)
     ):
+        return False
+    else:
+        return True
+
+
+def check_json_response_error(output_found: bool) -> None:
+    """Throws error if output in json_response isn't found."""
+    if not output_found:
         raise ValueError(
             "No data was retrieved! Please look if you have further "
             "warning messages to identify the issue."

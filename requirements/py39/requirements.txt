@@ -1,7 +1,11 @@
 certifi==2021.10.8
     # via requests
+cffi==1.15.0
+    # via cryptography
 charset-normalizer==2.0.7
     # via requests
+cryptography==37.0.2
+    # via requests-kerberos
 easygui==0.98.2
     # via -r requirements\py39\requirements.in
 idna==3.3
@@ -18,6 +22,10 @@ pandas==1.3.4
     # via -r requirements\py39\requirements.in
 pyaml==21.10.1
     # via -r requirements\py39\requirements.in
+pycparser==2.21
+    # via cffi
+pyspnego[kerberos]==0.5.2
+    # via requests-kerberos
 python-dateutil==2.8.2
     # via pandas
 pytz==2021.3
@@ -28,6 +36,10 @@ pyyaml==6.0
     # via pyaml
 python-certifi-win32
 requests==2.26.0
+    # via
+    #   -r requirements\py39\requirements.in
+    #   requests-kerberos
+requests-kerberos==0.14.0
     # via -r requirements\py39\requirements.in
 six==1.16.0
     # via python-dateutil
