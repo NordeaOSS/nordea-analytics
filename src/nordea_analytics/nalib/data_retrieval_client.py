@@ -1,81 +1,30 @@
-from abc import ABC
-import json
 import time
-from typing import Any, Callable, Dict
-from urllib.parse import urljoin
+from typing import Dict
 import warnings
 
 import requests
 from requests import Response
-from requests.auth import HTTPBasicAuth
 
-from nordea_analytics.nalib import auth
-from nordea_analytics.nalib.credentials import Login
-from nordea_analytics.nalib.proxy_finder import ProxyFinder
-from nordea_analytics.nalib.streaming_service import (
-    LiveKeyfigureListener,
-    LiveKeyfigureStreamListener,
-    StreamListener,
-)
-from nordea_analytics.nalib.util import check_string, get_config
-
-config = get_config()
-
-SERVICE_URL = config["service_url"]
-GET_PROXY_INFO = config["get_proxy_information"]
+from nordea_analytics.nalib import exceptions
+from nordea_analytics.nalib.http.core import RestApiHttpClient
+from nordea_analytics.nalib.live_keyfigures.core import HttpStreamIterator
+from nordea_analytics.nalib.util import check_string
 
 
-class DataRetrievalServiceClient(Login, ABC):
+class DataRetrievalServiceClient(object):
     """Logs in to the Nordea Analytics REST API and sends requests to the service."""
 
     def __init__(
-        self,
-        username: str = None,
-        password: str = None,
-        login: bool = None,
-        service_url: str = None,
-        streaming: bool = False,
+        self, http_client: RestApiHttpClient, stream_listener: HttpStreamIterator
     ) -> None:
-        """Initialization of class.
+        """Constructs a :class:`DataRetrievalServiceClient <DataRetrievalServiceClient>`.
 
         Args:
-            username: Windows g-login or client id(external users).
-                Search for if None
-            password: Windows password or client secret(external users).
-                Asked for if None
-            login: boolean if should login with credentials or not. for testing.
-            service_url: string to which service should be pointed to. Used for testing.
-            streaming: boolean if should use streaming. Used for testing.
+            http_client: instance of RestApiHttpClient which will perform HTTP requests.
+            stream_listener: instance of HttpStreamIterator which will iterate over HTTP stream.
         """
-        self._service_name = config["service_name"]
-        self.service_url = service_url if service_url is not None else SERVICE_URL
-        self.streaming = True
-        self._auth = None
-        self.proxies = None
-        self.live_data = None
-
-        if login is not None:
-            login = login
-        else:
-            login = config["login"]
-
-        if GET_PROXY_INFO:
-            self.proxy_finder = ProxyFinder(self.service_url)
-            self.proxies = self.proxy_finder.proxies
-
-        if login:
-            Login.__init__(self, self._service_name, username, password)
-            self._auth = HTTPBasicAuth(
-                self.username + config["user_suffix"], self.password
-            )
-
-        # check of proxies and login info if needed
-        if self.proxies is not None:
-            self._check_proxies()
-        if self._auth is not None:
-            self._check_credentials()
-
-        self._session: Dict[str, Any] = {}
+        self.http_client = http_client
+        self.stream_listener = stream_listener
 
     def get_response(self, request: dict, url_suffix: str) -> dict:
         """Gets the response from _get_response function for a given request.
@@ -86,30 +35,14 @@ class DataRetrievalServiceClient(Login, ABC):
 
         Returns:
             Response in the form of json.
-
-        Raises:
-            ValueError: If request takes to long to load.
         """
         response = self._get_response(request, url_suffix)
-
-        if "job_url" in response.text:
-            response_info = json.loads(response.text)
-            t_end = time.time() + 60 * 8
-            while True:
-                if time.time() > t_end:
-                    raise ValueError("Took too long to retrieve values")
-                response = self._get_response(
-                    {}, urljoin(self.service_url, "job/" + response_info["id"])
-                )
-
-                if check_string(response.text, '"state":"completed"'):
-                    break
-                else:
-                    time.sleep(0.2)
-
-            _response = self._check_errors(response)
+        response_json = response.json()
+        if "info" in response_json and "job_url" in response_json["info"]:
+            background_response = self._proceed_background_job(response_json)
+            _response = self._check_errors(background_response)
         else:
-            _response = response.json()["data"]
+            _response = response_json["data"]
             if "failed_queries" in _response.keys():
                 if not _response["failed_queries"] == []:
                     warnings.warn(str(_response["failed_queries"]))
@@ -117,7 +50,7 @@ class DataRetrievalServiceClient(Login, ABC):
         return _response
 
     def get_post_get_response(self, request: dict, url_suffix: str) -> dict:
-        """Posts a requests and gets response.
+        """Posts a requests for background calculation and gets response.
 
         Args:
             request: Request in the form of dictionary
@@ -125,30 +58,44 @@ class DataRetrievalServiceClient(Login, ABC):
 
         Returns:
             Response in the form of json.
-
-        Raises:
-            ValueError: If error in request or takes to long to load.
         """
         post_response = self._post_response(request, url_suffix)
+        background_response = self._proceed_background_job(post_response.json())
+        return self._check_errors(background_response)
 
+    def get_live_streamer(self) -> HttpStreamIterator:
+        """Method return HttpStreamIterator which allow iteration over stream."""
+        return self.stream_listener
+
+    def _proceed_background_job(self, response_info: Dict) -> requests.Response:
+        """Proceed background response and retrieve job data from server."""
         t_end = time.time() + 60 * 8
-        while True:
-            if time.time() > t_end:
-                raise ValueError("Took too long to retrieve values")
+        while time.time() < t_end:
+            response = self._get_response(
+                {},
+                "job/" + response_info["id"],
+            )
 
-            get_response = self._get_response({}, "job/" + post_response.json()["id"])
-            if check_string(get_response.text, '"state":"completed"'):
-                break
-            else:
+            if '"state":"completed"' in response.text:
+                return response
+            elif '"state":"failed"' in response.text:
+                raise exceptions.BackgroundCalculationFailed(
+                    error_id=response.headers["x-request-id"],
+                    error_description="Background job failed to proceed",
+                )
+            elif (
+                '"state":"new"' in response.text
+                or '"state":"processing"' in response.text
+                or '"state":"rescheduled"' in response.text
+            ):
                 time.sleep(0.2)
-        _response = self._check_errors(get_response)
-        return _response
+            else:
+                raise exceptions.BackgroundCalculationFailed(
+                    error_id=response.headers["x-request-id"],
+                    error_description=f"Unknown status: {response.text}",
+                )
 
-    def get_live_streamer(
-        self, request: dict, url_suffix: str, update_method: Callable
-    ) -> StreamListener:
-        """Method for LiveDataRetrievalServiceClient."""
-        pass
+        raise exceptions.BackgroundCalculationTimeout()
 
     @staticmethod
     def _check_errors(get_response: Response) -> Dict:
@@ -188,243 +135,8 @@ class DataRetrievalServiceClient(Login, ABC):
 
         return _response
 
-    def _get_response(
-        self, request: dict, url_suffix: str, return_invalid_request: bool = False
-    ) -> Any:
-        """Gets the response from the service for a given request.
+    def _get_response(self, request: dict, url_suffix: str) -> requests.Response:
+        return self.http_client.get(url_suffix, params=request)
 
-        Args:
-            request: Request in the form of dictionary
-            url_suffix: Url suffix for a given method
-            return_invalid_request: When True, invalid requests are returned.
-                Only used in _check_credentials to see if error message
-                includes unauthorized string
-
-        Returns:
-             Response object.
-
-        Raises:
-            ValueError: If error in request.
-            raise_for_status: If error in request.
-        """
-        self._check_auth()
-        max_retries = 10
-        while max_retries != 0:
-            max_retries = max_retries - 1
-            if config["use_headers"]:
-                response = requests.get(
-                    urljoin(self.service_url, url_suffix),
-                    headers={
-                        "X-IBM-client-id": self.username,
-                        "X-IBM-client-secret": self.password,
-                    },
-                    params=request,
-                    proxies=self.proxies,
-                    **self._session,
-                )
-            else:
-                response = requests.get(
-                    urljoin(self.service_url, url_suffix),
-                    params=request,
-                    auth=self._auth,
-                    proxies=self.proxies,
-                    **self._session,
-                )
-
-            if response.status_code == 401:
-                self._check_auth(True)
-                max_retries = max_retries + 1
-                continue
-
-            if response.ok:  # status_code == 200
-                return response
-            if return_invalid_request and response.status_code == 400:
-                return response
-            if max_retries != 0 and response.status_code == 503:
-                time.sleep(0.2)
-            else:
-                if "error_description" in response.text:
-                    raise ValueError(
-                        json.loads(response.text)["error_description"]
-                        + "\n Error_code: "
-                        + json.loads(response.text)["error_code"]
-                    )
-
-                raise response.raise_for_status()
-
-    def _post_response(self, request: dict, url_suffix: str) -> Any:
-        """Gets the post response from the service given a request.
-
-        Args:
-            request: Request in the form of dictionary
-            url_suffix: Url suffix for a given method
-
-        Returns:
-             Post Response object with job information.
-
-        Raises:
-            ValueError: If error in request.
-            raise_for_status: If error in request.
-        """
-        self._check_auth()
-        max_retries = 10
-        while max_retries != 0:
-            max_retries = max_retries - 1
-            if config["use_headers"]:
-                post_response = requests.post(
-                    urljoin(self.service_url, url_suffix),
-                    headers={
-                        "X-IBM-client-id": self.username,
-                        "X-IBM-client-secret": self.password,
-                    },
-                    json=request,
-                    proxies=self.proxies,
-                    **self._session,
-                )
-            else:
-                post_response = requests.post(
-                    urljoin(self.service_url, url_suffix),
-                    json=request,
-                    auth=self._auth,
-                    proxies=self.proxies,
-                    **self._session,
-                )
-
-            if post_response.status_code == 401:
-                self._check_auth(True)
-                max_retries = max_retries + 1
-                continue
-
-            if post_response.ok:  # status_code == 200
-                return post_response
-            if max_retries != 0 and post_response.status_code == 503:
-                time.sleep(0.2)
-            else:
-                if "error_description" in post_response.text:
-                    raise ValueError(
-                        json.loads(post_response.text)["error_description"]
-                        + "\n Error_code: "
-                        + json.loads(post_response.text)["error_code"]
-                    )
-
-                raise post_response.raise_for_status()
-
-    def _check_credentials(self) -> Any:
-        response = self._get_response(
-            {"": ""},
-            config["url_suffix"]["index_composition"],
-            return_invalid_request=True,
-        )
-        if not response.ok:
-            if "Unauthorized" in response.text:
-                Warning("Invalid UserName or Password. Try again")
-                Login.__init__(
-                    self,
-                    self._service_name,
-                    self.username,
-                    self.password,
-                    new_credentials=True,
-                )
-                self._auth = HTTPBasicAuth(
-                    self.username + config["user_suffix"], self.password
-                )
-                check = self._get_response(
-                    {"": ""}, config["url_suffix"]["index_composition"]
-                )
-                if not check.ok:
-                    Warning(
-                        "Invalid UserName or Password. "
-                        "Please try running the code again."
-                    )
-            else:
-                Warning(response.reason)
-
-    def _check_proxies(self) -> Any:
-        try:
-            self._get_response({"": ""}, config["url_suffix"]["index_composition"])
-        except Exception as e:
-            if type(e) == requests.exceptions.ConnectionError:
-                # if proxy error, try deleting the .proxy_info file
-                # and look for proxy information again
-
-                proxy_path = self.proxy_finder.proxy_path
-                if proxy_path.exists():
-                    proxy_path.unlink()
-                new_proxy_finder = ProxyFinder(self.service_url)
-                proxy_info = new_proxy_finder.proxies
-                # try once again
-                try:
-                    self._get_response(
-                        {"": ""}, config["url_suffix"]["index_composition"]
-                    )
-                    self.proxies = proxy_info
-                except Exception as e:
-                    raise e
-
-    def _check_auth(self, refresh: bool = False) -> None:
-        if refresh and "cookies" in self._session:
-            del self._session["cookies"]
-
-        if "cookies" not in self._session:
-            cookies = auth.authenticate()
-            if not cookies:
-                raise ValueError("Authentication not supported!")
-
-            self._session["cookies"] = cookies
-
-
-class LiveDataRetrievalServiceClient(DataRetrievalServiceClient):
-    """Logs in and sends requests to the live streaming service."""
-
-    def __init__(
-        self,
-        username: str = None,
-        password: str = None,
-        login: bool = None,
-        service_url: str = None,
-        streaming: bool = False,
-    ) -> None:
-        """Initialization of class.
-
-        Args:
-            username: Windows g-login or client id(external users).
-                Search for if None
-            password: Windows password or client secret(external users).
-                Asked for if None
-            login: boolean if should login with credentials or not. for testing.
-            service_url: string to which service should be pointed to. Used for testing.
-            streaming: boolean if should use streaming. Used for testing.
-        """
-        super(LiveDataRetrievalServiceClient, self).__init__(
-            username, password, login, service_url, streaming
-        )
-        self.streamListener = None
-        self.live_data = None
-
-    def get_live_streamer(
-        self, request: Dict, url_suffix: str, update_method: Callable
-    ) -> StreamListener:
-        """Sends request and returns the stream listener which controls the live stream.
-
-        Args:
-            request: Dictionary of ISINs which should be streamed.
-            url_suffix: Url suffix for a given method.
-            update_method: reference to callable method where the streamed data is
-                transformed into a presentable format.
-
-        Returns:
-            StreamListener for streaming.
-
-        """
-        isins = [request[x] for x in request]
-        if "stream" in url_suffix:
-            return LiveKeyfigureStreamListener(
-                urljoin(self.service_url, url_suffix), isins, update_method, self._auth
-            )
-        else:
-            return LiveKeyfigureListener(
-                urljoin(self.service_url, url_suffix),
-                isins,
-                update_method,
-                self._get_response,
-            )
+    def _post_response(self, request: dict, url_suffix: str) -> requests.Response:
+        return self.http_client.post(url_suffix, request)

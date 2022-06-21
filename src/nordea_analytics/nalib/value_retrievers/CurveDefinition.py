@@ -41,7 +41,11 @@ class CurveDefinition(ValueRetriever):
         """
         super(CurveDefinition, self).__init__(client)
         self._client = client
-        self.curve = convert_to_variable_string(curve, CurveName)
+        self.curve = (
+            convert_to_variable_string(curve, CurveName)
+            if type(curve) == CurveName
+            else curve
+        )
         self.calc_date = calc_date
 
         self._data = self.get_curve_definition()

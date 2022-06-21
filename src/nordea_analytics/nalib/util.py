@@ -1,16 +1,21 @@
 """Script for various methods for nordea analytics library."""
-import os
+from abc import ABC
 from pathlib import Path
 from typing import Callable, Dict, List, Mapping, Union
 
 import yaml
 
+from nordea_analytics.convention_variable_names import (
+    DateRollConvention,
+    DayCountConvention,
+    Exchange,
+    TimeConvention,
+)
 from nordea_analytics.curve_variable_names import (
     CurveDefinitionName,
     CurveName,
     CurveType,
     SpotForward,
-    TimeConvention,
 )
 from nordea_analytics.forecast_names import YieldCountry, YieldHorizon, YieldType
 from nordea_analytics.key_figure_names import (
@@ -52,6 +57,9 @@ def convert_to_variable_string(
         CurveDefinitionName,
         CurveName,
         CurveType,
+        DateRollConvention,
+        DayCountConvention,
+        Exchange,
         TimeConvention,
         SpotForward,
         AmortisationType,
@@ -89,6 +97,9 @@ def convert_to_variable_string(
         CurveDefinitionName,
         CurveName,
         CurveType,
+        DateRollConvention,
+        DayCountConvention,
+        Exchange,
         TimeConvention,
         SpotForward,
         AmortisationType,
@@ -118,6 +129,7 @@ def convert_to_variable_string(
                 or variable_type == CurveDefinitionName
                 or variable_type == CapitalCentres
                 or variable_type == CapitalCentreTypes
+                or variable_type == Exchange
                 or variable_type == YieldCountry
                 or variable_type == YieldHorizon
             ):
@@ -149,22 +161,22 @@ def get_user(user_path: Path) -> str:
         return ""
 
 
-def get_config() -> Dict:
-    """Find and return the config file."""
-    config_file_name = os.environ.get("ANALYTICS_API_CONFIG", "config.yml")
-    config_path = str(Path(__file__).parent / config_file_name)
-    with open(config_path) as file:
-        config = yaml.safe_load(file)
-    return config
+class ConfigContainer(ABC):
+    """Store config data."""
+
+    config: Dict = {}
 
 
-def get_config_test() -> Dict:
+def get_config(config_path: str = None) -> Dict:
     """Find and return the config file."""
-    config_file_name = "config_test.yml"
-    config_path = str(Path(__file__).parent / config_file_name)
+    if ConfigContainer.config and config_path is None:
+        return ConfigContainer.config
+
+    if not config_path:
+        config_path = str(Path(__file__).parent / "config.yml")
     with open(config_path) as file:
-        config = yaml.safe_load(file)
-    return config
+        ConfigContainer.config = yaml.safe_load(file)
+    return ConfigContainer.config
 
 
 def check_string(string: str, substring: str) -> bool:

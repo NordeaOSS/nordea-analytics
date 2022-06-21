@@ -51,7 +51,8 @@ class ProxyFinder:
                 self.proxy_path.write_text(str(proxy_info))
             return proxy_info
 
-    def find_proxies(self, url: str) -> Any:
+    @staticmethod
+    def find_proxies(url: str) -> Any:
         """Searches for proxy information.
 
         Args:
@@ -59,9 +60,6 @@ class ProxyFinder:
 
         Returns:
             Proxy information.
-
-        Raises:
-            Exception: If session can not be closed.
         """
         proxies = urllib.request.getproxies()
         if platform.system() != "Windows":
@@ -75,12 +73,11 @@ class ProxyFinder:
 
             current_user_ie_proxy_config = ctypes_struct.current_user_ie_proxy_config
 
-            if not current_user_ie_proxy_config.fAutoDetect == 1:
-                return {}
-
             auto_proxy_settings = current_user_ie_proxy_config.lpszAutoConfigUrl
             proxy_info = ctypes_struct.proxy_info
             # parse protocol
+            if url is None:
+                return {}
             parsed_url = urllib.parse.urlparse(url)
             session_handle = ctypes_struct.session_handle
             if "https" in auto_proxy_settings:
@@ -94,13 +91,10 @@ class ProxyFinder:
             }
         finally:
             if session_handle:
-                try:
-                    ctypes.windll.winhttp.WinHttpCloseHandle.argtypes = (
-                        ctypes.wintypes.HANDLE,
-                    )
-                    ctypes.windll.winhttp.WinHttpCloseHandle(session_handle)
-                except Exception as e:
-                    raise e
+                ctypes.windll.winhttp.WinHttpCloseHandle.argtypes = (
+                    ctypes.wintypes.HANDLE,
+                )
+                ctypes.windll.winhttp.WinHttpCloseHandle(session_handle)
 
 
 class CtypesStructure:

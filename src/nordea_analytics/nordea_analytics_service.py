@@ -1,12 +1,17 @@
 from datetime import datetime
-from typing import Any, Dict, List, Union
+from typing import Any, Iterator, List, Union
 
+from nordea_analytics.convention_variable_names import (
+    DateRollConvention,
+    DayCountConvention,
+    Exchange,
+    TimeConvention,
+)
 from nordea_analytics.curve_variable_names import (
     CurveDefinitionName,
     CurveName,
     CurveType,
     SpotForward,
-    TimeConvention,
 )
 from nordea_analytics.forecast_names import YieldCountry, YieldHorizon, YieldType
 from nordea_analytics.key_figure_names import (
@@ -16,11 +21,7 @@ from nordea_analytics.key_figure_names import (
     LiveBondKeyFigureName,
     TimeSeriesKeyFigureName,
 )
-from nordea_analytics.nalib.data_retrieval_client import (
-    DataRetrievalServiceClient,
-    LiveDataRetrievalServiceClient,
-)
-from nordea_analytics.nalib.streaming_service import StreamListener
+from nordea_analytics.nalib.data_retrieval_client import DataRetrievalServiceClient
 from nordea_analytics.nalib.value_retrievers.BondFinder import BondFinder
 from nordea_analytics.nalib.value_retrievers.BondKeyFigureCalculator import (
     BondKeyFigureCalculator,
@@ -56,15 +57,14 @@ class NordeaAnalyticsService:
 
     def __init__(
         self,
-        client: DataRetrievalServiceClient = None,
+        client: DataRetrievalServiceClient,
     ) -> None:
         """Initialization of class.
 
         Args:
-            client: DataRetrievalServiceClient
-                or DataRetrievalServiceClientFile; REST API.
+            client: DataRetrievalServiceClient REST API.
         """
-        self._client = DataRetrievalServiceClient() if client is None else client
+        self._client = client
 
     def get_bond_key_figures(
         self,
@@ -630,9 +630,9 @@ class NordeaAnalyticsService:
         self,
         date: datetime,
         days: int,
-        exchange: str = None,
-        day_count_convention: str = None,
-        date_roll_convention: str = None,
+        exchange: Union[str, Exchange] = None,
+        day_count_convention: Union[str, DayCountConvention] = None,
+        date_roll_convention: Union[str, DateRollConvention] = None,
     ) -> datetime:
         """Shifts a date using internal holiday calendars.
 
@@ -661,8 +661,8 @@ class NordeaAnalyticsService:
         self,
         from_date: datetime,
         to_date: datetime,
-        time_convention: str,
-    ) -> str:
+        time_convention: Union[str, TimeConvention],
+    ) -> float:
         """Calculate the time between two dates in terms of years.
 
         Args:
@@ -678,49 +678,53 @@ class NordeaAnalyticsService:
             from_date,
             to_date,
             time_convention,
-        ).to_str()
+        ).to_float()
 
-
-class NordeaAnalyticsLiveService:
-    """Main class for the Nordea Analytics python live service."""
-
-    def __init__(
-        self,
-        client: LiveDataRetrievalServiceClient = None,
-    ) -> None:
-        """Initialization of class.
-
-        Args:
-            client: DataRetrievalServiceClient
-                or DataRetrievalServiceClientFile; REST API.
-        """
-        self._client = LiveDataRetrievalServiceClient() if client is None else client
-        self.dict: Dict = {}
-
-    def get_live_bond_key_figures(
+    def get_bond_live_key_figures(
         self,
         isins: Union[str, List[str]],
         keyfigures: Union[
             List[LiveBondKeyFigureName], List[str], LiveBondKeyFigureName, str
         ],
-        stream: bool = True,
         as_df: bool = False,
-    ) -> StreamListener:
-        """Stream live bond key figures for a given ISINs.
+    ) -> Any:
+        """Return last available live bond key figures for a given ISINs.
 
         Args:
             isins: ISINs of bond that should be retrieved live.
             keyfigures: List of bond key figures which should be streamed.
                 Can be a list of LiveBondKeyFigureNames or string.
-            stream: Internal input only. Default True.
-                If True, returns a stream, if False, returns a snapshot of latest key figures
             as_df: Default False. If True, the results are represented
                 as pandas DataFrame, else as dictionary
 
         Returns:
-            LiveBondKeyFigures class
+            pandas DataFrame or dictionary
 
         """
         return LiveBondKeyFigures(
-            self._client, isins, keyfigures, self.dict, stream, as_df
-        ).get_live_streamer()
+            isins, self._client, keyfigures, as_df
+        ).latest_keyfigures
+
+    def iter_live_bond_key_figures(
+        self,
+        isins: Union[str, List[str]],
+        keyfigures: Union[
+            List[LiveBondKeyFigureName], List[str], LiveBondKeyFigureName, str
+        ],
+        as_df: bool = False,
+    ) -> Iterator[Any]:
+        """Subscribe for live bond keyfigures updates from a server.
+
+        Args:
+            isins: ISINs of bond that should be retrieved live.
+            keyfigures: List of bond key figures which should be streamed.
+                Can be a list of LiveBondKeyFigureNames or string.
+            as_df: Default False. If True, the results are represented
+                as pandas DataFrame, else as dictionary
+
+        Returns:
+            Iterator object that can be used to iterate over HTTP stream.
+        """
+        return LiveBondKeyFigures(
+            isins, self._client, keyfigures, as_df
+        ).stream_keyfigures

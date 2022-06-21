@@ -30,6 +30,8 @@ class CapitalCentres(Enum):
     BRF_B = "B (BRF)"
     BRF_E = "E (BRF)"
     BRF_General = "GENERAL (BRF)"
+    DLR_B = "B (DLR)"
+    DLR_General = "GENERAL (DLR)"
     NDA_1 = "1 (NDA)"
     NDA_2 = "2 (NDA)"
     NYK_C = "C (NYK)"
