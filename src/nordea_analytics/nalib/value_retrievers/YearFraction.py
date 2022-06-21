@@ -1,13 +1,14 @@
 from datetime import datetime
-import typing
-from typing import Dict
+from typing import Dict, Union
 
 import pandas as pd
 
+from nordea_analytics import TimeConvention
 from nordea_analytics.nalib.data_retrieval_client import (
     DataRetrievalServiceClient,
 )
 from nordea_analytics.nalib.util import (
+    convert_to_variable_string,
     get_config,
 )
 from nordea_analytics.nalib.value_retriever import ValueRetriever
@@ -23,7 +24,7 @@ class YearFraction(ValueRetriever):
         client: DataRetrievalServiceClient,
         from_date: datetime,
         to_date: datetime,
-        time_convention: str,
+        time_convention: Union[str, TimeConvention],
     ) -> None:
         """Initialization of class.
 
@@ -38,7 +39,11 @@ class YearFraction(ValueRetriever):
         self._client = client
         self.from_date = from_date
         self.to_date = to_date
-        self.time_convention = time_convention
+        self.time_convention = (
+            convert_to_variable_string(time_convention, TimeConvention)
+            if type(time_convention) == TimeConvention
+            else time_convention
+        )
         self._data = self.year_fraction()
 
     def year_fraction(self) -> Dict:
@@ -67,9 +72,9 @@ class YearFraction(ValueRetriever):
 
         return request_dict
 
-    def to_str(self) -> str:
-        """Reformat the json response to a datetime."""
-        year_fraction = typing.cast(str, self._data["year_fraction"])
+    def to_float(self) -> float:
+        """Reformat the json response to a float."""
+        year_fraction = self._data["year_fraction"]
 
         return year_fraction
 

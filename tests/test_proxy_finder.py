@@ -3,11 +3,9 @@ from pathlib import Path
 import pytest
 
 from nordea_analytics.nalib.proxy_finder import ProxyFinder
-from nordea_analytics.nalib.util import get_config
 
 DUMP_DATA = False
 
-config = get_config()
 SERVICE_URL = "https://open.nordea.com/instrument-analytics/v1/"
 # Proxies only needed for OB link
 

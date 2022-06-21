@@ -3,11 +3,11 @@ from typing import Dict, Mapping, Optional, Union
 
 import pandas as pd
 
+from nordea_analytics.convention_variable_names import TimeConvention
 from nordea_analytics.curve_variable_names import (
     CurveName,
     CurveType,
     SpotForward,
-    TimeConvention,
 )
 from nordea_analytics.nalib.data_retrieval_client import (
     DataRetrievalServiceClient,
@@ -54,7 +54,11 @@ class Curve(ValueRetriever):
         """
         super(Curve, self).__init__(client)
         self._client = client
-        self.curve = convert_to_variable_string(curve, CurveName)
+        self.curve = (
+            convert_to_variable_string(curve, CurveName)
+            if type(curve) == CurveName
+            else curve
+        )
         self.calc_date = calc_date
         self.tenor_frequency = (
             str(tenor_frequency) if tenor_frequency is not None else None

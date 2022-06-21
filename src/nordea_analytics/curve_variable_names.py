@@ -4,6 +4,7 @@ from enum import Enum
 class CurveName(Enum):
     """Most common available curves. Availability not limit to this list."""
 
+    ATSGOV = "ATSGOV"
     BEFGOV = "BEFGOV"
     CHFGOV = "CHFGOV"
     CHFSWAP_Disc_OIS = "CHFSWAP DISC OIS"
@@ -64,6 +65,7 @@ class CurveName(Enum):
     NOKSWAP_Fix_3M_OIS = "NOKSWAP FIX 3M OIS"
     NOKSWAP_Fix_6M_OIS = "NOKSWAP FIX 6M OIS"
     NOKSWAP_Libor = "NOKSWAP LIBOR"
+    PLNGOV = "PLNGOV"
     RUBSWAP = "RUBSWAP"
     RUBSWAP_Disc_OIS = "RUBSWAP DISC OIS"
     RUBSWAP_Fix_1D_OIS = "RUBSWAP FIX 1D OIS"
@@ -97,7 +99,8 @@ class CurveName(Enum):
 class CurveDefinitionName:
     """Most common available curves definition. Availability not limit to this list."""
 
-    # Note that curve definition is limited to Infinity curves for externals.
+    # Note that curve definition is limited to non-Infinity curves for externals.
+    ATSGOV = "ATSGOV"
     BEFGOV = "BEFGOV"
     CHFGOV = "CHFGOV"
     DEMGOV = "DEMGOV"
@@ -118,6 +121,7 @@ class CurveDefinitionName:
     NOKGOV = "NOKGOV"
     NOKSWAP = "NOKSWAP"
     NOKSWAP_Libor = "NOKSWAP LIBOR"
+    PLNGOV = "PLNGOV"
     RUBSWAP = "RUBSWAP"
     SEKGOV = "SEKGOV"
     SEKMTGBLEND = "SEKMTGBLEND"
@@ -141,20 +145,6 @@ class CurveType(Enum):
     YTMCurve = "ytm curve"
     ParCurve = "par curve"
     DurationCurve = "duration curve"
-
-
-class TimeConvention(Enum):
-    """Time conventions available in the service."""
-
-    TC_30360 = "30360"
-    TC_30E360 = "30e360"
-    TC_30EP360 = "30ep360"
-    Act360 = "act360"
-    Act365 = "act365"
-    ISDAAct = "isdaact"
-    ActNL365 = "actnl365"
-    AFB = "afb"
-    ActNL360 = "actnl360"
 
 
 class SpotForward(Enum):

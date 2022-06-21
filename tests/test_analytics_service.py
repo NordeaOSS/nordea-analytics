@@ -6,12 +6,12 @@ from typing import List, Union
 
 import pytest
 
+from nordea_analytics import NordeaAnalyticsService, TimeConvention
 from nordea_analytics.curve_variable_names import (
     CurveDefinitionName,
     CurveName,
     CurveType,
     SpotForward,
-    TimeConvention,
 )
 from nordea_analytics.forecast_names import YieldCountry, YieldHorizon, YieldType
 from nordea_analytics.key_figure_names import (
@@ -28,16 +28,18 @@ from nordea_analytics.search_bond_names import (
     CapitalCentreTypes,
     Issuers,
 )
-from tests import NordeaAnalyticsLiveServiceTest, NordeaAnalyticsServiceTest
+from nordea_analytics import get_nordea_analytics_client  # type: ignore
 from tests.util import load_and_compare_dfs
 
 DUMP_DATA = False
 
 
 @pytest.fixture
-def na_service() -> NordeaAnalyticsServiceTest:
+def na_service() -> NordeaAnalyticsService:
     """NordeaAnaLyticsService test class."""
-    return NordeaAnalyticsServiceTest()
+    client_id = "<CLIENT_ID>"
+    client_secret = "<CLIENT_SECRET>"
+    return get_nordea_analytics_client(client_id=client_id, client_secret=client_secret)
 
 
 @pytest.fixture
@@ -56,6 +58,12 @@ def result_path() -> str:
 def isins() -> List[str]:
     """ISINs used for testing."""
     return ["DK0002044551", "DE0001141794"]
+
+
+@pytest.fixture
+def isins_partial_spread_data() -> List[str]:
+    """ISINs used for testing partial get_bond_key_figures response."""
+    return ["DK0009408601", "DK0002030337"]
 
 
 @pytest.fixture
@@ -109,7 +117,7 @@ class TestBondKeyFigures:
 
     def test_get_bond_key_figures_dict(
         self,
-        na_service: NordeaAnalyticsServiceTest,
+        na_service: NordeaAnalyticsService,
         anchor: datetime,
         result_path: str,
         isins: List[str],
@@ -141,7 +149,7 @@ class TestBondKeyFigures:
 
     def test_get_bond_key_figures_df(
         self,
-        na_service: NordeaAnalyticsServiceTest,
+        na_service: NordeaAnalyticsService,
         anchor: datetime,
         result_path: str,
         isins: List[str],
@@ -159,13 +167,47 @@ class TestBondKeyFigures:
             dump_data=DUMP_DATA,
         )
 
+    def test_partial_data_is_returned(
+        self,
+        na_service: NordeaAnalyticsService,
+        anchor: datetime,
+        result_path: str,
+        isins_partial_spread_data: List[str],
+        keyfigures: List[Union[str, BondKeyFigureName]],
+    ) -> None:
+        """Check if available key figures is returned despite some ISINs having no key figures."""
+        bond_key_figures = na_service.get_bond_key_figures(
+            isins_partial_spread_data, BondKeyFigureName.Spread, anchor
+        )
+
+        if DUMP_DATA:
+            expected_file = open(
+                os.path.join(
+                    result_path,
+                    anchor.strftime("%d%m%y") + "_partial_spread_data_is_returned.txt",
+                ),
+                "w+",
+            )
+            json.dump(bond_key_figures, expected_file)
+
+        expected_file = open(
+            os.path.join(
+                result_path,
+                anchor.strftime("%d%m%y") + "_partial_spread_data_is_returned.txt",
+            ),
+            "r",
+        )
+        expected_result = json.load(expected_file)
+
+        assert bond_key_figures == expected_result
+
 
 class TestIndexComposition:
     """Test class for retrieving index Composition."""
 
     def test_get_index_composition_dict(
         self,
-        na_service: NordeaAnalyticsServiceTest,
+        na_service: NordeaAnalyticsService,
         anchor: datetime,
         result_path: str,
         index: List[str],
@@ -195,7 +237,7 @@ class TestIndexComposition:
 
     def test_get_index_comopsition_df(
         self,
-        na_service: NordeaAnalyticsServiceTest,
+        na_service: NordeaAnalyticsService,
         anchor: datetime,
         result_path: str,
         index: List[str],
@@ -220,7 +262,7 @@ class TestTimeSeries:
 
     def test_get_time_series_dict(
         self,
-        na_service: NordeaAnalyticsServiceTest,
+        na_service: NordeaAnalyticsService,
         anchor: datetime,
         from_date: datetime,
         result_path: str,
@@ -267,7 +309,7 @@ class TestTimeSeries:
 
     def test_get_time_series_df(
         self,
-        na_service: NordeaAnalyticsServiceTest,
+        na_service: NordeaAnalyticsService,
         anchor: datetime,
         from_date: datetime,
         result_path: str,
@@ -319,7 +361,7 @@ class TestCurveTimeSeries:
     )
     def test_get_curve_time_series_dict(
         self,
-        na_service: NordeaAnalyticsServiceTest,
+        na_service: NordeaAnalyticsService,
         anchor: datetime,
         from_date: datetime,
         result_path: str,
@@ -400,7 +442,7 @@ class TestCurveTimeSeries:
     )
     def test_get_curve_time_series_df(
         self,
-        na_service: NordeaAnalyticsServiceTest,
+        na_service: NordeaAnalyticsService,
         anchor: datetime,
         from_date: datetime,
         result_path: str,
@@ -455,7 +497,7 @@ class TestCurveTimeSeries:
     )
     def test_check_forward(
         self,
-        na_service: NordeaAnalyticsServiceTest,
+        na_service: NordeaAnalyticsService,
         anchor: datetime,
         from_date: datetime,
         result_path: str,
@@ -515,7 +557,7 @@ class TestCurve:
     )
     def test_get_curve_dict(
         self,
-        na_service: NordeaAnalyticsServiceTest,
+        na_service: NordeaAnalyticsService,
         anchor: datetime,
         result_path: str,
         curve_name: Union[str, CurveName],
@@ -583,7 +625,7 @@ class TestCurve:
     )
     def test_get_curve_df(
         self,
-        na_service: NordeaAnalyticsServiceTest,
+        na_service: NordeaAnalyticsService,
         anchor: datetime,
         result_path: str,
         curve_name: Union[str, CurveName],
@@ -631,7 +673,7 @@ class TestCurveDefinition:
     )
     def test_get_curve_definition_dict(
         self,
-        na_service: NordeaAnalyticsServiceTest,
+        na_service: NordeaAnalyticsService,
         anchor: datetime,
         result_path: str,
         curve_name: Union[str, CurveDefinitionName],
@@ -681,7 +723,7 @@ class TestCurveDefinition:
     )
     def test_get_curve_definition_df(
         self,
-        na_service: NordeaAnalyticsServiceTest,
+        na_service: NordeaAnalyticsService,
         anchor: datetime,
         result_path: str,
         curve_name: Union[str, CurveDefinitionName],
@@ -710,7 +752,7 @@ class TestSearchBonds:
 
     @pytest.mark.parametrize(
         "dmb, currency, issuers, amortisation_type, asset_type, "
-        "upper_maturity, country, is_io, "
+        "upper_maturity, country, "
         "capital_centres, capital_centre_types",
         [
             (
@@ -720,7 +762,6 @@ class TestSearchBonds:
                 None,
                 None,
                 datetime(2022, 1, 3),
-                None,
                 None,
                 None,
                 None,
@@ -735,7 +776,6 @@ class TestSearchBonds:
                 "United States",
                 None,
                 None,
-                None,
             ),
             (
                 True,
@@ -745,7 +785,6 @@ class TestSearchBonds:
                 None,
                 None,
                 None,
-                True,
                 [CapitalCentres.NDA_1, CapitalCentres.RD_General],
                 [CapitalCentreTypes.JCB, CapitalCentreTypes.RO],
             ),
@@ -753,7 +792,7 @@ class TestSearchBonds:
     )
     def test_search_bonds_dict(
         self,
-        na_service: NordeaAnalyticsServiceTest,
+        na_service: NordeaAnalyticsService,
         anchor: datetime,
         result_path: str,
         dmb: bool,
@@ -763,7 +802,6 @@ class TestSearchBonds:
         asset_type: AssetType,
         upper_maturity: datetime,
         country: str,
-        is_io: bool,
         capital_centres: CapitalCentres,
         capital_centre_types: CapitalCentreTypes,
     ) -> None:
@@ -777,7 +815,6 @@ class TestSearchBonds:
             asset_types=asset_type,
             upper_maturity=upper_maturity,
             country=country,
-            is_io=is_io,
             capital_centres=capital_centres,
             capital_centre_types=capital_centre_types,
         )
@@ -808,7 +845,7 @@ class TestSearchBonds:
     )
     def test_search_bonds_df(
         self,
-        na_service: NordeaAnalyticsServiceTest,
+        na_service: NordeaAnalyticsService,
         anchor: datetime,
         result_path: str,
         dmb: bool,
@@ -838,7 +875,7 @@ class TestSearchBonds:
         )
 
     def test_danish_capped_floaters(
-        self, na_service: NordeaAnalyticsServiceTest, anchor: datetime
+        self, na_service: NordeaAnalyticsService, anchor: datetime
     ) -> None:
         """Hold the statements that we have documented on capped floaters."""
         currency = "DKK"
@@ -865,9 +902,6 @@ class TestSearchBonds:
         )
 
         assert len(all) == len(only_capped) + len(only_normal)
-
-    # def test_check_input(self, na_service:NordeaAnalyticsServiceTest):
-    #     assert na_service.search_bonds(dmb=False, is_io=False)
 
 
 class TestCalculateBondKeyFigure:
@@ -925,7 +959,7 @@ class TestCalculateBondKeyFigure:
     )
     def test_calculate_bond_key_figure_dict(
         self,
-        na_service: NordeaAnalyticsServiceTest,
+        na_service: NordeaAnalyticsService,
         anchor: datetime,
         result_path: str,
         isin: str,
@@ -999,7 +1033,7 @@ class TestCalculateBondKeyFigure:
     )
     def test_calculate_bond_key_figure_df(
         self,
-        na_service: NordeaAnalyticsServiceTest,
+        na_service: NordeaAnalyticsService,
         anchor: datetime,
         result_path: str,
         isin: List[str],
@@ -1044,7 +1078,7 @@ class TestCalculateHorizonBondKeyFigure:
                     HorizonCalculatedBondKeyFigureName.ReturnInterestAmount,
                 ],
                 datetime(2022, 1, 3),
-                CurveName.DKKSWAP_Disc_OIS,
+                [CurveName.DKKSWAP_Disc_OIS],
                 ["0Y 5", "30Y -5"],
                 0.5,
                 70,
@@ -1055,7 +1089,7 @@ class TestCalculateHorizonBondKeyFigure:
     )
     def test_calculate_horizon_bond_key_figure_dict(
         self,
-        na_service: NordeaAnalyticsServiceTest,
+        na_service: NordeaAnalyticsService,
         anchor: datetime,
         result_path: str,
         isin: str,
@@ -1129,7 +1163,7 @@ class TestCalculateHorizonBondKeyFigure:
     )
     def test_calculate_horizon_bond_key_figure_df(
         self,
-        na_service: NordeaAnalyticsServiceTest,
+        na_service: NordeaAnalyticsService,
         anchor: datetime,
         result_path: str,
         isin: List[str],
@@ -1179,7 +1213,7 @@ class TestFXForecast:
     )
     def test_get_fx_forecast_dict(
         self,
-        na_service: NordeaAnalyticsServiceTest,
+        na_service: NordeaAnalyticsService,
         result_path: str,
         currency_pair: str,
     ) -> None:
@@ -1219,7 +1253,7 @@ class TestFXForecast:
     )
     def test_fx_forecast_df(
         self,
-        na_service: NordeaAnalyticsServiceTest,
+        na_service: NordeaAnalyticsService,
         anchor: datetime,
         result_path: str,
         currency_pair: str,
@@ -1262,7 +1296,7 @@ class TestYieldForecast:
     )
     def test_get_yield_forecast_dict(
         self,
-        na_service: NordeaAnalyticsServiceTest,
+        na_service: NordeaAnalyticsService,
         result_path: str,
         country: YieldCountry,
         yield_type: YieldType,
@@ -1310,7 +1344,7 @@ class TestYieldForecast:
     )
     def test_yield_forecast_df(
         self,
-        na_service: NordeaAnalyticsServiceTest,
+        na_service: NordeaAnalyticsService,
         anchor: datetime,
         result_path: str,
         country: str,
@@ -1373,16 +1407,18 @@ class TestNordeaAnalyticsLiveService:
         streaming: bool,
     ) -> None:
         """Test live streaming returned as a dict."""
-        na_live_service = NordeaAnalyticsLiveServiceTest(streaming=streaming)
+        na_live_service = get_nordea_analytics_client()
 
-        live_bond_keyfigure = na_live_service.get_live_bond_key_figures(
+        live_bond_keyfigure = na_live_service.iter_live_bond_key_figures(
             isin, live_key_figure
         )
         i = 0
-        with live_bond_keyfigure as live_streamer:  # type: ignore
-            while i < 5:
-                live_dict = live_streamer.run()
+        for kf in live_bond_keyfigure:
+            if i < 5:
+                live_dict = kf
                 i = i + 1
+            else:
+                break
         list(live_dict.keys()).sort()
         isin.sort()
         assert list(live_dict.keys()) == isin
@@ -1393,14 +1429,9 @@ class TestNordeaAnalyticsLiveService:
         [
             (
                 ["DK0009398620", "DK0009527376"],
-                [LiveBondKeyFigureName.SwapSpread, LiveBondKeyFigureName.OAS_6M],
+                [LiveBondKeyFigureName.SwapSpread, LiveBondKeyFigureName.LiborSpread6M],
                 False,
             ),
-            # (
-            #     ["DK0009398620", "DK0009527376"],
-            #     [LiveBondKeyFigureName.OAS_3M, LiveBondKeyFigureName.GovSpread],
-            #     True,
-            # ),
         ],
     )
     def test_live_streaming_df(
@@ -1410,16 +1441,18 @@ class TestNordeaAnalyticsLiveService:
         streaming: bool,
     ) -> None:
         """Test live streaming returned as a dict."""
-        na_live_service = NordeaAnalyticsLiveServiceTest(streaming=streaming)
+        na_live_service = get_nordea_analytics_client()
 
-        live_bond_keyfigure = na_live_service.get_live_bond_key_figures(
+        live_bond_keyfigure = na_live_service.iter_live_bond_key_figures(
             isin, live_key_figure, as_df=True
         )
         i = 0
-        with live_bond_keyfigure as live_streamer:  # type: ignore
-            while i < 5:
-                live_df = live_streamer.run()
+        for kf in live_bond_keyfigure:
+            if i < 5:
+                live_df = kf
                 i = i + 1
+            else:
+                break
         isin.sort()
         list(live_df["ISIN"]).sort()
         assert list(live_df["ISIN"]) == isin
@@ -1435,7 +1468,7 @@ class TestShiftDays:
     )
     def test_shift_days_datetime(
         self,
-        na_service: NordeaAnalyticsServiceTest,
+        na_service: NordeaAnalyticsService,
         anchor: datetime,
         result_path: str,
         date: datetime,
@@ -1468,7 +1501,7 @@ class TestYearFraction:
     )
     def test_year_fraction(
         self,
-        na_service: NordeaAnalyticsServiceTest,
+        na_service: NordeaAnalyticsService,
         anchor: datetime,
         result_path: str,
         from_date: datetime,
@@ -1494,7 +1527,7 @@ class TestBondStaticData:
     )
     def test_bond_static_data(
         self,
-        na_service: NordeaAnalyticsServiceTest,
+        na_service: NordeaAnalyticsService,
         anchor: datetime,
         result_path: str,
         symbols: List[str],

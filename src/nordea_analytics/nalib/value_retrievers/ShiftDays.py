@@ -1,13 +1,19 @@
 from datetime import datetime
 import typing
-from typing import Dict
+from typing import Dict, Union
 
 import pandas as pd
 
+from nordea_analytics.convention_variable_names import (
+    DateRollConvention,
+    DayCountConvention,
+    Exchange,
+)
 from nordea_analytics.nalib.data_retrieval_client import (
     DataRetrievalServiceClient,
 )
 from nordea_analytics.nalib.util import (
+    convert_to_variable_string,
     get_config,
 )
 from nordea_analytics.nalib.value_retriever import ValueRetriever
@@ -23,9 +29,9 @@ class ShiftDays(ValueRetriever):
         client: DataRetrievalServiceClient,
         date: datetime,
         days: int,
-        exchange: str = None,
-        day_count_convention: str = None,
-        date_roll_convention: str = None,
+        exchange: Union[str, Exchange] = None,
+        day_count_convention: Union[str, DayCountConvention] = None,
+        date_roll_convention: Union[str, DateRollConvention] = None,
     ) -> None:
         """Initialization of class.
 
@@ -44,9 +50,21 @@ class ShiftDays(ValueRetriever):
         self._client = client
         self.date = date
         self.days = days
-        self.exchange = exchange
-        self.day_count_convention = day_count_convention
-        self.date_roll_convention = date_roll_convention
+        self.exchange = (
+            convert_to_variable_string(exchange, Exchange)
+            if type(exchange) == Exchange
+            else exchange
+        )
+        self.day_count_convention = (
+            convert_to_variable_string(day_count_convention, DayCountConvention)
+            if type(day_count_convention) == DayCountConvention
+            else day_count_convention
+        )
+        self.date_roll_convention = (
+            convert_to_variable_string(date_roll_convention, DateRollConvention)
+            if type(date_roll_convention) == DateRollConvention
+            else date_roll_convention
+        )
         self._data = self.shift_days()
 
     def shift_days(self) -> Dict:

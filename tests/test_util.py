@@ -3,10 +3,12 @@ from typing import Callable, Dict, List, Tuple, Union
 
 import pytest
 
-from nordea_analytics.curve_variable_names import CurveType, SpotForward, TimeConvention
+from nordea_analytics.convention_variable_names import TimeConvention
+from nordea_analytics.curve_variable_names import CurveType, SpotForward
 from nordea_analytics.key_figure_names import BondKeyFigureName
 from nordea_analytics.nalib.util import (
     check_json_response,
+    check_json_response_error,
     check_string,
     convert_to_float_if_float,
     convert_to_variable_string,
@@ -89,10 +91,10 @@ def test_curve_variables_name_string(
 
 
 @pytest.mark.parametrize("test_key_figure", [(["Quotes"])])
-def test_keyfigure_fails(
+def test_some_keyfigure_fails(
     test_key_figure: Union[List[str], List[BondKeyFigureName]]
 ) -> None:
-    """Test that function returns ValueError when unavailable key figure is given."""
+    """Test that function returns available data despite some ISINs having no available key figures."""
     try:
         [convert_to_variable_string(t, BondKeyFigureName) for t in test_key_figure]
         expected_results = False
@@ -151,7 +153,8 @@ def test_float_to_tenor_string(
 def test_check_json_response(input: Union[List, Dict]) -> None:
     """Check if the function throws an error when it receives an empty list."""
     try:
-        check_json_response(input)
+        output_found = check_json_response(input)
+        check_json_response_error(output_found)
         expected_results = False
     except ValueError:
         expected_results = True

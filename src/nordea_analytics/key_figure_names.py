@@ -248,6 +248,7 @@ class CalculatedBondKeyFigureName(Enum):
     BPV = "bpv"
     BPV_Ladder = "bpvladder"
     CVX = "cvx"
+    DeterministicSpread = "deterministicspread"
     ExpectedCashflow = "expectedcashflow"
     MacaulayDuration = "macdur"
     ModifiedDuration = "moddur"

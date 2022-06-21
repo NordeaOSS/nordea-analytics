@@ -179,7 +179,7 @@ class BondFinder(ValueRetriever):
             "upper-coupon": self.upper_coupon,
             "amortisation-type": self.amortisation_type,
             "capital-centres": self.capital_centres,
-            "capital-centretypes": self.capital_centre_types,
+            "capital-centre-types": self.capital_centre_types,
         }
 
         request = {

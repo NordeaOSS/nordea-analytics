@@ -15,8 +15,7 @@ NordeaAnalyticsService and NordeaAnalyticsLiveService classes.
 
 .. code-block:: python
 
-    from nordea_analytics.nordea_analytics_service import NordeaAnalyticsService
-    from nordea_analytics.nordea_analytics_service import NordeaAnalyticsLiveService
+    from nordea_analytics import get_nordea_analytics_client
 
 Available methods
 ^^^^^^^^^^^^^^^^^^^^
@@ -88,18 +87,22 @@ are shifted up by 5 bps on the 6M, 1Y and 2Y tenor.
 .. code-block:: python
 
     import datetime
-    from nordea_analytics.nordea_analytics_service import NordeaAnalyticsService
-    from nordea_analytics.key_figure_names import CalculatedBondKeyFigureName
-    from nordea_analytics.curve_variable_names import CurveName
+    from nordea_analytics import get_nordea_analytics_client
+    from nordea_analytics import CalculatedBondKeyFigureName, CurveName
 
-    na_service = NordeaAnalyticsService()
+    na_service = get_nordea_analytics_client(client_id="Your client id", client_secret="Your client secret")
     isin = 'DK0002000421'
     bond_key_figure = [CalculatedBondKeyFigureName.Spread, CalculatedBondKeyFigureName.BPV]
     calc_date = datetime.datetime(2021, 12, 15)
-    curves = [CurveName.DKKSWAP_Disc_OIS, CurveName.DKKSWAP_Libor] #Optional
+    curves = [CurveName.DKKSWAP_Disc_OIS,
+              CurveName.DKKSWAP_Libor] #Optional
     rates_shifts = ["6M 5", "1Y 5", "2Y 5"] #Optional
-    df = na_service.calculate_bond_key_figure(isin, bond_key_figure, calc_date, curves=curves,
-                                          rates_shifts=rates_shifts, as_df=True)
+    df = na_service.calculate_bond_key_figure(isin,
+                                              bond_key_figure,
+                                              calc_date,
+                                              curves=curves,
+                                              rates_shifts=rates_shifts,
+                                              as_df=True)
 
 Other optional input variables can be found in :meth:`calculate_bond_key_figure()
 <nordea_analytics.nordea_analytics_service.NordeaAnalyticsService.calculate_bond_key_figure>`
@@ -113,18 +116,20 @@ at 14th of February 2022 for the ISIN `DK0002000421`. Key figure "PriceClean" sh
 .. code-block:: python
 
     import datetime
-    from nordea_analytics.nordea_analytics_service import NordeaAnalyticsService
-    from nordea_analytics.key_figure_names import HorizonCalculatedBondKeyFigureName
+    from nordea_analytics import get_nordea_analytics_client
+    from nordea_analytics import HorizonCalculatedBondKeyFigureName
 
-    na_service = NordeaAnalyticsService()
+    na_service = get_nordea_analytics_client(client_id="Your client id", client_secret="Your client secret")
     isin = 'DK0002000421'
     bond_key_figure = [HorizonCalculatedBondKeyFigureName.BPV, HorizonCalculatedBondKeyFigureName.CVX,
                HorizonCalculatedBondKeyFigureName.Spread, HorizonCalculatedBondKeyFigureName.PriceClean]
     calc_date = datetime.datetime(2022, 2, 14)
     horizon_date = datetime.datetime(2022, 2, 18)
     df = na_service.calculate_horizon_bond_key_figure(isin,
-                                                      bond_key_figure, calc_date,
-                                                      horizon_date, as_df=True)
+                                                      bond_key_figure,
+                                                      calc_date,
+                                                      horizon_date,
+                                                      as_df=True)
 
 Other optional input variables can be found in :meth:`calculate_horizon_bond_key_figure()
 <nordea_analytics.nordea_analytics_service.NordeaAnalyticsService.calculate_horizon_bond_key_figure>`
@@ -136,17 +141,18 @@ The following example retrieves Vega, BPV and CVX for a given set of ISINs and r
 .. code-block:: python
 
     import datetime
+    from nordea_analytics import get_nordea_analytics_client
+    from nordea_analytics import HorizonCalculatedBondKeyFigureName
 
-    from nordea_analytics.nordea_analytics_service import NordeaAnalyticsService
-    from nordea_analytics.key_figure_names import BondKeyFigureName
-
-    na_service = NordeaAnalyticsService()
+    na_service = get_nordea_analytics_client(client_id="Your client id", client_secret="Your client secret")
     value_date = datetime.datetime.today() - datetime.timedelta(1)
     isins =['DK0002000421', 'DK0002004092', 'DK0002013408', 'DK0006344171']
     bond_key_figure_name = [BondKeyFigureName.Vega, BondKeyFigureName.BPV, BondKeyFigureName.CVX]
 
-    bond_key_figures = na_service.get_bond_key_figures(isins, bond_key_figure_name,
-                                                   value_date, as_df=True)
+    bond_key_figures = na_service.get_bond_key_figures(isins,
+                                                       bond_key_figure_name,
+                                                       value_date,
+                                                       as_df=True)
 
 
 Get Curve
@@ -157,14 +163,16 @@ The following example retrieves the `DKKSWAP Libor` spot par curve with for the 
 .. code-block:: python
 
     import datetime
+    from nordea_analytics import get_nordea_analytics_client
+    from nordea_analytics import CurveName
 
-    from nordea_analytics.nordea_analytics_service import NordeaAnalyticsService
-    from nordea_analytics.curve_variable_names import CurveName
-
-    na_service = NordeaAnalyticsService()
+    na_service = get_nordea_analytics_client(client_id="Your client id", client_secret="Your client secret")
     calc_date = datetime.datetime(2022, 1, 3)
     curve_name = CurveName.DKKSWAP_Libor
-    curve = na_service.get_curve(curve_name, calc_date, as_df=True)
+
+    curve = na_service.get_curve(curve_name,
+                                 calc_date,
+                                 as_df=True)
 
 The following example retrieves the `USDGOV` 2Y forward curve with a half-year tenor interval (0.5) for the value date
 1st January 2021 and returns the results in a pandas DataFrame. The curve is constructed using the
@@ -173,10 +181,10 @@ Nelson Siegel method and time convention Act/365.
 .. code-block:: python
 
     import datetime
-    from nordea_analytics.nordea_analytics_service import NordeaAnalyticsService
-    from nordea_analytics.curve_variable_names import CurveName, CurveType, TimeConvention, SpotForward
+    from nordea_analytics import get_nordea_analytics_client
+    from nordea_analytics import CurveName, CurveType, TimeConvention, SpotForward
 
-    na_service = NordeaAnalyticsService()
+    na_service = get_nordea_analytics_client(client_id="Your client id", client_secret="Your client secret")
     value_date = datetime.datetime(2021, 1, 4)
     curve_name = CurveName.USDGOV
     curve_type = CurveType.NelsonSiegel
@@ -185,10 +193,14 @@ Nelson Siegel method and time convention Act/365.
     spot_forward = SpotForward.Forward
     forward_tenor = 2
 
-    curve = na_service.get_curve(curve_name, value_date, curve_type=curve_type,
+    curve = na_service.get_curve(curve_name,
+                                 value_date,
+                                 curve_type=curve_type,
                                  tenor_frequency=tenor_frequency,
-                                 time_convention=time_convention, spot_forward=spot_forward,
-                                 forward_tenor=forward_tenor, as_df=True)
+                                 time_convention=time_convention,
+                                 spot_forward=spot_forward,
+                                 forward_tenor=forward_tenor,
+                                 as_df=True)
 
 Note that tenor frequency input will not have affect unless a specific curve_type are chosen like Nelson or Hybrid.
 
@@ -201,14 +213,16 @@ curve definition can be retrieved, therefore we have a special enumeration class
 .. code-block:: python
 
     import datetime
+    from nordea_analytics import get_nordea_analytics_client
+    from nordea_analytics import CurveDefinitionName
 
-    from nordea_analytics.nordea_analytics_service import NordeaAnalyticsService
-    from nordea_analytics.curve_variable_names import CurveDefinitionName
-
-    na_service = NordeaAnalyticsService()
+    na_service = get_nordea_analytics_client(client_id="Your client id", client_secret="Your client secret")
     calc_date = datetime.datetime(2021, 1, 1)
     curve_name = CurveDefinitionName.EURGOV
-    curve_def = na_service.get_curve_definition(curve_name, calc_date, as_df=True)
+
+    curve_def = na_service.get_curve_definition(curve_name,
+                                                calc_date,
+                                                as_df=True)
 
 Get Curve Time Series
 ^^^^^^^^^^^^^^^^^^^^^^
@@ -219,20 +233,24 @@ convention 30/360.
 .. code-block:: python
 
     import datetime
+    from nordea_analytics import get_nordea_analytics_client
+    from nordea_analytics import CurveName, CurveType, TimeConvention
 
-    from nordea_analytics.nordea_analytics_service import NordeaAnalyticsService
-    from nordea_analytics.curve_variable_names import CurveName, CurveType, TimeConvention, SpotForward
-
-    na_service = NordeaAnalyticsService()
+    na_service = get_nordea_analytics_client(client_id="Your client id", client_secret="Your client secret")
     from_date = datetime.datetime(2021, 1, 1)
     to_date = datetime.datetime.today()
     curve = CurveName.DKKSWAP
     tenors = [1, 0.5]  # at least one required.
     curve_type = CurveType.ParCurve  # Optional input
     time_convention = TimeConvention.TC_30360  # Optional input
-    curve_time_series = na_service.get_curve_time_series(curve, from_date, to_date, tenors,
+
+    curve_time_series = na_service.get_curve_time_series(curve,
+                                                         from_date,
+                                                         to_date,
+                                                         tenors,
                                                          curve_type=curve_type,
-                                                         time_convention=time_convention, as_df=True)
+                                                         time_convention=time_convention,
+                                                         as_df=True)
 
 The following example retrieves daily points on the 2Y1Y `EURGOV` forward curve, for the time period 3rd of
 January 2021 to the day to day and returns the results in a pandas DataFrame. The curve is constructed using the
@@ -242,20 +260,23 @@ has to be given.
 .. code-block:: python
 
     import datetime
+    from nordea_analytics import get_nordea_analytics_client
+    from nordea_analytics import CurveName,  CurveType, TimeConvention, SpotForward
 
-    from nordea_analytics.nordea_analytics_service import NordeaAnalyticsService
-    from nordea_analytics.curve_variable_names import CurveName,  CurveType, TimeConvention, SpotForward
-
-    na_service = NordeaAnalyticsService()
+    na_service = get_nordea_analytics_client(client_id="Your client id", client_secret="Your client secret")
     from_date = datetime.datetime(2022, 1, 3)
     to_date = datetime.datetime.today()
-    curve = CurveName.EURGOV
+    curve = CurveName.DKKGOV
     tenors = 1
     curve_type = CurveType.Bootstrap  # Optional input
     time_convention = TimeConvention.Act365  # Optional input
     spot_forward = SpotForward.Forward  # Optional input
     forward_tenor = 2  # Required when spot_forward is set to spot forward or implied forward curve.
-    curve_time_series = na_service.get_curve_time_series(curve, from_date, to_date, tenors,
+
+    curve_time_series = na_service.get_curve_time_series(curve,
+                                                         from_date,
+                                                         to_date,
+                                                          tenors,
                                                          curve_type=curve_type,
                                                          time_convention=time_convention,
                                                          spot_forward=spot_forward,
@@ -268,11 +289,12 @@ The following example retrieves Nordea's latest FX forecast for the EUR/DKK cros
 
 .. code-block:: python
 
-    from nordea_analytics.nordea_analytics_service import NordeaAnalyticsService
+    from nordea_analytics import get_nordea_analytics_client
 
-    na_service = NordeaAnalyticsService()
+    na_service = get_nordea_analytics_client(client_id="Your client id", client_secret="Your client secret")
+    currency_pair = "EURDKK"
 
-    df = na_service.get_fx_forecasts("EURDKK", as_df=True)
+    df = na_service.get_fx_forecasts(currency_pair, as_df=True)
 
 Get Index Composition
 ^^^^^^^^^^^^^^^^^^^^^^
@@ -282,37 +304,55 @@ in a pandas DataFrame.
 .. code-block:: python
 
     import datetime
+    from nordea_analytics import get_nordea_analytics_client
 
-    from nordea_analytics.nordea_analytics_service import NordeaAnalyticsService
-
-    na_service = NordeaAnalyticsService()
+    na_service = get_nordea_analytics_client(client_id="Your client id", client_secret="Your client secret")
     calc_date = datetime.datetime.today() - datetime.timedelta(1)
     indices = ['DK Mtg Callable', 'DK Govt']
 
-    index_composition = na_service.get_index_composition(indices, calc_date, as_df=True)
+    index_composition = na_service.get_index_composition(indices,
+                                                         calc_date,
+                                                         as_df=True)
 
 Get Live Key Figure
 ^^^^^^^^^^^^^^^^^^^^^^
-The following example returns live Quotes and CVX in a pandas DataFrame format and stops the feed after one minute.
+The following example returns live Quote and CVX in a pandas DataFrame format and stops the feed after one minute.
 
 .. code-block:: python
 
-    from nordea_analytics.key_figure_names import LiveBondKeyFigureName
-    from nordea_analytics.nordea_analytics_service import NordeaAnalyticsLiveService
     import time
+    from nordea_analytics import NordeaAnalyticsLiveService
+    from nordea_analytics.key_figure_names import LiveBondKeyFigureName
 
-    live_service = NordeaAnalyticsLiveService()
-    live_bond_keyfigure = live_service.get_live_bond_key_figures(["DK0009398620"],
+    na_service = get_nordea_analytics_client(client_id="Your client id", client_secret="Your client secret")
+    live_bond_keyfigure = na_service.iter_live_bond_key_figures(["DK0009398620"],
                                                              [LiveBondKeyFigureName.Quote,
-                                                              LiveBondKeyFigureName.CVX],
+                                                             LiveBondKeyFigureName.CVX],
                                                              as_df=True)
     t_end = time.time() + 60 * 1  #one minute
-    with live_bond_keyfigure as live_streamer:
-        while live_streamer:
-            df = live_streamer.run()
-            print(df)
-            if time.time() > t_end:
-                live_streamer.stop()
+
+    for kf in live_bond_keyfigure:
+        df = kf
+        print(df)
+        if time.time() > t_end:
+            live_bond_keyfigure.stop()
+
+Get Live Key Figure Snapshot
+^^^^^^^^^^^^^^^^^^^^^^
+The following example returns the latest available live Quote and CVX in a pandas DataFrame format.
+
+.. code-block:: python
+
+    import time
+    from nordea_analytics import NordeaAnalyticsLiveService
+    from nordea_analytics.key_figure_names import LiveBondKeyFigureName
+
+    na_service = get_nordea_analytics_client(client_id="Your client id", client_secret="Your client secret")
+    latest_bond_keyfigures = na_service.get_bond_live_key_figures(["DK0009398620"],
+                                              [LiveBondKeyFigureName.Quote,
+                                              LiveBondKeyFigureName.CVX],
+                                              as_df=True)
+
 
 Get Time Series
 ^^^^^^^^^^^^^^^^
@@ -324,17 +364,22 @@ can also retrieve time series for swaps, FX, FX swap point, then the key figure 
 .. code-block:: python
 
     import datetime
-    from nordea_analytics.nordea_analytics_service import NordeaAnalyticsService
-    from nordea_analytics.key_figure_names import TimeSeriesKeyFigureName
+    from nordea_analytics import get_nordea_analytics_client
+    from nordea_analytics import TimeSeriesKeyFigureName
 
-    na_service = NordeaAnalyticsService()
+    na_service = get_nordea_analytics_client(client_id="Your client id", client_secret="Your client secret")
     from_date = datetime.datetime(2021, 1, 1)
     to_date = datetime.datetime.today()
     symbols = ['DK0002000421', 'DK0002004092', 'DK0002013408', 'DK0006344171']
-    key_figure_name = [TimeSeriesKeyFigureName.Vega, TimeSeriesKeyFigureName.BPV,
+    key_figure_name = [TimeSeriesKeyFigureName.Vega,
+                       TimeSeriesKeyFigureName.BPV,
                        TimeSeriesKeyFigureName.CVX]
 
-    time_Series = na_service.get_time_series(symbols, key_figure_name, from_date, to_date)
+    time_series = na_service.get_time_series(symbols,
+                                             key_figure_name,
+                                             from_date,
+                                             to_date,
+                                             as_df=True)
 
 Get Shift Days
 ^^^^^^^^^^^^^^^^^^^^^
@@ -343,12 +388,20 @@ The following example shifts a date forward 1 bank day and returns the results a
 .. code-block:: python
 
     import datetime
-    from nordea_analytics.nordea_analytics_service import NordeaAnalyticsService
+    from nordea_analytics import get_nordea_analytics_client
+    from nordea_analytics import DateRollConvention, DayCountConvention, Exchange
 
-    na_service = NordeaAnalyticsService()
+    na_service = get_nordea_analytics_client(client_id="Your client id", client_secret="Your client secret")
     date = datetime.date(2022, 3, 18)
+    day_count_convention = DayCountConvention.BankDays
+    date_roll_convention = DateRollConvention.Preceeding
+    exchange = Exchange.Copenhagen
 
-    shifted_date = na_service.get_shift_days(date, 1, day_count_convention= "bank days")
+    shifted_date = na_service.get_shift_days(date,
+                                             1,
+                                             exchange=exchange,
+                                             day_count_convention=day_count_convention,
+                                             date_roll_convention=date_roll_convention)
 
 Get Yield Forecast
 ^^^^^^^^^^^^^^^^^^^^
@@ -356,13 +409,15 @@ The following retrieves Nordea's latest yield forecast for CIBOR 3M
 
 .. code-block:: python
 
-    from nordea_analytics.nordea_analytics_service import NordeaAnalyticsService
-    from nordea_analytics.forecast_names import YieldCountry, YieldHorizon, YieldType
+    from nordea_analytics import get_nordea_analytics_client
+    from nordea_analytics import YieldCountry, YieldHorizon, YieldType
 
-    na_service = NordeaAnalyticsService()
+    na_service = get_nordea_analytics_client(client_id="Your client id", client_secret="Your client secret")
 
-    df = na_service.get_yield_forecasts(YieldCountry.DK, YieldType.Libor,
-                                    YieldHorizon.Horizon_3M, as_df=True)
+    df = na_service.get_yield_forecasts(YieldCountry.DK,
+                                        YieldType.Libor,
+                                        YieldHorizon.Horizon_3M,
+                                        as_df=True)
 
 Get Year Fraction
 ^^^^^^^^^^^^^^^^^^^^^
@@ -371,13 +426,17 @@ The following example calculates the time between two dates as a year fraction a
 .. code-block:: python
 
     import datetime
-    from nordea_analytics.nordea_analytics_service import NordeaAnalyticsService
+    from nordea_analytics import get_nordea_analytics_client
+    from nordea_analytics import TimeConvention
 
-    na_service = NordeaAnalyticsService()
+    na_service = get_nordea_analytics_client(client_id="Your client id", client_secret="Your client secret")
     from_date = datetime.date(2022, 3, 18)
     to_date = datetime.date(2022, 6, 18)
+    time_convention = TimeConvention.Act365
 
-    year_fraction = na_service.get_year_fraction(from_date, to_date, "Act365")
+    year_fraction = na_service.get_year_fraction(from_date,
+                                                 to_date,
+                                                 time_convention)
 
 Search Bonds
 ^^^^^^^^^^^^^
@@ -387,16 +446,18 @@ type. The results are in a DataFrame format.
 
 .. code-block:: python
 
-    from nordea_analytics.nordea_analytics_service import NordeaAnalyticsService
-    from nordea_analytics.search_bond_names import AssetType, AmortisationType
+    from nordea_analytics import get_nordea_analytics_client
+    from nordea_analytics import AssetType, AmortisationType
 
-    na_service = NordeaAnalyticsService()
+    na_service = get_nordea_analytics_client(client_id="Your client id", client_secret="Your client secret")
     currency = "USD"
     asset_type = AssetType.FixToFloatBond
     amortisation_type = AmortisationType.Annuity
 
-    df = na_service.search_bonds(currency=currency, asset_types=asset_type,
-                             amortisation_type=amortisation_type, as_df=True)
+    df = na_service.search_bonds(currency=currency,
+                                 asset_types=asset_type,
+                                 amortisation_type=amortisation_type,
+                                 as_df=True)
 
 The following example returns list of ISINs and bond names for `only` Danish Mortgage Bonds (dmb=True), with DKK as currency and maturity between 9th
 of December 2021 to the day to day. Note that if dmb=False (default value), it would return `all` bonds with the same criteria,
@@ -405,17 +466,18 @@ including Danish Mortgage Bonds. The results are in a DataFrame format.
 .. code-block:: python
 
     import datetime
+    from nordea_analytics import get_nordea_analytics_client
 
-    from nordea_analytics.nordea_analytics_service import NordeaAnalyticsService
-
-    na_service = NordeaAnalyticsService()
+    na_service = get_nordea_analytics_client(client_id="Your client id", client_secret="Your client secret")
     from_maturity = datetime.datetime(2021, 12, 9)
     to_maturity = datetime.datetime.today()
     currency = "DKK"
 
-    df = na_service.search_bonds(dmb=True, currency=currency,
-                             upper_maturity=to_maturity, lower_maturity=from_maturity,
-                             as_df=True)
+    df = na_service.search_bonds(dmb=True,
+                                 currency=currency,
+                                 upper_maturity=to_maturity,
+                                 lower_maturity=from_maturity,
+                                 as_df=True)
 
 When asset_type is set to Danish Capped Floaters, then both capped floaters and normal floaters are returned.
 To search specifically for capped floaters set upper_coupon = 1,000 (shown in example below).
@@ -423,18 +485,21 @@ To search specifically for normal floaters set lower_coupon = 100,000.
 
 .. code-block:: python
 
-    from nordea_analytics.nordea_analytics_service import NordeaAnalyticsService
+    from nordea_analytics import get_nordea_analytics_client
     from nordea_analytics.search_bond_names import AssetType
 
-    na_service = NordeaAnalyticsService()
+    na_service = get_nordea_analytics_client(client_id="Your client id", client_secret="Your client secret")
     asset_type = AssetType.DanishCappedFloaters
     upper_coupon = 1000
 
 
     currency = "DKK"
 
-    df = na_service.search_bonds(dmb=True, currency=currency, asset_types=asset_type,
-                             upper_coupon=upper_coupon, as_df=True)
+    df = na_service.search_bonds(dmb=True,
+                                 currency=currency,
+                                 asset_types=asset_type,
+                                 upper_coupon=upper_coupon,
+                                 as_df=True)
 
 Other serach criterias are listed in :meth:`search_bonds()
 <nordea_analytics.nordea_analytics_service.NordeaAnalyticsService.search_bonds>`
@@ -455,7 +520,7 @@ Live Dash board
     from dash import dcc
 
     from nordea_analytics.nordea_analytics_service import NordeaAnalyticsLiveService
-    from nordea_analytics.key_figure_names import LiveBondKeyFigureName
+    from nordea_analytics import LiveBondKeyFigureName
 
     live_service = NordeaAnalyticsLiveService()
     live_bond_keyfigure = live_service.get_live_bond_key_figures(["DK0009398620"],
@@ -528,7 +593,10 @@ when new live key figures are in.
 
     isin = ["DK0009527376", "DK0009527293", "DK0009527103"]
 
-    time_Series = analytics_api.get_time_series(isin, key_figure_name_ts, from_date, yesterday,
+    time_Series = analytics_api.get_time_series(isin,
+                                                key_figure_name_ts,
+                                                from_date,
+                                                yesterday,
                                                 as_df=True)
     live_service = NordeaAnalyticsLiveService()
     live_bond_keyfigure = live_service.get_live_bond_key_figures(isin,
@@ -568,17 +636,17 @@ Make key figure report on portfolio or index (or both)
 
     import pandas as pd
     from datetime import datetime
+    from nordea_analytics import get_nordea_analytics_client
+    from nordea_analytics import BondKeyFigureName
 
-    from nordea_analytics.nordea_analytics_service import NordeaAnalyticsService
-    from nordea_analytics.key_figure_names import BondKeyFigureName as kf_db
-
-    analytics_api = NordeaAnalyticsService()
-    df_index = analytics_api.get_index_composition("DK0IX0000014", datetime(2022, 2, 28),
+    na_service = get_nordea_analytics_client(client_id="Your client id", client_secret="Your client secret")
+    df_index = na_service.get_index_composition("DK0IX0000014", datetime(2022, 2, 28),
                                                     as_df=True).set_index('ISIN')
 
-    df_key_fig = analytics_api.get_bond_key_figures(isins=df_index.index,
+    df_key_fig = na_service.get_bond_key_figures(isins=df_index.index,
                                                     calc_date=datetime(2022, 2, 28),
-                                                    keyfigures=[kf_db.BPV, kf_db.CVX], as_df=True)
+                                                    keyfigures=[BondKeyFigureName.BPV, BondKeyFigureName.CVX],
+                                                    as_df=True)
 
     df_kf_report = pd.concat([df_index, df_key_fig], axis=1)
 
@@ -592,17 +660,18 @@ Plot Curve
 
     import matplotlib.pyplot as plt
     from datetime import datetime
+    from nordea_analytics import get_nordea_analytics_client
+    from nordea_analytics import CurveType, TimeConvention, SpotForward, CurveName
 
-    from nordea_analytics.nordea_analytics_service import NordeaAnalyticsService
-    from nordea_analytics.curve_variable_names import CurveType, TimeConvention, SpotForward, CurveName
+    na_service = get_nordea_analytics_client(client_id="Your client id", client_secret="Your client secret")
 
-    analytics_api = NordeaAnalyticsService()
-
-    df = analytics_api.get_curve(curve=CurveName.DKKGOV, calc_date=datetime.now(),
-                            curve_type=CurveType.YTMCurve,
-                            time_convention = TimeConvention.Act365,
-                            spot_forward = SpotForward.Spot,
-                            tenor_frequency=1, as_df=True)
+    df = na_service.get_curve(curve=CurveName.DKKGOV,
+                                 calc_date=datetime.now(),
+                                 curve_type=CurveType.YTMCurve,
+                                 time_convention=TimeConvention.Act365,
+                                 spot_forward=SpotForward.Spot,
+                                 tenor_frequency=1,
+                                 as_df=True)
 
     f, ax = plt.subplots(figsize=(9,5))
     ax.plot(df['Tenor'], df['Value'].mul(10_000), color='blue', dashes=(5,5))
@@ -620,16 +689,16 @@ Plot Curve Time series
 
     import matplotlib.pyplot as plt
     from datetime import datetime
+    from nordea_analytics import get_nordea_analytics_client
+    from nordea_analytics import CurveType, TimeConvention, SpotForward, CurveName
 
-    from nordea_analytics.nordea_analytics_service import NordeaAnalyticsService
-    from nordea_analytics.curve_variable_names import CurveType, TimeConvention, SpotForward, CurveName
-
-    analytics_api = NordeaAnalyticsService()
-    analytics_api.get_curve_time_series(curve=CurveName.DKKGOV, from_date=datetime(2020, 1, 2),
+    na_service = get_nordea_analytics_client(client_id="Your client id", client_secret="Your client secret")
+    na_service.get_curve_time_series(curve=CurveName.DKKGOV,
+                                        from_date=datetime(2020, 1, 2),
                                         to_date=datetime(2022, 2, 28),
                                         curve_type=CurveType.YTMCurve,
-                                        time_convention = TimeConvention.Act365, tenors=[5, 10],
-                                        spot_forward = SpotForward.Spot,
+                                        time_convention=TimeConvention.Act365, tenors=[5, 10],
+                                        spot_forward=SpotForward.Spot,
                                         as_df=True).set_index('Date').mul(10_000).plot(grid=True)
     plt.show()
 
@@ -641,13 +710,15 @@ Plot time series key figure
 
     import matplotlib.pyplot as plt
     from datetime import datetime
+    from nordea_analytics import get_nordea_analytics_client
+    from nordea_analytics import TimeSeriesKeyFigureName as kf_ts
 
-    from nordea_analytics.nordea_analytics_service import NordeaAnalyticsService
-    from nordea_analytics.key_figure_names import TimeSeriesKeyFigureName as kf_ts
-
-    analytics_api = NordeaAnalyticsService()
-    analytics_api.get_time_series(symbol=["NDA 1 01oct50 (2)"], keyfigures=[kf_ts.PriceClean],
-    from_date=datetime(2019, 1, 2), to_date=datetime.now(), as_df=True).set_index('Date').plot(grid=True)
+    na_service = get_nordea_analytics_client(client_id="Your client id", client_secret="Your client secret")
+    na_service.get_time_series(symbol=["NDA 1 01oct50 (2)"],
+                                  keyfigures=[kf_ts.PriceClean],
+                                  from_date=datetime(2019, 1, 2),
+                                  to_date=datetime.now(),
+                                  as_df=True).set_index('Date').plot(grid=True)
     plt.show()
 
 .. image:: images/ts_plot.png
@@ -660,20 +731,22 @@ Plot time series key figure with crispy charts
     import matplotlib.pyplot as plt
     from datetime import datetime
 
-    from nordea_analytics.nordea_analytics_service import NordeaAnalyticsService
-    from nordea_analytics.key_figure_names import TimeSeriesKeyFigureName as kf_ts
+    from nordea_analytics import get_nordea_analytics_client
+    from nordea_analytics import TimeSeriesKeyFigureName as kf_ts
 
-    analytics_api = NordeaAnalyticsService()
+    na_service = get_nordea_analytics_client(client_id="Your client id", client_secret="Your client secret")
     from_date = datetime(2019, 5, 2)
 
-    df_swap = analytics_api.get_time_series(symbol=["DKK SWAP 10Y"],
+    df_swap = na_service.get_time_series(symbol=["DKK SWAP 10Y"],
                                             keyfigures=[kf_ts.Quote],
-                                           from_date=from_date, to_date=datetime.now(),
-                                           as_df=True).set_index('Date')
+                                            from_date=from_date,
+                                            to_date=datetime.now(),
+                                            as_df=True).set_index('Date')
 
-    df_price = analytics_api.get_time_series(symbol=["NDA 1 01oct50 (2)"],
+    df_price = na_service.get_time_series(symbol=["NDA 1 01oct50 (2)"],
                                             keyfigures=[kf_ts.PriceClean],
-                                            from_date=from_date, to_date=datetime.now(),
+                                            from_date=from_date,
+                                            to_date=datetime.now(),
                                             as_df=True).set_index('Date')
 
     f, ax = plt.subplots(figsize=(9,5))
@@ -722,29 +795,32 @@ Showing why buybacks are making bonds more rich
     import matplotlib.pyplot as plt
     from datetime import datetime
 
-    from nordea_analytics.nordea_analytics_service import NordeaAnalyticsService
+    from nordea_analytics import get_nordea_analytics_client
     from nordea_analytics.key_figure_names import TimeSeriesKeyFigureName as kf_ts
     from nordea_analytics.key_figure_names import CalculatedBondKeyFigureName as kf_calc
     from nordea_analytics.curve_variable_names import CurveName
 
-    analytics_api = NordeaAnalyticsService()
-
+    na_service = get_nordea_analytics_client(client_id="Your client id", client_secret="Your client secret")
     from_date = datetime(2022, 1, 3)
 
     isin_1 = "NDA 2.5 01oct53 (2)"
     isin_2 = "NDA 1 01oct50 (2)"
-    df_25_53 = analytics_api.get_time_series(symbol=[isin_1],
+    df_25_53 = na_service.get_time_series(symbol=[isin_1],
                                              keyfigures=[kf_ts.PriceClean, kf_ts.OAS_GOV],
-                                             from_date=from_date, to_date=datetime.now(),
+                                             from_date=from_date,
+                                             to_date=datetime.now(),
                                              as_df=True).set_index('Date')
-    df_1_50 = analytics_api.get_time_series(symbol=[isin_2],
+    df_1_50 = na_service.get_time_series(symbol=[isin_2],
                                             keyfigures=[kf_ts.PriceClean, kf_ts.OAS_GOV],
-                                            from_date=from_date, to_date=datetime.now(),
+                                            from_date=from_date,
+                                            to_date=datetime.now(),
                                             as_df=True).set_index('Date')
 
-    df_calc_oas = analytics_api.calculate_bond_key_figure(calc_date=datetime.now(), isins=[isin_1, isin_2]
+    df_calc_oas = na_service.calculate_bond_key_figure(calc_date=datetime.now(),
+                                                          isins=[isin_1, isin_2]
                                                           keyfigures=[kf_calc.Spread],
-                                                          curves=[CurveName.DKKGOV], as_df=True)
+                                                          curves=[CurveName.DKKGOV],
+                                                          as_df=True)
     df_25_53.loc[df_25_53.index[-1], 'OAS_GOV'] = df_calc_oas.loc[isin_1, 'Spread']
     df_1_50.loc[df_25_53.index[-1], 'OAS_GOV'] = df_calc_oas.loc[isin_2, 'Spread']
 
