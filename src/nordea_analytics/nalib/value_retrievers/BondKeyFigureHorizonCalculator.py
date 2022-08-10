@@ -4,6 +4,7 @@ from typing import Any, Dict, List, Mapping, Optional, Union
 
 import pandas as pd
 
+from nordea_analytics.convention_variable_names import CashflowType
 from nordea_analytics.curve_variable_names import (
     CurveName,
 )
@@ -31,7 +32,7 @@ class BondKeyFigureHorizonCalculator(ValueRetriever):
     def __init__(
         self,
         client: DataRetrievalServiceClient,
-        isins: Union[str, List[str]],
+        symbols: Union[str, List[str]],
         keyfigures: Union[
             str,
             HorizonCalculatedBondKeyFigureName,
@@ -45,17 +46,19 @@ class BondKeyFigureHorizonCalculator(ValueRetriever):
         rates_shifts: Optional[Union[List[str], str]] = None,
         pp_speed: Optional[float] = None,
         price: Optional[float] = None,
+        cashflow_type: Optional[Union[str, CashflowType]] = None,
         fixed_prepayments: Optional[float] = None,
         reinvest_in_series: Optional[bool] = None,
         reinvestment_rate: Optional[float] = None,
         spread_change_horizon: Optional[float] = None,
+        align_to_forward_curve: Optional[bool] = None,
     ) -> None:
         """Initialization of class.
 
         Args:
             client: DataRetrievalServiceClient
                 or DataRetrievalServiceClientTest for testing.
-            isins: ISINs of bond that should be valued.
+            symbols: ISIN or name of bonds that should be valued.
             keyfigures: Bond key figure that should be valued.
             calc_date: date of calculation
             horizon_date: future date of calculation
@@ -63,19 +66,23 @@ class BondKeyFigureHorizonCalculator(ValueRetriever):
             rates_shifts: shifts in curves("tenor shift in bbp"
                 like "0Y 5" or "30Y -5").
             pp_speed: Prepayment speed. Default = 1.
-            price: fixed price for ISIN.
+            price: fixed price for bond.
+            cashflow_type: Type of cashflow to calculate with.
             fixed_prepayments: repayments between calc_cate and horizon date.
                 Value of 0.01 would mean that prepayments are set to 1%,
                 but model prepayments are still used after horizon date.
                 If noting entered, then model prepayments used.
-            reinvest_in_series:  True if you want to reinvest in the series.
+            reinvest_in_series: True if you want to reinvest in the series.
                 Default value is True
             reinvestment_rate: Rate you want to reinvest if you don't
                 want to reinvest in series. Only relevant if
                     reinvest_in_series is False, or horizon date is
                     further out than maturity of the bond.
-            spread_change_horizon:bump the spread between calc date
+            spread_change_horizon: Bump the spread between calc date
                 and horizon date. Value should be in bps.
+            align_to_forward_curve: True if you want the curve used for horizon
+                calculations to be the respective forward curve.
+                Default is False.
         """
         super(BondKeyFigureHorizonCalculator, self).__init__(client)
         self._client = client
@@ -84,7 +91,7 @@ class BondKeyFigureHorizonCalculator(ValueRetriever):
             convert_to_variable_string(keyfigure, HorizonCalculatedBondKeyFigureName)
             for keyfigure in _keyfigures
         ]
-        self.isins = [isins] if type(isins) == str else isins
+        self.symbols = [symbols] if type(symbols) == str else symbols
         self.calc_date = calc_date
         self.horizon_date = horizon_date
         _curves: Union[
@@ -106,10 +113,16 @@ class BondKeyFigureHorizonCalculator(ValueRetriever):
         self.rates_shifts = rates_shifts
         self.pp_speed = pp_speed
         self.price = price
+        self.cashflow_type = (
+            convert_to_variable_string(cashflow_type, CashflowType)
+            if cashflow_type is not None
+            else None
+        )
         self.fixed_prepayments = fixed_prepayments
         self.reinvest_in_series = reinvest_in_series
         self.reinvestment_rate = reinvestment_rate
         self.spread_change_horizon = spread_change_horizon
+        self.align_to_forward_curve = align_to_forward_curve
         self.fixed_keyfigures = [
             "price",
             "price_at_horizon",
@@ -158,9 +171,9 @@ class BondKeyFigureHorizonCalculator(ValueRetriever):
         if keyfigures == []:  # There has to be some key figure in request,
             # but it will not be returned in final results
             keyfigures = "bpv"  # type:ignore
-        for isin in self.isins:
+        for symbol in self.symbols:
             initial_request = {
-                "symbol": isin,
+                "symbol": symbol,
                 "date": self.calc_date.strftime("%Y-%m-%d"),
                 "horizon_date": self.horizon_date.strftime("%Y-%m-%d"),
                 "keyfigures": keyfigures,
@@ -168,10 +181,12 @@ class BondKeyFigureHorizonCalculator(ValueRetriever):
                 "rates_shift": self.rates_shifts,
                 "pp_speed": self.pp_speed,
                 "price": self.price,
+                "cashflow_type": self.cashflow_type,
                 "fixed_prepayments": self.fixed_prepayments,
                 "reinvest_in_series": self.reinvest_in_series,
                 "reinvestment_rate": self.reinvestment_rate,
                 "spread_change_horizon": self.spread_change_horizon,
+                "align_to_forward_curve": self.align_to_forward_curve,
             }
             request = {
                 key: initial_request[key]
@@ -184,39 +199,40 @@ class BondKeyFigureHorizonCalculator(ValueRetriever):
     def to_dict(self) -> Dict:
         """Reformat the json response to a dictionary."""
         _dict: Dict[Any, Any] = {}
-        for isin in self._data:
-            isin_data = self._data[isin]
-            _dict_isin: Dict[Any, Any] = {}
-            for key_figure in isin_data:
-                if "price" not in key_figure and key_figure in self.keyfigures:
+        for symbol in self._data:
+            bond_data = self._data[symbol]
+            _dict_bond: Dict[Any, Any] = {}
+            for key_figure in bond_data:
+                if "price" != key_figure and key_figure in self.keyfigures:
                     data = (
-                        isin_data[key_figure]
+                        bond_data[key_figure]
                         if key_figure in self.fixed_keyfigures
-                        else isin_data[key_figure]["values"]
+                        else bond_data[key_figure]["values"]
                     )
                     for curve_data in data:
-                        _data_dict = {}
-                        _data_dict[
-                            HorizonCalculatedBondKeyFigureName(key_figure).name
-                        ] = convert_to_float_if_float(curve_data["value"])
-                        if curve_data["key"] in _dict_isin.keys():
-                            _dict_isin[curve_data["key"]].update(_data_dict)
+                        _data_dict = {
+                            HorizonCalculatedBondKeyFigureName(
+                                key_figure
+                            ).name: convert_to_float_if_float(curve_data["value"])
+                        }
+                        if curve_data["key"] in _dict_bond.keys():
+                            _dict_bond[curve_data["key"]].update(_data_dict)
                         else:
-                            _dict_isin[curve_data["key"]] = _data_dict
+                            _dict_bond[curve_data["key"]] = _data_dict
 
             if (
-                _dict_isin == {}
+                _dict_bond == {}
             ):  # This would be the case if only Price would be selected as key figure
-                for curve_data in isin_data["bpv"]["values"]:
-                    _dict_isin[curve_data["key"]] = {}
+                for curve_data in bond_data["bpv"]["values"]:
+                    _dict_bond[curve_data["key"]] = {}
 
-            if "price" in isin_data and "price" in self.keyfigures:
-                for curve in _dict_isin:
-                    _dict_isin[curve][
+            if "price" in bond_data and "price" in self.keyfigures:
+                for curve in _dict_bond:
+                    _dict_bond[curve][
                         HorizonCalculatedBondKeyFigureName("price").name
-                    ] = isin_data["price"]
+                    ] = bond_data["price"]
 
-            _dict[isin] = _dict_isin
+            _dict[symbol] = _dict_bond
 
         return _dict
 
@@ -224,9 +240,9 @@ class BondKeyFigureHorizonCalculator(ValueRetriever):
         """Reformat the json response to a pandas DataFrame."""
         _dict = self.to_dict()
         df = pd.DataFrame()
-        for isin in _dict:
-            _df = pd.DataFrame.from_dict(_dict[isin]).transpose()
+        for symbol in _dict:
+            _df = pd.DataFrame.from_dict(_dict[symbol]).transpose()
             _df = _df.reset_index().rename(columns={"index": "Curve"})
-            _df.index = [isin] * len(_df)
-            df = df.append(_df)
+            _df.index = [symbol] * len(_df)
+            df = pd.concat([df, _df], axis=0)
         return df

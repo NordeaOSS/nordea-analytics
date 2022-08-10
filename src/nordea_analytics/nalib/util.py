@@ -1,11 +1,13 @@
 """Script for various methods for nordea analytics library."""
 from abc import ABC
+import json
 from pathlib import Path
 from typing import Callable, Dict, List, Mapping, Union
 
 import yaml
 
 from nordea_analytics.convention_variable_names import (
+    CashflowType,
     DateRollConvention,
     DayCountConvention,
     Exchange,
@@ -25,6 +27,7 @@ from nordea_analytics.key_figure_names import (
     LiveBondKeyFigureName,
     TimeSeriesKeyFigureName,
 )
+from nordea_analytics.nalib.exceptions import AnalyticsResponseError
 from nordea_analytics.search_bond_names import (
     AmortisationType,
     AssetType,
@@ -54,6 +57,7 @@ def convert_to_variable_string(
         str,
         BondKeyFigureName,
         TimeSeriesKeyFigureName,
+        CashflowType,
         CurveDefinitionName,
         CurveName,
         CurveType,
@@ -94,6 +98,7 @@ def convert_to_variable_string(
     if type(variable) in (
         BondKeyFigureName,
         TimeSeriesKeyFigureName,
+        CashflowType,
         CurveDefinitionName,
         CurveName,
         CurveType,
@@ -125,7 +130,8 @@ def convert_to_variable_string(
             elif variable.lower() == "impliedforward":
                 return "ImpliedForward"
             elif (
-                variable_type == CurveName
+                variable_type == CashflowType
+                or variable_type == CurveName
                 or variable_type == CurveDefinitionName
                 or variable_type == CapitalCentres
                 or variable_type == CapitalCentreTypes
@@ -179,16 +185,6 @@ def get_config(config_path: str = None) -> Dict:
     return ConfigContainer.config
 
 
-def check_string(string: str, substring: str) -> bool:
-    """Strictly checks if substring is in string."""
-    try:
-        string.index(substring)
-    except ValueError:
-        return False
-    else:
-        return True
-
-
 def float_to_tenor_string(float_tenor: Union[str, float]) -> str:
     """Convert float year fraction to tenor string."""
     if float(float_tenor).is_integer():
@@ -210,7 +206,12 @@ def check_json_response(json_response: Union[List, Mapping]) -> bool:
 def check_json_response_error(output_found: bool) -> None:
     """Throws error if output in json_response isn't found."""
     if not output_found:
-        raise ValueError(
+        raise AnalyticsResponseError(
             "No data was retrieved! Please look if you have further "
             "warning messages to identify the issue."
         )
+
+
+def pretty_dict_string(d: Dict, indent: int = 4, sort_keys: bool = True) -> str:
+    """Print dict content as nice-formatted JSON string."""
+    return json.dumps(d, indent=indent, sort_keys=sort_keys) if d else "{}"

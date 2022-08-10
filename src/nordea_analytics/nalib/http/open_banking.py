@@ -40,6 +40,7 @@ class OpenBankingHttpClient(RestApiHttpClient):
 
     def __init__(self, conf: OpenBankingClientConfiguration) -> None:
         """Constructs a :class:`OpenBankingHttpClient <OpenBankingHttpClient>`."""
+        super(OpenBankingHttpClient, self).__init__()
         self.conf = conf
 
     @property

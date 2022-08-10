@@ -12,6 +12,7 @@ from nordea_analytics.curve_variable_names import (
 from nordea_analytics.nalib.data_retrieval_client import (
     DataRetrievalServiceClient,
 )
+from nordea_analytics.nalib.exceptions import AnalyticsInputError
 from nordea_analytics.nalib.util import (
     check_json_response,
     check_json_response_error,
@@ -31,7 +32,13 @@ class CurveTimeSeries(ValueRetriever):
     def __init__(
         self,
         client: DataRetrievalServiceClient,
-        curve: Union[str, CurveName],
+        curves: Union[
+            str,
+            CurveName,
+            List[str],
+            List[CurveName],
+            List[Union[str, CurveName]],
+        ],
         from_date: datetime,
         to_date: datetime,
         tenors: Union[float, List[float]],
@@ -45,7 +52,7 @@ class CurveTimeSeries(ValueRetriever):
         Args:
             client: DataRetrievalServiceClient
                 or DataRetrievalServiceClientTest for testing.
-            curve: Name of curve that should be retrieved.
+            curves: Name of curves that should be retrieved.
             from_date: From date for calc date interval.
             to_date: To date for calc date interval.
             tenors: For what tenors should be curve be constructed.
@@ -57,11 +64,10 @@ class CurveTimeSeries(ValueRetriever):
         """
         super(CurveTimeSeries, self).__init__(client)
         self._client = client
-        self.curve = (
-            convert_to_variable_string(curve, CurveName)
-            if type(curve) == CurveName
-            else curve
-        )
+        _curves: List = curves if type(curves) == list else [curves]
+        self.curves = [
+            convert_to_variable_string(curve, CurveName) for curve in _curves
+        ]
         self.from_date = from_date
         self.to_date = to_date
         _tenors: List = tenors if type(tenors) == list else [tenors]  # type:ignore
@@ -90,8 +96,7 @@ class CurveTimeSeries(ValueRetriever):
         for request_dict in self.request:
             _json_response = self.get_response(request_dict)
             json_map = _json_response[config["results"]["curve_time_series"]]
-
-            json_response = list(json_map) + json_response
+            json_response.append({"curve": request_dict["curve"], "values": json_map})
 
         output_found = check_json_response(json_response)
         check_json_response_error(output_found)
@@ -108,11 +113,11 @@ class CurveTimeSeries(ValueRetriever):
             Forward tenor as a string or None.
 
         Raises:
-            ValueError: If forward tenor should have a value.
+            AnalyticsInputError: If forward tenor should have a value.
         """
         if forward_tenor is None:
             if self.spot_forward == "Forward" or self.spot_forward == "ImpliedForward":
-                raise ValueError(
+                raise AnalyticsInputError(
                     "Forward tenor has to be chosen for forward and"
                     " implied forward curves"
                 )
@@ -140,84 +145,95 @@ class CurveTimeSeries(ValueRetriever):
             new_from_date = new_to_date.replace(day=new_to_date.day + 1)
         date_interv.append({"from": new_from_date, "to": self.to_date})
 
-        request_dict = []
-        for dates in date_interv:
-            _initial_request_dict = {
-                "from": dates["from"].strftime("%Y-%m-%d"),
-                "to": dates["to"].strftime("%Y-%m-%d"),
-                "curve": self.curve,
-                "tenors": self.tenors,
-                "type": self.curve_type,
-                "time-convention": self.time_convention,
-                "spot-forward": self.spot_forward,
-                "forward": self.forward_tenor,
-            }
+        request_list = []
 
-            _request_dict = {
-                key: _initial_request_dict[key]
-                for key in _initial_request_dict.keys()
-                if _initial_request_dict[key] is not None
-            }
+        for curve in self.curves:
+            for dates in date_interv:
+                _initial_request_dict = {
+                    "from": dates["from"].strftime("%Y-%m-%d"),
+                    "to": dates["to"].strftime("%Y-%m-%d"),
+                    "curve": curve,
+                    "tenors": self.tenors,
+                    "type": self.curve_type,
+                    "time-convention": self.time_convention,
+                    "spot-forward": self.spot_forward,
+                    "forward": self.forward_tenor,
+                }
 
-            request_dict.append(_request_dict)
+                _request_dict = {
+                    key: _initial_request_dict[key]
+                    for key in _initial_request_dict.keys()
+                    if _initial_request_dict[key] is not None
+                }
 
-        return request_dict
+                request_list.append(_request_dict)
+
+        return request_list
 
     def to_dict(self) -> Dict:
         """Reformat the json response to a dictionary."""
-        _dict: Dict[Any, Any] = {}
-        curve_name = (
-            self.curve if type(self.curve) == str else self.curve.name  # type:ignore
-        )
+        _curves_dict: Dict[Any, Any] = {}
+        for curve_series in self._data:
+            _tenor_dict: Dict[Any, Any] = {}
+            for timeseries in curve_series["values"]:
+                for tenor in timeseries["values"]:
+                    if self.forward_tenor is None:
+                        curve_and_tenor = (
+                            curve_series["curve"]
+                            + "("
+                            + float_to_tenor_string(tenor["tenor"])
+                            + ")"
+                        )
+                    else:
+                        curve_and_tenor = (
+                            curve_series["curve"]
+                            + "("
+                            + float_to_tenor_string(self.forward_tenor)
+                            + ")"
+                            + "("
+                            + float_to_tenor_string(tenor["tenor"])
+                            + ")"
+                        )
 
-        for timeseries in self._data:
-            for tenor in timeseries["values"]:
-                if self.forward_tenor is None:
-                    curve_and_tenor = (
-                        curve_name + "(" + float_to_tenor_string(tenor["tenor"]) + ")"
-                    )
-                else:
-                    curve_and_tenor = (
-                        curve_name
-                        + "("
-                        + float_to_tenor_string(self.forward_tenor)
-                        + ")"
-                        + "("
-                        + float_to_tenor_string(tenor["tenor"])
-                        + ")"
-                    )
+                    if curve_and_tenor not in _tenor_dict.keys():
+                        _tenor_dict[curve_and_tenor] = {}
+                        _tenor_dict[curve_and_tenor]["Value"] = [
+                            convert_to_float_if_float(tenor["value"])
+                        ]
+                        _tenor_dict[curve_and_tenor]["Date"] = [
+                            datetime.strptime(
+                                timeseries["date"].split("T")[0], "%Y-%m-%d"
+                            )
+                        ]
+                    else:
+                        _tenor_dict[curve_and_tenor]["Value"].append(
+                            convert_to_float_if_float(tenor["value"])
+                        )
+                        _tenor_dict[curve_and_tenor]["Date"].append(
+                            datetime.strptime(
+                                timeseries["date"].split("T")[0], "%Y-%m-%d"
+                            )
+                        )
+            _curves_dict[curve_series["curve"]] = _tenor_dict
 
-                if curve_and_tenor not in _dict.keys():
-                    _dict[curve_and_tenor] = {}
-                    _dict[curve_and_tenor]["Value"] = [
-                        convert_to_float_if_float(tenor["value"])
-                    ]
-                    _dict[curve_and_tenor]["Date"] = [
-                        datetime.strptime(timeseries["date"].split("T")[0], "%Y-%m-%d")
-                    ]
-                else:
-                    _dict[curve_and_tenor]["Value"].append(
-                        convert_to_float_if_float(tenor["value"])
-                    )
-                    _dict[curve_and_tenor]["Date"].append(
-                        datetime.strptime(timeseries["date"].split("T")[0], "%Y-%m-%d")
-                    )
-
-        return _dict
+        return _curves_dict
 
     def to_df(self) -> pd.DataFrame:
         """Reformat the json response to a pandas DataFrame."""
         df = pd.DataFrame.empty
         _dict = self.to_dict()
-        for curve_and_tenor in _dict:
-            _df = pd.DataFrame.empty
-            _df = pd.DataFrame.from_dict(_dict[curve_and_tenor])
-            _df = _df[["Date", "Value"]]
-            _df.columns = ["Date", curve_and_tenor]
-            if df is pd.DataFrame.empty:
-                df = _df
-            else:
-                df = df.merge(_df, on="Date", how="outer")
-            df = df.sort_values(by="Date")
+
+        _df = pd.DataFrame.from_dict(_dict, orient="index")
+        for curve_series in _dict:
+            for tenor_series in _dict[curve_series]:
+                _df = pd.DataFrame.empty
+                _df = pd.DataFrame.from_dict(_dict[curve_series][tenor_series])
+                _df = _df[["Date", "Value"]]
+                _df.columns = ["Date", tenor_series]
+                if df is pd.DataFrame.empty:
+                    df = _df
+                else:
+                    df = df.merge(_df, on="Date", how="outer")
+                df = df.sort_values(by="Date")
 
         return df

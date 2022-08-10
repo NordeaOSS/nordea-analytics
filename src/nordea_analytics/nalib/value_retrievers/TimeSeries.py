@@ -45,9 +45,9 @@ class TimeSeries(ValueRetriever):
         Args:
             client: DataRetrievalServiceClient
                 or DataRetrievalServiceClientTest for testing.
-            symbol: Bonds ISINs, swaps, FX, FX swap point.
+            symbol: Bonds, swaps, FX, FX swap point.
             keyfigures: Key figure names for request. If symbol is
-                something else than a bond ISIN, quote should be chosen.
+                something else than a bonds, quote should be chosen.
             from_date: From date for calc date interval.
             to_date: To date for calc date interval.
         """
@@ -116,9 +116,9 @@ class TimeSeries(ValueRetriever):
     def to_dict(self) -> Dict:
         """Reformat the json response to a dictionary."""
         _dict: Dict[Any, Any] = {}
-        for isin_data in self._data:
+        for symbol_data in self._data:
             _timeseries_dict: Dict[Any, Any] = {}
-            for timeseries in isin_data["timeseries"]:
+            for timeseries in symbol_data["timeseries"]:
                 key_figure_name = TimeSeriesKeyFigureName(timeseries["keyfigure"]).name
                 _timeseries_dict[key_figure_name] = {}
                 _timeseries_dict[key_figure_name]["Date"] = [
@@ -129,31 +129,31 @@ class TimeSeries(ValueRetriever):
                     convert_to_float_if_float(x["value"]) for x in timeseries["values"]
                 ]
 
-                if isin_data["symbol"] in _dict.keys():
-                    if key_figure_name in _dict[isin_data["symbol"]].keys():
+                if symbol_data["symbol"] in _dict.keys():
+                    if key_figure_name in _dict[symbol_data["symbol"]].keys():
                         if (
-                            _dict[isin_data["symbol"]][key_figure_name]["Date"][-1]
+                            _dict[symbol_data["symbol"]][key_figure_name]["Date"][-1]
                             > _timeseries_dict[key_figure_name]["Date"][0]
                         ):
-                            _dict[isin_data["symbol"]][key_figure_name][
+                            _dict[symbol_data["symbol"]][key_figure_name][
                                 "Date"
                             ] += _timeseries_dict[key_figure_name]["Date"]
-                            _dict[isin_data["symbol"]][key_figure_name][
+                            _dict[symbol_data["symbol"]][key_figure_name][
                                 "Value"
                             ] += _timeseries_dict[key_figure_name]["Value"]
                         else:
-                            _dict[isin_data["symbol"]][key_figure_name]["Date"] = (
+                            _dict[symbol_data["symbol"]][key_figure_name]["Date"] = (
                                 _timeseries_dict[key_figure_name]["Date"]
-                                + _dict[isin_data["symbol"]][key_figure_name]["Date"]
+                                + _dict[symbol_data["symbol"]][key_figure_name]["Date"]
                             )
-                            _dict[isin_data["symbol"]][key_figure_name]["Value"] = (
+                            _dict[symbol_data["symbol"]][key_figure_name]["Value"] = (
                                 _timeseries_dict[key_figure_name]["Value"]
-                                + _dict[isin_data["symbol"]][key_figure_name]["Value"]
+                                + _dict[symbol_data["symbol"]][key_figure_name]["Value"]
                             )
                     else:
-                        _dict[isin_data["symbol"]].update(_timeseries_dict)
+                        _dict[symbol_data["symbol"]].update(_timeseries_dict)
                 else:
-                    _dict[isin_data["symbol"]] = _timeseries_dict
+                    _dict[symbol_data["symbol"]] = _timeseries_dict
 
         return _dict
 
@@ -177,5 +177,5 @@ class TimeSeries(ValueRetriever):
             if df is pd.DataFrame.empty:
                 df = _df
             else:
-                df = df.append(_df)
+                df = pd.concat([df, _df], axis=0)
         return df.reset_index(drop=True)

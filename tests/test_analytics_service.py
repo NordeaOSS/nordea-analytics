@@ -4,7 +4,9 @@ import os
 from pathlib import Path
 from typing import List, Union
 
+from pandas import DataFrame
 import pytest
+
 
 from nordea_analytics import NordeaAnalyticsService, TimeConvention
 from nordea_analytics.curve_variable_names import (
@@ -21,6 +23,7 @@ from nordea_analytics.key_figure_names import (
     LiveBondKeyFigureName,
     TimeSeriesKeyFigureName,
 )
+from nordea_analytics.nalib.exceptions import AnalyticsInputError
 from nordea_analytics.search_bond_names import (
     AmortisationType,
     AssetType,
@@ -28,7 +31,7 @@ from nordea_analytics.search_bond_names import (
     CapitalCentreTypes,
     Issuers,
 )
-from nordea_analytics import get_nordea_analytics_client  # type: ignore
+from nordea_analytics.shortcuts.nordea import get_nordea_analytics_client  # type: ignore
 from tests.util import load_and_compare_dfs
 
 DUMP_DATA = False
@@ -37,9 +40,7 @@ DUMP_DATA = False
 @pytest.fixture
 def na_service() -> NordeaAnalyticsService:
     """NordeaAnaLyticsService test class."""
-    client_id = "<CLIENT_ID>"
-    client_secret = "<CLIENT_SECRET>"
-    return get_nordea_analytics_client(client_id=client_id, client_secret=client_secret)
+    return get_nordea_analytics_client()
 
 
 @pytest.fixture
@@ -384,10 +385,12 @@ class TestCurveTimeSeries:
             forward_tenor,
         )
         # change dateformat so it can be saved
-        for curve_tenor in curve_time_series:
-            curve_time_series[curve_tenor]["Date"] = [
-                x.isoformat() for x in curve_time_series[curve_tenor]["Date"]
-            ]
+        for curve_key in curve_time_series:
+            for curve_tenor in curve_time_series[curve_key]:
+                curve_time_series[curve_key][curve_tenor]["Date"] = [
+                    x.isoformat()
+                    for x in curve_time_series[curve_key][curve_tenor]["Date"]
+                ]
 
         curve_name = curve if type(curve) == str else curve.name  # type:ignore
         if DUMP_DATA:
@@ -521,7 +524,7 @@ class TestCurveTimeSeries:
                 forward_tenor,
             )
             expected_result = False
-        except ValueError as e:
+        except AnalyticsInputError as e:
             expected_result = (
                 e.args[0] == "Forward tenor has to be chosen for forward and "
                 "implied forward curves"
@@ -546,7 +549,7 @@ class TestCurve:
                 2,
             ),
             (
-                CurveName.USDSWAP_Fix_3M_OIS,
+                CurveName.DKKSWAP_Fix_6M_OIS,
                 0.25,
                 CurveType.ParCurve,
                 TimeConvention.TC_30360,
@@ -601,6 +604,7 @@ class TestCurve:
 
         assert curve == expected_result
 
+    @pytest.mark.skip("load_and_compare_dfs doesn't support nested results")
     @pytest.mark.parametrize(
         "curve_name, tenor_frequency, curve_type, time_convention,"
         " spot_forward, forward_tenor",
@@ -1381,82 +1385,146 @@ class TestYieldForecast:
         assert yield_forecast_df.values.size != 0
 
 
-@pytest.mark.skip("test not robust enough")
+# @pytest.mark.skip("test not robust enough")
 class TestNordeaAnalyticsLiveService:
     """Test class for live streaming service."""
 
     @pytest.mark.parametrize(
-        "isin, live_key_figure, streaming",
+        "isins, live_key_figure",
         [
             (
                 ["DK0009295065", "DK0009527376"],
                 [LiveBondKeyFigureName.Quote, LiveBondKeyFigureName.CVX],
-                False,
             ),
-            # (
-            #     ["DK0009295065", "DK0009527376"],
-            #     [LiveBondKeyFigureName.Spread, LiveBondKeyFigureName.Yield],
-            #     True,
-            # ),
         ],
     )
     def test_live_streaming_dict(
         self,
-        isin: List[str],
+        isins: List[str],
         live_key_figure: Union[List[LiveBondKeyFigureName], List[str]],
-        streaming: bool,
     ) -> None:
         """Test live streaming returned as a dict."""
         na_live_service = get_nordea_analytics_client()
 
         live_bond_keyfigure = na_live_service.iter_live_bond_key_figures(
-            isin, live_key_figure
+            isins, live_key_figure, as_df=False
         )
         i = 0
+        live_dict: dict[str, dict] = {}
         for kf in live_bond_keyfigure:
             if i < 5:
-                live_dict = kf
+                for entry in kf:
+                    if not live_dict.__contains__(entry):
+                        live_dict[entry] = dict(kf)[entry]
                 i = i + 1
             else:
                 break
         list(live_dict.keys()).sort()
-        isin.sort()
-        assert list(live_dict.keys()) == isin
-        assert len(live_dict[isin[0]]) == len(live_key_figure) + 1
+        isins.sort()
+        assert list(live_dict.keys()) == isins
+        assert len(live_dict[isins[0]]) == len(live_key_figure) + 1
 
     @pytest.mark.parametrize(
-        "isin, live_key_figure, streaming",
+        "isins, live_key_figure",
         [
             (
                 ["DK0009398620", "DK0009527376"],
                 [LiveBondKeyFigureName.SwapSpread, LiveBondKeyFigureName.LiborSpread6M],
-                False,
             ),
         ],
     )
     def test_live_streaming_df(
         self,
-        isin: List[str],
+        isins: List[str],
         live_key_figure: Union[List[LiveBondKeyFigureName], List[str]],
-        streaming: bool,
     ) -> None:
         """Test live streaming returned as a dict."""
         na_live_service = get_nordea_analytics_client()
 
         live_bond_keyfigure = na_live_service.iter_live_bond_key_figures(
-            isin, live_key_figure, as_df=True
+            isins, live_key_figure, as_df=True
         )
         i = 0
+        live_df = []
         for kf in live_bond_keyfigure:
             if i < 5:
-                live_df = kf
+                kf_list = DataFrame(kf).values.tolist()
+                for entry in kf_list:
+                    live_df.append(entry)
                 i = i + 1
             else:
                 break
-        isin.sort()
-        list(live_df["ISIN"]).sort()
-        assert list(live_df["ISIN"]) == isin
-        assert live_df.columns.size == len(live_key_figure) + 2
+        isins.sort()
+        live_isins_sorted = [
+            sublist[0] for sublist in live_df
+        ]  # retrieves first item of each sublist => isins
+        live_isins_sorted = list(set(live_isins_sorted))  # unique list of isins
+        live_isins_sorted.sort()
+        assert live_isins_sorted == isins
+
+        liv = []
+        for item in live_df[0]:
+            liv.append(item)
+        assert liv.__len__() == len(live_key_figure) + 2
+
+    @pytest.mark.parametrize(
+        "isins, live_key_figure",
+        [
+            (
+                ["DK0009295065", "DK0009527376"],
+                [LiveBondKeyFigureName.Quote, LiveBondKeyFigureName.CVX],
+            ),
+        ],
+    )
+    def test_live_snapshot_dict(
+        self,
+        isins: List[str],
+        live_key_figure: Union[List[LiveBondKeyFigureName], List[str]],
+    ) -> None:
+        """Test live streaming returned as a dict."""
+        na_live_service = get_nordea_analytics_client()
+
+        live_bond_keyfigure = na_live_service.get_bond_live_key_figures(
+            isins, live_key_figure, as_df=False
+        )
+
+        list(live_bond_keyfigure.keys()).sort()
+        isins.sort()
+        assert list(live_bond_keyfigure.keys()) == isins
+        assert len(live_bond_keyfigure[isins[0]]) == len(live_key_figure) + 1
+
+    @pytest.mark.parametrize(
+        "isins, live_key_figure",
+        [
+            (
+                ["DK0009398620", "DK0009527376"],
+                [LiveBondKeyFigureName.SwapSpread, LiveBondKeyFigureName.LiborSpread6M],
+            ),
+        ],
+    )
+    def test_live_snapshot_df(
+        self,
+        isins: List[str],
+        live_key_figure: Union[List[LiveBondKeyFigureName], List[str]],
+    ) -> None:
+        """Test live streaming returned as a dict."""
+        na_live_service = get_nordea_analytics_client()
+
+        live_bond_keyfigure: DataFrame = na_live_service.get_bond_live_key_figures(
+            isins, live_key_figure, as_df=True
+        )
+
+        isins.sort()
+        live_isins_sorted = live_bond_keyfigure[
+            "ISIN"
+        ].tolist()  # retrieves first item of each sublist => isins
+        live_isins_sorted.sort()
+        assert live_isins_sorted == isins
+
+        liv = []
+        for item in live_bond_keyfigure.to_dict():
+            liv.append(item)
+        assert liv.__len__() == len(live_key_figure) + 2
 
 
 class TestShiftDays:
@@ -1491,7 +1559,6 @@ class TestShiftDays:
         assert shifted_date == expected_result
 
 
-@pytest.mark.skip("Throws AttributionError")
 class TestYearFraction:
     """Test class for year fraction."""
 

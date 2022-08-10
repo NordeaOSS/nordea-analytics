@@ -1,6 +1,6 @@
 from abc import ABC, abstractmethod
 import time
-from typing import Any, Callable, Dict
+from typing import Any, Callable, Dict, List
 
 import requests
 
@@ -40,6 +40,21 @@ class HttpClientConfiguration(object):
 
 class RestApiHttpClient(ABC):
     """Sends requests to the Nordea Analytics REST API."""
+
+    def __init__(self) -> None:
+        """Create new instance of RestApiHttpClient."""
+        self._history: List = []
+
+    @property
+    def history(self) -> List:
+        """A list of :class:`Response <Response>` objects with the history of the Responses.
+
+        Any responses will end up here. The list is sorted from the oldest to the most recent response.
+
+        Returns:
+            A list of objects
+        """
+        return self._history
 
     @property
     @abstractmethod
@@ -94,9 +109,13 @@ class RestApiHttpClient(ABC):
         self, max_retries: int, send_callable: Callable[[], requests.Response]
     ) -> requests.Response:
         """Proceed the response in accordance with server logic."""
+        self.history.clear()
+
         while max_retries != 0:
             max_retries = max_retries - 1
             response = send_callable()
+
+            self.history.append(response)
 
             if response.ok:
                 return response
@@ -110,10 +129,7 @@ class RestApiHttpClient(ABC):
                     error_json = response.json()
                     raise ApiServerError(
                         error_id=response.headers["x-request-id"],
-                        error_description=f'{error_json["error_description"]}'
-                        f'Error_code: {error_json["error_code"]}',
+                        error_description=f'{error_json["error_description"]}',
                     )
-
-            raise response.raise_for_status()
 
             return response

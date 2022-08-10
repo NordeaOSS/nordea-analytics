@@ -6,10 +6,10 @@ import pytest
 from nordea_analytics.convention_variable_names import TimeConvention
 from nordea_analytics.curve_variable_names import CurveType, SpotForward
 from nordea_analytics.key_figure_names import BondKeyFigureName
+from nordea_analytics.nalib.exceptions import AnalyticsResponseError
 from nordea_analytics.nalib.util import (
     check_json_response,
     check_json_response_error,
-    check_string,
     convert_to_float_if_float,
     convert_to_variable_string,
     float_to_tenor_string,
@@ -136,7 +136,7 @@ def test_get_config() -> None:
 )
 def test_check_string(string: str, substring: str, expected_results: bool) -> None:
     """Test that returns True when exactly the right substring is given."""
-    assert check_string(string, substring) == expected_results
+    assert (substring in string) == expected_results
 
 
 @pytest.mark.parametrize(
@@ -156,7 +156,7 @@ def test_check_json_response(input: Union[List, Dict]) -> None:
         output_found = check_json_response(input)
         check_json_response_error(output_found)
         expected_results = False
-    except ValueError:
+    except AnalyticsResponseError:
         expected_results = True
 
     assert expected_results
