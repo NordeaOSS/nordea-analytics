@@ -19,23 +19,23 @@ config = get_config()
 
 
 class BondStaticData(ValueRetriever):
-    """Retrieves and reformat latest bond static data for given ISINs."""
+    """Retrieves and reformat latest static data for given bonds."""
 
     def __init__(
         self,
         client: DataRetrievalServiceClient,
-        isins: Union[List[str], str],
+        symbols: Union[List[str], str],
     ) -> None:
         """Initialization of class.
 
         Args:
             client:  DataRetrievalServiceClient
                 or DataRetrievalServiceClientTest for testing
-            isins: ISINs for requests.
+            symbols: ISIN or name of bonds for requests.
         """
         super(BondStaticData, self).__init__(client)
 
-        self.isins: List = [isins] if type(isins) != list else isins
+        self.symbols: List = [symbols] if type(symbols) != list else symbols
         self._data = self.get_bond_static_data()
 
     def get_bond_static_data(self) -> List:
@@ -68,21 +68,21 @@ class BondStaticData(ValueRetriever):
 
     @property
     def request(self) -> List[Dict]:
-        """Request dictionary for a given set of ISINs."""
-        if len(self.isins) > config["max_isins"]:
-            split_isins = np.array_split(
-                self.isins, math.ceil(len(self.isins) / config["max_isins"])
+        """Request dictionary for a given set of symbols."""
+        if len(self.symbols) > config["max_bonds"]:
+            split_symbols = np.array_split(
+                self.symbols, math.ceil(len(self.symbols) / config["max_bonds"])
             )
             request_dict = [
                 {
-                    "symbols": list(isins),
+                    "symbols": list(symbols),
                 }
-                for isins in split_isins
+                for symbols in split_symbols
             ]
         else:
             request_dict = [
                 {
-                    "symbols": self.isins,
+                    "symbols": self.symbols,
                 }
             ]
 
@@ -91,12 +91,12 @@ class BondStaticData(ValueRetriever):
     def to_dict(self) -> Dict:
         """Reformat the json response to a dictionary."""
         _dict = {}
-        for isin_data in self._data:
-            _isin_dict = {}
-            _isin_dict["name"] = isin_data["name"]
+        for bond_data in self._data:
+            _symbol_dict = {}
+            _symbol_dict["name"] = bond_data["name"]
 
-            for static_data_key in isin_data["static_data"]:
-                key_value_pair = isin_data["static_data"][static_data_key]
+            for static_data_key in bond_data["static_data"]:
+                key_value_pair = bond_data["static_data"][static_data_key]
 
                 if (
                     key_value_pair["key"] == "closing_date"
@@ -104,13 +104,13 @@ class BondStaticData(ValueRetriever):
                     or key_value_pair["key"] == "maturity"
                     or key_value_pair["key"] == "retrieval_date"
                 ):
-                    _isin_dict[key_value_pair["key"]] = datetime.strptime(
+                    _symbol_dict[key_value_pair["key"]] = datetime.strptime(
                         key_value_pair["value"], "%Y-%m-%dT%H:%M:%S.0000000"
                     )
                 else:
-                    _isin_dict[key_value_pair["key"]] = key_value_pair["value"]
+                    _symbol_dict[key_value_pair["key"]] = key_value_pair["value"]
 
-            _dict[isin_data["symbol"]] = _isin_dict
+            _dict[bond_data["symbol"]] = _symbol_dict
 
         return _dict
 

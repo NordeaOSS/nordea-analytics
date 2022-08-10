@@ -1,5 +1,6 @@
 """The Nordea Analytics Python Project API."""
 from .convention_variable_names import (
+    CashflowType,
     DateRollConvention,
     DayCountConvention,
     Exchange,
@@ -22,6 +23,7 @@ from .search_bond_names import (
     CapitalCentreTypes,
     Issuers,
 )
+from .shortcuts.utils import disable_analytics_warnings
 
 # To distinguish between external and internal packages
 try:
@@ -29,15 +31,17 @@ try:
 except (NameError, ModuleNotFoundError):
     from .shortcuts.open_banking import get_nordea_analytics_client  # type: ignore
 
-__version__ = "1.2.3"
+__version__ = "1.2.4"
 __all__ = [
     "get_nordea_analytics_client",
+    "disable_analytics_warnings",
     "AmortisationType",
     "AssetType",
     "BondKeyFigureName",
     "CalculatedBondKeyFigureName",
     "CapitalCentreTypes",
     "CapitalCentres",
+    "CashflowType",
     "CurveDefinitionName",
     "CurveName",
     "CurveType",

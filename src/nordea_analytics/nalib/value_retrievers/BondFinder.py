@@ -49,6 +49,8 @@ class BondFinder(ValueRetriever):
         capital_centre_types: Optional[
             Union[List[str], str, CapitalCentreTypes, List[CapitalCentreTypes]]
         ] = None,
+        lower_outstanding_amount: Optional[float] = None,
+        upper_outstanding_amount: Optional[float] = None,
     ) -> None:
         """Initialization of class.
 
@@ -57,19 +59,21 @@ class BondFinder(ValueRetriever):
                 or DataRetrievalServiceClientTest for testing.
             dmb: Default to False. True if only Danish Mortgage
                 Bonds should be found.
-            country: country of issue.
-            currency: issue currency.
-            issuers: name of issuers.
+            country: Country of issue.
+            currency: Issue currency.
+            issuers: Name of issuers.
             asset_types: Type of asset.
-            lower_maturity: minimum(from) maturity.
-            upper_maturity: maximum(to) maturity.
-            lower_closing_date: minimum(from) closing date.
-            upper_closing_date: maximum(to) closing date.
-            lower_coupon: minimum coupon.
-            upper_coupon: maximum coupon.
-            amortisation_type: amortisation type of bond.
-            capital_centres: capital centres names - only relevant for DMB.
-            capital_centre_types: capital centres types - only relevant for DMB.
+            lower_maturity: Minimum(from) maturity.
+            upper_maturity: Maximum(to) maturity.
+            lower_closing_date: Minimum(from) closing date.
+            upper_closing_date: Maximum(to) closing date.
+            lower_coupon: Minimum coupon.
+            upper_coupon: Maximum coupon.
+            amortisation_type: Amortisation type of bond.
+            capital_centres: Capital centres names - only relevant for DMB.
+            capital_centre_types: Capital centres types - only relevant for DMB.
+            lower_outstanding_amount: Minimum outstanding amount - only relevant for DMB.
+            upper_outstanding_amount: Maximum outstanding amount - only relevant for DMB.
 
         """
         super(BondFinder, self).__init__(client)
@@ -135,6 +139,9 @@ class BondFinder(ValueRetriever):
             if capital_centre_types is not None
             else None
         )
+        self.lower_outstanding_amount = lower_outstanding_amount
+        self.upper_outstanding_amount = upper_outstanding_amount
+
         self.check_inputs()
 
         self._data = self.get_search_bonds()
@@ -180,6 +187,8 @@ class BondFinder(ValueRetriever):
             "amortisation-type": self.amortisation_type,
             "capital-centres": self.capital_centres,
             "capital-centre-types": self.capital_centre_types,
+            "lower-outstanding-amount": self.lower_outstanding_amount,
+            "upper-outstanding-amount": self.upper_outstanding_amount,
         }
 
         request = {
@@ -204,6 +213,18 @@ class BondFinder(ValueRetriever):
                 warnings.warn(
                     "capital_centre_types is only relevant for DMB."
                     " This variable will be ignored."
+                )
+        if self.lower_outstanding_amount is not None:
+            if not self.dmb:
+                warnings.warn(
+                    "lower_outstanding_amount is only relevant for DMB. "
+                    "This variable will be ignored."
+                )
+        if self.upper_outstanding_amount is not None:
+            if not self.dmb:
+                warnings.warn(
+                    "upper_outstanding_amount is only relevant for DMB. "
+                    "This variable will be ignored."
                 )
 
     def to_dict(self) -> Dict:

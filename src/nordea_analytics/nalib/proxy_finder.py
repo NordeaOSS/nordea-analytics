@@ -32,7 +32,7 @@ class ProxyFinder:
             Proxy information.
 
         Raises:
-            ValueError: If proxy information need to be written in manually.
+            LookupError: If proxy information need to be written in manually.
         """
         if self.proxy_path.exists():
             proxy_info = self.proxy_path.read_text()
@@ -43,7 +43,7 @@ class ProxyFinder:
                 self.proxy_path.write_text(
                     str('{"http":"ENTER PROXY INFO HERE IN A STRING FORMAT"}')
                 )
-                raise ValueError(
+                raise LookupError(
                     "We were not able to find your proxy information, "
                     "please enter them manually in " + str(self.proxy_path)
                 )

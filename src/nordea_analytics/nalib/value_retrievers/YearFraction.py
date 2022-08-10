@@ -60,8 +60,8 @@ class YearFraction(ValueRetriever):
     @property
     def request(self) -> dict:
         """Request year fraction."""
-        from_date = self.from_date
-        to_date = self.to_date
+        from_date = self.from_date.strftime("%Y-%m-%d")
+        to_date = self.to_date.strftime("%Y-%m-%d")
         time_convention = self.time_convention
 
         request_dict = {

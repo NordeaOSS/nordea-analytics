@@ -1,5 +1,5 @@
 from datetime import datetime
-from typing import Dict, Mapping, Optional, Union
+from typing import Any, Dict, List, Optional, Union
 
 import pandas as pd
 
@@ -12,6 +12,7 @@ from nordea_analytics.curve_variable_names import (
 from nordea_analytics.nalib.data_retrieval_client import (
     DataRetrievalServiceClient,
 )
+from nordea_analytics.nalib.exceptions import AnalyticsInputError
 from nordea_analytics.nalib.util import (
     check_json_response,
     check_json_response_error,
@@ -30,7 +31,13 @@ class Curve(ValueRetriever):
     def __init__(
         self,
         client: DataRetrievalServiceClient,
-        curve: Union[str, CurveName],
+        curves: Union[
+            str,
+            CurveName,
+            List[str],
+            List[CurveName],
+            List[Union[str, CurveName]],
+        ],
         calc_date: datetime,
         curve_type: Union[str, CurveType] = None,
         tenor_frequency: float = None,
@@ -43,7 +50,7 @@ class Curve(ValueRetriever):
         Args:
             client: DataRetrievalServiceClient
                 or DataRetrievalServiceClientTest for testing.
-            curve: Name of curve that should be retrieved.
+            curves: Name of curves that should be retrieved.
             calc_date: calculation date for request.
             tenor_frequency: frequency between tenors as a fraction of a year.
             curve_type: What type of curve is retrieved.
@@ -54,11 +61,10 @@ class Curve(ValueRetriever):
         """
         super(Curve, self).__init__(client)
         self._client = client
-        self.curve = (
-            convert_to_variable_string(curve, CurveName)
-            if type(curve) == CurveName
-            else curve
-        )
+        _curves: List = curves if type(curves) == list else [curves]
+        self.curves = [
+            convert_to_variable_string(curve, CurveName) for curve in _curves
+        ]
         self.calc_date = calc_date
         self.tenor_frequency = (
             str(tenor_frequency) if tenor_frequency is not None else None
@@ -82,10 +88,13 @@ class Curve(ValueRetriever):
 
         self._data = self.get_curve()
 
-    def get_curve(self) -> Mapping:
+    def get_curve(self) -> List:
         """Retrieves response with curve."""
-        json_response = self.get_response(self.request)
-        json_response = json_response[config["results"]["curve"]]
+        json_response: List[Any] = []
+        for request_dict in self.request:
+            _json_response = self.get_response(request_dict)
+            json_map = _json_response[config["results"]["curve"]]
+            json_response.append(json_map)
 
         output_found = check_json_response(json_response)
         check_json_response_error(output_found)
@@ -102,12 +111,12 @@ class Curve(ValueRetriever):
             Forward tenor as a string or None.
 
         Raises:
-            ValueError: If forward tenor should have a value.
+            AnalyticsInputError: If forward tenor should have a value.
         """
         if forward_tenor is None:
             if self.spot_forward == "Forward" or self.spot_forward == "ImpliedForward":
-                raise ValueError(
-                    "Forward tenor has to be chosen for forward and"
+                raise AnalyticsInputError(
+                    "Forward tenor has to be set for forward and"
                     " implied forward curves"
                 )
             else:
@@ -121,39 +130,45 @@ class Curve(ValueRetriever):
         return config["url_suffix"]["curve"]
 
     @property
-    def request(self) -> Dict:
+    def request(self) -> List[Dict]:
         """Request dictionary with curve."""
-        initial_request = {
-            "date": self.calc_date.strftime("%Y-%m-%d"),
-            "tenor-frequency": self.tenor_frequency,
-            "curve": self.curve,
-            "type": self.curve_type,
-            "time-convention": self.time_convention,
-            "spot-forward": self.spot_forward,
-            "Forward": self.forward_tenor,
-        }
+        request_list = [
+            {
+                "date": self.calc_date.strftime("%Y-%m-%d"),
+                "tenor-frequency": self.tenor_frequency,
+                "curve": curve,
+                "type": self.curve_type,
+                "time-convention": self.time_convention,
+                "spot-forward": self.spot_forward,
+                "Forward": self.forward_tenor,
+            }
+            for curve in self.curves
+        ]
 
-        request = {
-            key: initial_request[key]
-            for key in initial_request.keys()
-            if initial_request[key] is not None
-        }
-
-        return request
+        return request_list
 
     def to_dict(self) -> Dict:
         """Reformat the json response to a dictionary."""
-        _dict = {
-            self.curve: [
-                {"Tenor": x["tenor"], "Value": convert_to_float_if_float(x["value"])}
-                for x in self._data["curve"]["values"]
-            ]
-        }
+        _dict = {}
+        for curve in self._data:
+            _curve = {
+                "type": curve["curve"]["curve_specification"]["type"],
+                "time_convention": curve["curve"]["curve_specification"][
+                    "time_convention"
+                ],
+                "values": [
+                    {
+                        "Tenor": x["tenor"],
+                        "Value": convert_to_float_if_float(x["value"]),
+                    }
+                    for x in curve["curve"]["values"]
+                ],
+            }
+
+            _dict[curve["curve"]["curve_specification"]["name"]] = _curve
+
         return _dict
 
     def to_df(self) -> pd.DataFrame:
         """Reformat the json response to a pandas DataFrame."""
-        _dict = self.to_dict()
-        df = pd.DataFrame.from_dict(_dict[self.curve])
-        df.index = [self.curve] * len(df)
-        return df
+        return pd.DataFrame.from_dict(self.to_dict(), orient="index")

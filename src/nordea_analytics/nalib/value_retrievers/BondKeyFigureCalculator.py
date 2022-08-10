@@ -4,6 +4,7 @@ from typing import Any, Dict, List, Mapping, Optional, Union
 
 import pandas as pd
 
+from nordea_analytics.convention_variable_names import CashflowType
 from nordea_analytics.curve_variable_names import (
     CurveName,
 )
@@ -31,7 +32,7 @@ class BondKeyFigureCalculator(ValueRetriever):
     def __init__(
         self,
         client: DataRetrievalServiceClient,
-        isins: Union[str, List[str]],
+        symbols: Union[str, List[str]],
         keyfigures: Union[
             str,
             CalculatedBondKeyFigureName,
@@ -49,28 +50,30 @@ class BondKeyFigureCalculator(ValueRetriever):
         yield_input: Optional[float] = None,
         asw_fix_frequency: Optional[str] = None,
         ladder_definition: Optional[List[str]] = None,
+        cashflow_type: Optional[Union[str, CashflowType]] = None,
     ) -> None:
         """Initialization of class.
 
         Args:
             client: DataRetrievalServiceClient
                 or DataRetrievalServiceClientTest for testing.
-            isins: ISINs of bond that should be valued.
+            symbols: ISIN or name of bonds that should be valued.
             keyfigures: Bond key figure that should be valued.
             calc_date: date of calculation.
             curves: discount curves for calculation.
             rates_shifts: shifts in curves("tenor shift in bbp"
                 like "0Y 5" or "30Y -5").
             pp_speed: Prepayment speed. Default = 1.
-            price: fixed price for ISIN.
-            spread: fixed spread for ISIN. Mandatory to give
+            price: fixed price for bond.
+            spread: fixed spread for bond. Mandatory to give
                 spread_curve also as an input.
             spread_curve: spread curve to calculate the
                 key figures when a fixed spread is given.
-            yield_input: fixed yield for ISIN.
+            yield_input: fixed yield for bond.
             asw_fix_frequency: Fixing frequency of swap in ASW calculation.
                 Mandatory input in all ASW calculations.
             ladder_definition: What tenors should be included in BPV ladder calculation.
+            cashflow_type: Type of cashflow to calculate with.
         """
         super(BondKeyFigureCalculator, self).__init__(client)
         self._client = client
@@ -79,7 +82,7 @@ class BondKeyFigureCalculator(ValueRetriever):
             convert_to_variable_string(keyfigure, CalculatedBondKeyFigureName)
             for keyfigure in _keyfigures
         ]
-        self.isins = [isins] if type(isins) == str else isins
+        self.symbols = [symbols] if type(symbols) == str else symbols
         self.calc_date = calc_date
 
         _curves: Union[List[Union[str, ValueError]], None]
@@ -87,7 +90,7 @@ class BondKeyFigureCalculator(ValueRetriever):
             _curves = [convert_to_variable_string(curve, CurveName) for curve in curves]
         elif curves is not None:
             # mypy doesn't know that curves in this line is never a list
-            _curves = convert_to_variable_string(curves, CurveName)  # type: ignore
+            _curves = [convert_to_variable_string(curves, CurveName)]  # type: ignore
         else:
             _curves = None
 
@@ -105,7 +108,11 @@ class BondKeyFigureCalculator(ValueRetriever):
         self.yield_input = yield_input
         self.asw_fix_frequency = asw_fix_frequency
         self.ladder_definition = ladder_definition
-
+        self.cashflow_type = (
+            convert_to_variable_string(cashflow_type, CashflowType)
+            if cashflow_type is not None
+            else None
+        )
         self._data = self.calculate_bond_key_figure()
 
     def calculate_bond_key_figure(self) -> Mapping:
@@ -140,9 +147,9 @@ class BondKeyFigureCalculator(ValueRetriever):
         if keyfigures == []:  # There has to be some key figure in request,
             # but it will not be returned in final results
             keyfigures = "bpv"  # type:ignore
-        for isin in self.isins:
+        for symbol in self.symbols:
             initial_request = {
-                "symbol": isin,
+                "symbol": symbol,
                 "date": self.calc_date.strftime("%Y-%m-%d"),
                 "keyfigures": keyfigures,
                 "curves": self.curves,
@@ -154,6 +161,7 @@ class BondKeyFigureCalculator(ValueRetriever):
                 "yield": self.yield_input,
                 "asw_fix_frequency": self.asw_fix_frequency,
                 "ladder_definition": self.ladder_definition,
+                "cashflow_type": self.cashflow_type,
             }
             request = {
                 key: initial_request[key]
@@ -161,23 +169,24 @@ class BondKeyFigureCalculator(ValueRetriever):
                 if initial_request[key] is not None
             }
             request_dict.append(request)
+
         return request_dict
 
     def to_dict(self) -> Dict:
         """Reformat the json response to a dictionary."""
         _dict: Dict[Any, Any] = {}
-        for isin in self._data:
-            isin_data = self._data[isin]
-            _dict_isin = self.to_dict_isin(isin_data)
-            _dict[isin] = _dict_isin
+        for symbol in self._data:
+            bond_data = self._data[symbol]
+            _dict_bond = self.to_dict_bond(bond_data)
+            _dict[symbol] = _dict_bond
         return _dict
 
-    def to_dict_isin(self, isin_data: Dict) -> Dict:
+    def to_dict_bond(self, bond_data: Dict) -> Dict:
         """to_dict function too complicated."""
-        _dict_isin: Dict[Any, Any] = {}
-        for key_figure in isin_data:
+        _dict_bond: Dict[Any, Any] = {}
+        for key_figure in bond_data:
             if key_figure != "price" and key_figure in self.keyfigures:
-                for curve_data in isin_data[key_figure]["values"]:
+                for curve_data in bond_data[key_figure]["values"]:
                     _data_dict = {}
                     if key_figure == "bpvladder":
                         ladder_dict = {
@@ -205,31 +214,31 @@ class BondKeyFigureCalculator(ValueRetriever):
                         ] = convert_to_float_if_float(
                             curve_data["value"]
                         )  # type:ignore
-                    if curve_data["key"] in _dict_isin.keys():
-                        _dict_isin[curve_data["key"]].update(_data_dict)
+                    if curve_data["key"] in _dict_bond.keys():
+                        _dict_bond[curve_data["key"]].update(_data_dict)
                     else:
-                        _dict_isin[curve_data["key"]] = _data_dict
+                        _dict_bond[curve_data["key"]] = _data_dict
         if (
-            _dict_isin == {}
+            _dict_bond == {}
         ):  # This would be the case if only Price would be selected as key figure
-            for curve_data in isin_data["bpv"]["values"]:
-                _dict_isin[curve_data["key"]] = {}
+            for curve_data in bond_data["bpv"]["values"]:
+                _dict_bond[curve_data["key"]] = {}
 
-        if "price" in isin_data and "price" in self.keyfigures:
-            for curve in _dict_isin:
-                _dict_isin[curve][
+        if "price" in bond_data and "price" in self.keyfigures:
+            for curve in _dict_bond:
+                _dict_bond[curve][
                     CalculatedBondKeyFigureName("price").name
-                ] = isin_data["price"]
+                ] = bond_data["price"]
 
-        return _dict_isin
+        return _dict_bond
 
     def to_df(self) -> pd.DataFrame:
         """Reformat the json response to a pandas DataFrame."""
         _dict = self.to_dict()
         df = pd.DataFrame()
-        for isin in _dict:
-            _df = pd.DataFrame.from_dict(_dict[isin]).transpose()
+        for symbol in _dict:
+            _df = pd.DataFrame.from_dict(_dict[symbol]).transpose()
             _df = _df.reset_index().rename(columns={"index": "Curve"})
-            _df.index = [isin] * len(_df)
-            df = df.append(_df)
+            _df.index = [symbol] * len(_df)
+            df = pd.concat([df, _df], axis=0)
         return df

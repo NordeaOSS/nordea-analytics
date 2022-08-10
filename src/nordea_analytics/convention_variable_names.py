@@ -137,3 +137,10 @@ class Exchange(Enum):
     Zagreb = "HRK"
     ZagrebStockExchange = "XZAG"
     Zurich = "CHF"
+
+
+class CashflowType(Enum):
+    """Cashflow types available in the service."""
+
+    CSE = "CSE"
+    MCI = "MCI"

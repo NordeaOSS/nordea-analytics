@@ -11,7 +11,7 @@ Start coding with Nordea Analytics python
 ------------------------------------------
 
 All methods available in the Nordea Analytics python can be retrieved through the
-NordeaAnalyticsService and NordeaAnalyticsLiveService classes.
+get_nordea_analytics_client class.
 
 .. code-block:: python
 
@@ -21,11 +21,12 @@ Available methods
 ^^^^^^^^^^^^^^^^^^^^
 All methods can return results in the form of a dictionary(default) or as a pandas DataFrame(as_df=True).
 
-From NordeaAnalyticsService:
+From get_nordea_analytics_client:
 
 * :meth:`calculate_bond_key_figure() <nordea_analytics.nordea_analytics_service.NordeaAnalyticsService.calculate_bond_key_figure>`.
 * :meth:`calculate_horizon_bond_key_figure() <nordea_analytics.nordea_analytics_service.NordeaAnalyticsService.calculate_horizon_bond_key_figure>`.
 * :meth:`get_bond_key_figures() <nordea_analytics.nordea_analytics_service.NordeaAnalyticsService.get_bond_key_figures>`.
+* :meth:`get_bond_live_key_figures() <nordea_analytics.nordea_analytics_service.NordeaAnalyticsLiveService.get_bond_live_key_figures>`.
 * :meth:`get_curve() <nordea_analytics.nordea_analytics_service.NordeaAnalyticsService.get_curve>`.
 * :meth:`get_curve_definition() <nordea_analytics.nordea_analytics_service.NordeaAnalyticsService.get_curve_definition>`.
 * :meth:`get_curve_time_series() <nordea_analytics.nordea_analytics_service.NordeaAnalyticsService.get_curve_time_series>`.
@@ -37,15 +38,12 @@ From NordeaAnalyticsService:
 * :meth:`get_yield_forecasts() <nordea_analytics.nordea_analytics_service.NordeaAnalyticsService.get_yield_forecasts>`.
 * :meth:`search_bonds() <nordea_analytics.nordea_analytics_service.NordeaAnalyticsService.search_bonds>`
 
-From NordeaAnalyticsService:
-
-* :meth:`get_live_bond_key_figures() <nordea_analytics.nordea_analytics_service.NordeaAnalyticsLiveService.get_live_bond_key_figures>`.
 
 Enumeration classes for input parameters
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-Many input parameters are controlled by enumeration classes. These are the following available:
+Many input parameters are controlled by enumeration classes. From `nordea_analytics` the following are available:
 
-From `nordea_analytics.key_figure_name`
+For keyfigures
 
 * :meth:`BondKeyFigureName <nordea_analytics.key_figure_names.BondKeyFigureName>`
 * :meth:`TimeSeriesKeyFigureName <nordea_analytics.key_figure_names.TimeSeriesKeyFigureName>`
@@ -53,7 +51,7 @@ From `nordea_analytics.key_figure_name`
 * :meth:`HorizonCalculatedBondKeyFigureName <nordea_analytics.key_figure_names.HorizonCalculatedBondKeyFigureName>`
 * :meth:`LiveBondKeyFigureName <nordea_analytics.key_figure_names.LiveBondKeyFigureName>`
 
-From `nordea_analytics.curve_variable_names`
+For curves
 
 * :meth:`CurveName <nordea_analytics.curve_variable_names.CurveName>` Note, availability not limited to list
 * :meth:`CurveDefinitionNamee <nordea_analytics.curve_variable_names.CurveDefinitionName>` Note, availability not limited to list
@@ -61,7 +59,7 @@ From `nordea_analytics.curve_variable_names`
 * :meth:`TimeConvention <nordea_analytics.curve_variable_names.TimeConvention>`
 * :meth:`SpotForward <nordea_analytics.curve_variable_names.SpotForward>`
 
-from `nordea_analytics.search_bond_names`
+For bond searching
 
 * :meth:`AmortisationType <nordea_analytics.search_bond_names.AmortisationType>`
 * :meth:`AssetType <nordea_analytics.search_bond_names.AssetType>`
@@ -69,7 +67,7 @@ from `nordea_analytics.search_bond_names`
 * :meth:`CapitalCentreTypes <nordea_analytics.search_bond_names.CapitalCentreTypes>`
 * :meth:`Issuers <nordea_analytics.search_bond_names.Issuers>` Note, availability not limited to list
 
-from `nordea_analytics.forecast_names`
+For forecasts
 
 * :meth:`YieldCountry <nordea_analytics.forecast_names.YieldCountry>`
 * :meth:`YieldType <nordea_analytics.forecast_names.YieldType>`
@@ -142,7 +140,7 @@ The following example retrieves Vega, BPV and CVX for a given set of ISINs and r
 
     import datetime
     from nordea_analytics import get_nordea_analytics_client
-    from nordea_analytics import HorizonCalculatedBondKeyFigureName
+    from nordea_analytics import BondKeyFigureName
 
     na_service = get_nordea_analytics_client(client_id="Your client id", client_secret="Your client secret")
     value_date = datetime.datetime.today() - datetime.timedelta(1)
@@ -321,8 +319,31 @@ The following example returns live Quote and CVX in a pandas DataFrame format an
 .. code-block:: python
 
     import time
-    from nordea_analytics import NordeaAnalyticsLiveService
-    from nordea_analytics.key_figure_names import LiveBondKeyFigureName
+    from nordea_analytics import get_nordea_analytics_client
+    from nordea_analytics import LiveBondKeyFigureName
+
+    na_service = get_nordea_analytics_client(client_id="Your client id", client_secret="Your client secret")
+    live_bond_keyfigure = na_service.iter_live_bond_key_figures(["DK0009398620"],
+                                                             [LiveBondKeyFigureName.Quote,
+                                                             LiveBondKeyFigureName.CVX],
+                                                             as_df=True)
+    t_end = time.time() + 60 * 1  #one minute
+
+    for keyfigures in live_bond_keyfigure:
+        df = keyfigures
+        print(df)
+        if time.time() > t_end:
+            live_bond_keyfigure.stop()
+
+Get Live Key Figure Snapshot
+^^^^^^^^^^^^^^^^^^^^^^
+The following example returns the latest available live Quote and CVX in a pandas DataFrame format.
+
+.. code-block:: python
+
+    import time
+    from nordea_analytics import get_nordea_analytics_client
+    from nordea_analytics import LiveBondKeyFigureName
 
     na_service = get_nordea_analytics_client(client_id="Your client id", client_secret="Your client secret")
     live_bond_keyfigure = na_service.iter_live_bond_key_figures(["DK0009398620"],
@@ -344,8 +365,8 @@ The following example returns the latest available live Quote and CVX in a panda
 .. code-block:: python
 
     import time
-    from nordea_analytics import NordeaAnalyticsLiveService
-    from nordea_analytics.key_figure_names import LiveBondKeyFigureName
+    from nordea_analytics import get_nordea_analytics_client
+    from nordea_analytics import LiveBondKeyFigureName
 
     na_service = get_nordea_analytics_client(client_id="Your client id", client_secret="Your client secret")
     latest_bond_keyfigures = na_service.get_bond_live_key_figures(["DK0009398620"],
@@ -486,7 +507,7 @@ To search specifically for normal floaters set lower_coupon = 100,000.
 .. code-block:: python
 
     from nordea_analytics import get_nordea_analytics_client
-    from nordea_analytics.search_bond_names import AssetType
+    from nordea_analytics import AssetType
 
     na_service = get_nordea_analytics_client(client_id="Your client id", client_secret="Your client secret")
     asset_type = AssetType.DanishCappedFloaters
@@ -519,44 +540,46 @@ Live Dash board
     from dash import html
     from dash import dcc
 
-    from nordea_analytics.nordea_analytics_service import NordeaAnalyticsLiveService
+    from nordea_analytics import get_nordea_analytics_client
     from nordea_analytics import LiveBondKeyFigureName
 
-    live_service = NordeaAnalyticsLiveService()
-    live_bond_keyfigure = live_service.get_live_bond_key_figures(["DK0009398620"],
-                                                                 [LiveBondKeyFigureName.Quote,
-                                                                 LiveBondKeyFigureName.Spread],
-                                                                 as_df=True)
-    with live_bond_keyfigure as live_streamer:
-        df = live_streamer.run()
-        app = Dash(__name__)
-        app.layout = html.Div([
-            dcc.Interval(
-                id='graph-update',
-                interval=1000
-            ),
-            html.H5(children=f'Last refreshed:', id='header'),
-            dash_table.DataTable(data=df.to_dict(orient='records'),
-                                 columns=[{"name": i, "id": i} for i in df.columns],
-                                 id='table',
-                                 )
-        ])
+    live_service = get_nordea_analytics_client(client_id="Your client id", client_secret="Your client secret")
+    isins = ["DK0009398620", "DK0009922320","DK0009924029"]
+    keyfigures = [LiveBondKeyFigureName.Quote, LiveBondKeyFigureName.Spread]
 
-        @app.callback(
-            [
-                Output(component_id='table', component_property='data'),
-                Output(component_id='table', component_property='columns'),
-                Output(component_id='header', component_property='children'),
-            ],
-            [
-                Input(component_id='graph-update', component_property='n_intervals')
-            ]
-        )
-        def update_table(n_interval):
-            df_data = live_streamer.run()
-            return df_data.to_dict(orient='records'), \
-                   [{"name": i, "id": i} for i in df_data.columns], \
-                   f'Last refreshed: {datetime.now().strftime("%H:%M:%S")}'
+    df = live_service.get_bond_live_key_figures(isins,
+                                                keyfigures,
+                                                as_df=True)
+    app = Dash(__name__)
+    app.layout = html.Div([
+        dcc.Interval(
+            id='graph-update',
+            interval=1000
+        ),
+        html.H5(children=f'Last refreshed:', id='header'),
+        dash_table.DataTable(data=df.to_dict(orient='records'),
+                             columns=[{"name": i, "id": i} for i in df.columns],
+                             id='table',
+                             )
+    ])
+
+    @app.callback(
+        [
+            Output(component_id='table', component_property='data'),
+            Output(component_id='table', component_property='columns'),
+            Output(component_id='header', component_property='children'),
+        ],
+        [
+            Input(component_id='graph-update', component_property='n_intervals')
+        ]
+    )
+    def update_table(n_interval):
+        df_data = live_service.get_bond_live_key_figures(isins,
+                                                         keyfigures,
+                                                         as_df=True)
+        return df_data.to_dict(orient='records'), \
+               [{"name": i, "id": i} for i in df_data.columns], \
+               f'Last refreshed: {datetime.now().strftime("%H:%M:%S")}'
 
     def main():
         app.run_server(debug=False)
@@ -579,54 +602,49 @@ when new live key figures are in.
     from dash import dcc
     import plotly.express as px
 
-    from nordea_analytics.nordea_analytics_service import (
-    NordeaAnalyticsService,
-    NordeaAnalyticsLiveService)
-    from nordea_analytics.key_figure_names import TimeSeriesKeyFigureName as kf_ts
-    from nordea_analytics.key_figure_names import LiveBondKeyFigureName as kf_live
+    from nordea_analytics import get_nordea_analytics_client
+    from nordea_analytics import TimeSeriesKeyFigureName as kf_ts
+    from nordea_analytics import LiveBondKeyFigureName as kf_live
 
-    analytics_api = NordeaAnalyticsService()
+    analytics_api = get_nordea_analytics_client(client_id="Your client id", client_secret="Your client secret")
     from_date = datetime(2022, 3, 1)
     yesterday = datetime.today() - timedelta(1)
     key_figure_name_ts = [kf_ts.Spread]
     key_figure_name_live = [kf_live.Spread]
 
-    isin = ["DK0009527376", "DK0009527293", "DK0009527103"]
+    isin = ["DK0009527376", "DK0009527293", "DK0009924029"]
 
     time_Series = analytics_api.get_time_series(isin,
                                                 key_figure_name_ts,
                                                 from_date,
                                                 yesterday,
                                                 as_df=True)
-    live_service = NordeaAnalyticsLiveService()
-    live_bond_keyfigure = live_service.get_live_bond_key_figures(isin,
-                                                                 key_figure_name_live,
-                                                                 as_df=True)
 
-    with live_bond_keyfigure as live_streamer:
-        app = Dash(__name__)
+    app = Dash(__name__)
 
-        app.layout = html.Div([
-            dcc.Interval(
-                id='graph-update',
-                interval=1000),
-            html.H5(children=f'Last refreshed:', id='header'),
-            dcc.Graph(id="graph"),
-        ])
+    app.layout = html.Div([
+    dcc.Interval(
+        id='graph-update',
+        interval=1000),
+    html.H5(children=f'Last refreshed:', id='header'),
+    dcc.Graph(id="graph"),
+    ])
 
 
-        @app.callback(
-            Output("graph", "figure"),
-            Output(component_id='header', component_property='children'),
-            Input(component_id='graph-update', component_property='n_intervals'))
-        def update_bar_chart(n_interval):
-            live_df = live_streamer.run()
-            live_df = live_df.rename(columns={"timestamp": "Date", "ISIN": "Symbol"})
-            df = time_Series.append(live_df)
-            fig = px.line(df, x="Date", y="Spread", symbol="Symbol", color="Symbol")
-            return fig, f'Last refreshed: {datetime.now().strftime("%H:%M:%S")}'
+    @app.callback(
+        Output("graph", "figure"),
+        Output(component_id='header', component_property='children'),
+        Input(component_id='graph-update', component_property='n_intervals'))
+    def update_bar_chart(n_interval):
+        live_df = analytics_api.get_bond_live_key_figures(isin,
+                                                          key_figure_name_live,
+                                                          as_df=True)
+        live_df = live_df.rename(columns={"timestamp": "Date", "ISIN": "Symbol"})
+        df = time_Series.append(live_df)
+        fig = px.line(df, x="Date", y="Spread", symbol="Symbol", color="Symbol")
+        return fig, f'Last refreshed: {datetime.now().strftime("%H:%M:%S")}'
 
-        app.run_server(debug=False)
+    app.run_server(debug=False)
 
 .. image:: images/live_timeseries_plot.jpg
 
@@ -796,9 +814,9 @@ Showing why buybacks are making bonds more rich
     from datetime import datetime
 
     from nordea_analytics import get_nordea_analytics_client
-    from nordea_analytics.key_figure_names import TimeSeriesKeyFigureName as kf_ts
-    from nordea_analytics.key_figure_names import CalculatedBondKeyFigureName as kf_calc
-    from nordea_analytics.curve_variable_names import CurveName
+    from nordea_analytics import TimeSeriesKeyFigureName as kf_ts
+    from nordea_analytics import CalculatedBondKeyFigureName as kf_calc
+    from nordea_analytics import CurveName
 
     na_service = get_nordea_analytics_client(client_id="Your client id", client_secret="Your client secret")
     from_date = datetime(2022, 1, 3)
@@ -817,7 +835,7 @@ Showing why buybacks are making bonds more rich
                                             as_df=True).set_index('Date')
 
     df_calc_oas = na_service.calculate_bond_key_figure(calc_date=datetime.now(),
-                                                          isins=[isin_1, isin_2]
+                                                          isins=[isin_1, isin_2],
                                                           keyfigures=[kf_calc.Spread],
                                                           curves=[CurveName.DKKGOV],
                                                           as_df=True)
