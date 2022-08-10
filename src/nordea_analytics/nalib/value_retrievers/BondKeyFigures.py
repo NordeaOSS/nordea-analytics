@@ -24,12 +24,12 @@ config = get_config()
 
 
 class BondKeyFigures(ValueRetriever):
-    """Retrieves and reformat given bond key figures for given ISINs and calc date."""
+    """Retrieves and reformat given bond key figures for given bonds and calc date."""
 
     def __init__(
         self,
         client: DataRetrievalServiceClient,
-        isins: Union[List[str], str],
+        symbols: Union[List[str], str],
         keyfigures: Union[
             str,
             BondKeyFigureName,
@@ -44,13 +44,13 @@ class BondKeyFigures(ValueRetriever):
         Args:
             client:  DataRetrievalServiceClient
                 or DataRetrievalServiceClientTest for testing
-            isins: ISINs for requests.
+            symbols: ISIN or name of bonds for requests.
             keyfigures: Bond key figure names for request.
             calc_date: calculation date for request.
         """
         super(BondKeyFigures, self).__init__(client)
 
-        self.isins: List = [isins] if type(isins) != list else isins
+        self.symbols: List = [symbols] if type(symbols) != list else symbols
         _keyfigures: List = keyfigures if type(keyfigures) == list else [keyfigures]
         self.keyfigures = [
             convert_to_variable_string(keyfigure, BondKeyFigureName)
@@ -90,23 +90,23 @@ class BondKeyFigures(ValueRetriever):
 
     @property
     def request(self) -> List[Dict]:
-        """Request dictionary for a given set of ISINs, key figures and calc date."""
-        if len(self.isins) > config["max_isins"]:
-            split_isins = np.array_split(
-                self.isins, math.ceil(len(self.isins) / config["max_isins"])
+        """Request dictionary for a given set of symbols, key figures and calc date."""
+        if len(self.symbols) > config["max_bonds"]:
+            split_symbols = np.array_split(
+                self.symbols, math.ceil(len(self.symbols) / config["max_bonds"])
             )
             request_dict = [
                 {
-                    "symbols": list(isins),
+                    "symbols": list(symbols),
                     "keyfigures": self.keyfigures,
                     "date": self.calc_date.strftime("%Y-%m-%d"),
                 }
-                for isins in split_isins
+                for symbols in split_symbols
             ]
         else:
             request_dict = [
                 {
-                    "symbols": self.isins,
+                    "symbols": self.symbols,
                     "keyFigures": self.keyfigures,
                     "date": self.calc_date.strftime("%Y-%m-%d"),
                 }
@@ -117,15 +117,15 @@ class BondKeyFigures(ValueRetriever):
     def to_dict(self) -> Dict:
         """Reformat the json response to a dictionary."""
         _dict = {}
-        for isin_data in self._data:
-            _isin_dict = {}
-            for key_figure_data in isin_data["values"]:
+        for bond_data in self._data:
+            _bond_dict = {}
+            for key_figure_data in bond_data["values"]:
                 key_figure_name = BondKeyFigureName(key_figure_data["keyfigure"]).name
-                _isin_dict[key_figure_name] = convert_to_float_if_float(
+                _bond_dict[key_figure_name] = convert_to_float_if_float(
                     key_figure_data["value"]
                 )
 
-            _dict[isin_data["symbol"]] = _isin_dict
+            _dict[bond_data["symbol"]] = _bond_dict
 
         return _dict
 

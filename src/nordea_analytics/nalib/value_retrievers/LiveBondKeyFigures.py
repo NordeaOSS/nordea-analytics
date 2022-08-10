@@ -26,7 +26,7 @@ class LiveBondKeyFigures(ValueRetriever):
 
     def __init__(
         self,
-        isins: Union[str, List[str]],
+        symbols: Union[str, List[str]],
         client: DataRetrievalServiceClient,
         keyfigures: Union[
             List[LiveBondKeyFigureName], List[str], LiveBondKeyFigureName, str
@@ -36,7 +36,7 @@ class LiveBondKeyFigures(ValueRetriever):
         """Initialization of class.
 
         Args:
-            isins: ISINs of bond that should be retrieved live
+            symbols: ISIN or name of bonds that should be retrieved live
             client: LiveDataRetrivalServiceClient
             keyfigures: List of bond key figures which should be streamed.
                 Can be a list of LiveBondKeyFigureNames or string.
@@ -44,28 +44,22 @@ class LiveBondKeyFigures(ValueRetriever):
                 as pd.DataFrame, else as dictionary
         """
         super(LiveBondKeyFigures, self).__init__(client)
-        self.isins: List = [isins] if isinstance(isins, str) else isins
+        self.symbols: List = [symbols] if isinstance(symbols, str) else symbols
         _keyfigures: List = keyfigures if isinstance(keyfigures, list) else [keyfigures]
         self.keyfigures: List = [
             convert_to_variable_string(keyfigure, LiveBondKeyFigureName)
             for keyfigure in _keyfigures
         ]
-        self._data: List[Any] = []
         self._as_df = as_df
         self._stream_iterator = Iterator[Any]
-
-    @property
-    def latest_keyfigures(self) -> Any:
-        """Immediately return the latest values if it is available."""
         self._data = self._client.get_response(self.request, self.url_suffix)[
             "keyfigure_values"
         ]
-        return self.to_dict()
 
     @property
     def stream_keyfigures(self) -> Iterator[Any]:
         """Returns the stream listener which controls the live stream."""
-        for stream_chunk in self._client.get_live_streamer().stream(self.isins):
+        for stream_chunk in self._client.get_live_streamer().stream(self.symbols):
             json_payload = json.loads(stream_chunk)
             yield self._response_decorator(json_payload)
 
@@ -76,8 +70,8 @@ class LiveBondKeyFigures(ValueRetriever):
 
     @property
     def request(self) -> Dict:
-        """Request dictionary for a given set of ISINs, key figures and calc date."""
-        request_dict = {"bonds": str.join(",", self.isins)}
+        """Request dictionary for a given set of bonds, key figures and calc date."""
+        request_dict = {"bonds": str.join(",", self.symbols)}
         return request_dict
 
     def to_df(self) -> pd.DataFrame:

@@ -1,5 +1,5 @@
 service_name: 'Nordea Analytics API'
-max_isins: 50
+max_bonds: 50
 max_symbol_timeseries: 50
 max_keyfigures_timeseries: 1
 max_years_timeseries: 10

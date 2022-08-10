@@ -81,7 +81,7 @@ class ShiftDays(ValueRetriever):
     @property
     def request(self) -> dict:
         """Request shifted date."""
-        date = self.date
+        date = self.date.strftime("%Y-%m-%d")
         days = self.days
         exchange = self.exchange
         day_count_convention = self.day_count_convention

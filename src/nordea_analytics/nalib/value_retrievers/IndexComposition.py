@@ -67,25 +67,25 @@ class IndexComposition(ValueRetriever):
         """Reformat the json response to a dictionary."""
         _dict = {}
         for index_data in self._data:
-            _isin_dict = {}
-            _isin_dict["ISIN"] = [x["symbol"] for x in index_data["assets"]]
-            _isin_dict["Name"] = [x["name"] for x in index_data["assets"]]
-            _isin_dict["Nominal Amount"] = [
+            _index_dict = {}
+            _index_dict["ISIN"] = [x["symbol"] for x in index_data["assets"]]
+            _index_dict["Name"] = [x["name"] for x in index_data["assets"]]
+            _index_dict["Nominal Amount"] = [
                 convert_to_float_if_float(x["nominal"]) for x in index_data["assets"]
             ]
-            sum_nominal = sum(_isin_dict["Nominal Amount"])
-            _isin_dict["Nominal Weight"] = [
-                x / sum_nominal for x in _isin_dict["Nominal Amount"]
+            sum_nominal = sum(_index_dict["Nominal Amount"])
+            _index_dict["Nominal Weight"] = [
+                x / sum_nominal for x in _index_dict["Nominal Amount"]
             ]
 
-            _isin_dict["Market Amount"] = [
+            _index_dict["Market Amount"] = [
                 convert_to_float_if_float(x["market"]) for x in index_data["assets"]
             ]
-            sum_market = sum(_isin_dict["Market Amount"])
-            _isin_dict["Market Weight"] = [
-                x / sum_market for x in _isin_dict["Market Amount"]
+            sum_market = sum(_index_dict["Market Amount"])
+            _index_dict["Market Weight"] = [
+                x / sum_market for x in _index_dict["Market Amount"]
             ]
-            _dict[index_data["index_name"]["name"]] = _isin_dict
+            _dict[index_data["index_name"]["name"]] = _index_dict
 
         return _dict
 
@@ -100,5 +100,5 @@ class IndexComposition(ValueRetriever):
             if df is pd.DataFrame.empty:
                 df = _df
             else:
-                df = df.append(_df)
+                df = pd.concat([df, _df], axis=0)
         return df

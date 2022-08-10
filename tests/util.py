@@ -14,6 +14,8 @@ def load_and_compare_dfs(
 ) -> pytest:
     """Load the expected DataFrame and compares to expected results.
 
+    Does not support nested objects
+
     Args:
         df: DataFrame from the test.
         expected_df_file_path: Path where the expected DataFrame is saved.

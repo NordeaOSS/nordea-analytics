@@ -1,14 +1,14 @@
 import time
-from typing import Dict
-import warnings
+from typing import Any, Dict
 
 import requests
 from requests import Response
 
 from nordea_analytics.nalib import exceptions
+from nordea_analytics.nalib.exceptions import AnalyticsWarning, CustomWarning
 from nordea_analytics.nalib.http.core import RestApiHttpClient
 from nordea_analytics.nalib.live_keyfigures.core import HttpStreamIterator
-from nordea_analytics.nalib.util import check_string
+from nordea_analytics.nalib.util import AnalyticsResponseError
 
 
 class DataRetrievalServiceClient(object):
@@ -25,6 +25,20 @@ class DataRetrievalServiceClient(object):
         """
         self.http_client = http_client
         self.stream_listener = stream_listener
+        self._last_request: Any = {}
+
+    @property
+    def diagnostic(self) -> Dict:
+        """Return a diagnostic information."""
+        diag = self._last_request
+        if self.http_client.history:
+            last_response = self.http_client.history.pop()
+            diag["response"] = {
+                "id": last_response.headers["x-request-id"],
+                "status": last_response.status_code,
+                "elapsed": last_response.elapsed.total_seconds() * 1000,
+            }
+        return diag
 
     def get_response(self, request: dict, url_suffix: str) -> dict:
         """Gets the response from _get_response function for a given request.
@@ -45,7 +59,7 @@ class DataRetrievalServiceClient(object):
             _response = response_json["data"]
             if "failed_queries" in _response.keys():
                 if not _response["failed_queries"] == []:
-                    warnings.warn(str(_response["failed_queries"]))
+                    CustomWarning(str(_response["failed_queries"]), AnalyticsWarning)
 
         return _response
 
@@ -97,20 +111,25 @@ class DataRetrievalServiceClient(object):
 
         raise exceptions.BackgroundCalculationTimeout()
 
+    def _refresh_diagnostic_info(self, **kwargs: Any) -> None:
+        self._last_request.clear()
+        self._last_request = kwargs
+
     @staticmethod
     def _check_errors(get_response: Response) -> Dict:
-
         _response = get_response.json()["data"]["response"]
-        if check_string(get_response.text, "error"):
+        if "error" in get_response.text:
             if "error" in _response.keys() and _response["error"] == {}:
                 del _response["error"]
             elif _response["data"]["error"] == {}:
                 _response = _response["data"]
                 del _response["error"]
             else:
-                raise ValueError(_response["data"]["failed_calculation"]["info"])
+                raise AnalyticsResponseError(
+                    _response["data"]["failed_calculation"]["info"]
+                )
 
-        if check_string(get_response.text, "failed_calculation"):
+        if "failed_calculation" in get_response.text:
             if (
                 "failed_calculation" in _response.keys()
                 and _response["failed_calculation"] == {}
@@ -128,7 +147,9 @@ class DataRetrievalServiceClient(object):
             ):
                 del _response["failed_calculation"]
             else:
-                raise ValueError(_response["data"]["failed_calculation"]["info"])
+                raise AnalyticsResponseError(
+                    _response["data"]["failed_calculation"]["info"]
+                )
 
         if "data" in _response.keys():
             _response = _response["data"]
@@ -136,7 +157,13 @@ class DataRetrievalServiceClient(object):
         return _response
 
     def _get_response(self, request: dict, url_suffix: str) -> requests.Response:
+        self._refresh_diagnostic_info(
+            method="GET", request=request, url_suffix=url_suffix
+        )
         return self.http_client.get(url_suffix, params=request)
 
     def _post_response(self, request: dict, url_suffix: str) -> requests.Response:
+        self._refresh_diagnostic_info(
+            method="POST", request=request, url_suffix=url_suffix
+        )
         return self.http_client.post(url_suffix, request)
