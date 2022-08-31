@@ -66,7 +66,10 @@ class CurveTimeSeries(ValueRetriever):
         self._client = client
         _curves: List = curves if type(curves) == list else [curves]
         self.curves = [
-            convert_to_variable_string(curve, CurveName) for curve in _curves
+            convert_to_variable_string(curve, CurveName)
+            if type(curve) == CurveName
+            else curve
+            for curve in _curves
         ]
         self.from_date = from_date
         self.to_date = to_date
@@ -98,6 +101,7 @@ class CurveTimeSeries(ValueRetriever):
             json_map = _json_response[config["results"]["curve_time_series"]]
             json_response.append({"curve": request_dict["curve"], "values": json_map})
 
+        json_response = self._merge_timeseries(json_response)
         output_found = check_json_response(json_response)
         check_json_response_error(output_found)
 
@@ -237,3 +241,32 @@ class CurveTimeSeries(ValueRetriever):
                 df = df.sort_values(by="Date")
 
         return df
+
+    def _merge_timeseries(self, json_response: List[Any]) -> List[Any]:
+        """Merge the timeseries values into one array."""
+        merged = {}
+        for response in json_response:
+            if response["curve"] not in merged:
+                merged[response["curve"]] = response["values"]
+            elif len(response["values"]) > 0:
+                merged_values = []
+                a = response["values"]
+                b = merged[response["curve"]]
+                i = j = 0
+                while i < len(a) or j < len(b):
+                    ai = a[i]["date"] if i < len(a) else str(datetime.min)
+                    bj = b[j]["date"] if j < len(b) else str(datetime.min)
+                    if ai == bj:
+                        merged_values.append(b[j])
+                        j = j + 1
+                        i = i + 1
+                    elif ai > bj:
+                        merged_values.append(a[i])
+                        i = i + 1
+                    else:
+                        merged_values.append(b[j])
+                        j = j + 1
+
+                merged[response["curve"]] = merged_values
+
+        return [{"curve": key, "values": values} for key, values in merged.items()]

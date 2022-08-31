@@ -31,7 +31,7 @@ try:
 except (NameError, ModuleNotFoundError):
     from .shortcuts.open_banking import get_nordea_analytics_client  # type: ignore
 
-__version__ = "1.2.4"
+__version__ = "1.2.5"
 __all__ = [
     "get_nordea_analytics_client",
     "disable_analytics_warnings",

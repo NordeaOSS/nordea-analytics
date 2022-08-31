@@ -63,7 +63,10 @@ class Curve(ValueRetriever):
         self._client = client
         _curves: List = curves if type(curves) == list else [curves]
         self.curves = [
-            convert_to_variable_string(curve, CurveName) for curve in _curves
+            convert_to_variable_string(curve, CurveName)
+            if type(curve) == CurveName
+            else curve
+            for curve in _curves
         ]
         self.calc_date = calc_date
         self.tenor_frequency = (
