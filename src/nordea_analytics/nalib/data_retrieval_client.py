@@ -50,10 +50,16 @@ class DataRetrievalServiceClient(object):
         Returns:
             Response in the form of json.
         """
-        response = self._get_response(request, url_suffix)
+        response = self._get_response(url_suffix, params=request)
         response_json = response.json()
         if "info" in response_json and "job_url" in response_json["info"]:
-            background_response = self._proceed_background_job(response_json)
+            log_token = response.headers.get("X-Request-ID", None)
+            params = (
+                {"headers": {"X-Request-ID-Override": log_token}}
+                if log_token is not None
+                else {}
+            )
+            background_response = self._proceed_background_job(response_json, **params)
             _response = self._check_errors(background_response)
         else:
             _response = response_json["data"]
@@ -74,20 +80,30 @@ class DataRetrievalServiceClient(object):
             Response in the form of json.
         """
         post_response = self._post_response(request, url_suffix)
-        background_response = self._proceed_background_job(post_response.json())
+        log_token = post_response.headers.get("X-Request-ID", None)
+        params = (
+            {"headers": {"X-Request-ID-Override": log_token}}
+            if log_token is not None
+            else {}
+        )
+        background_response = self._proceed_background_job(
+            post_response.json(), **params
+        )
         return self._check_errors(background_response)
 
     def get_live_streamer(self) -> HttpStreamIterator:
         """Method return HttpStreamIterator which allow iteration over stream."""
         return self.stream_listener
 
-    def _proceed_background_job(self, response_info: Dict) -> requests.Response:
+    def _proceed_background_job(
+        self, response_info: Dict, **kwargs: Any
+    ) -> requests.Response:
         """Proceed background response and retrieve job data from server."""
         t_end = time.time() + 60 * 8
         while time.time() < t_end:
             response = self._get_response(
-                {},
                 "job/" + response_info["id"],
+                **kwargs,
             )
 
             if '"state":"completed"' in response.text:
@@ -156,14 +172,14 @@ class DataRetrievalServiceClient(object):
 
         return _response
 
-    def _get_response(self, request: dict, url_suffix: str) -> requests.Response:
-        self._refresh_diagnostic_info(
-            method="GET", request=request, url_suffix=url_suffix
-        )
-        return self.http_client.get(url_suffix, params=request)
+    def _get_response(self, url_suffix: str, **kwargs: Any) -> requests.Response:
+        self._refresh_diagnostic_info(method="GET", url_suffix=url_suffix, **kwargs)
+        return self.http_client.get(url_suffix, **kwargs)
 
-    def _post_response(self, request: dict, url_suffix: str) -> requests.Response:
+    def _post_response(
+        self, request: dict, url_suffix: str, **kwargs: Any
+    ) -> requests.Response:
         self._refresh_diagnostic_info(
-            method="POST", request=request, url_suffix=url_suffix
+            method="POST", request=request, url_suffix=url_suffix, **kwargs
         )
-        return self.http_client.post(url_suffix, request)
+        return self.http_client.post(url_suffix, request, **kwargs)

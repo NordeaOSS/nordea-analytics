@@ -3,3 +3,4 @@ pandas==1.3.4
 pyaml==21.10.1
 requests==2.26.0
 requests-kerberos==0.14.0
+pip-system-certs==3.0
