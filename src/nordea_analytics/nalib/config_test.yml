@@ -1,5 +1,11 @@
-service_name: 'Nordea Analytics API'
-max_bonds: 50
+service_name: 'Nordea Analytics Internal'
+test_service_url: 'https://analytics-api-test.oneadr.net/v1/'
+login: False
+get_proxy_information: False
+user_suffix: ""
+use_headers: False
+
+max_isins: 50
 max_symbol_timeseries: 50
 max_keyfigures_timeseries: 1
 max_years_timeseries: 10
@@ -7,7 +13,6 @@ max_years_timeseries: 10
 url_suffix:
   bond_key_figures: "bonds/keyfigure"
   calculate: "bonds-calculation"
-  calculate_advanced: "bonds-advanced-calculation"
   calculate_horizon: "bonds-horizoncalculation"
   bond_static_data: "bonds/static-data"
   curve: "curves"
@@ -17,11 +22,13 @@ url_suffix:
   index_composition: "index-composition"
   search_bonds: "search/bonds"
   search_dmb_bonds: "search/danishmortgagebonds"
+  live_bond_key_figures_stream: "bonds/live-keyfigures-stream"
   live_bond_key_figures: "bonds/live-keyfigures"
   shift_days: "shift-days"
   time_series: "timeseries"
   year_fraction: "year-fraction"
   yield_forecast: "yield-forecasts"
+  auth: "ninaa/auth"
 
 
 #Squashes json response layers

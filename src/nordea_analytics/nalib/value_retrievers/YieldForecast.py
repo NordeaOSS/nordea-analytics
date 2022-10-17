@@ -114,7 +114,7 @@ class YieldForecast(ValueRetriever):
             orient="index",
         )
         df = df.reset_index().rename(
-            columns={"level_0": "Symbol", "level_1": "Yield Type", "level_2": "Horizon"}
+            columns={"level_0": "Symbol", "level_1": "Yield_type", "level_2": "Horizon"}
         )
 
         return df

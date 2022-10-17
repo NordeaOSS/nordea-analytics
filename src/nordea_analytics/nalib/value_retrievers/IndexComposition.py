@@ -70,21 +70,24 @@ class IndexComposition(ValueRetriever):
             _index_dict = {}
             _index_dict["ISIN"] = [x["symbol"] for x in index_data["assets"]]
             _index_dict["Name"] = [x["name"] for x in index_data["assets"]]
-            _index_dict["Nominal Amount"] = [
+            _index_dict["Nominal_Amount"] = [
                 convert_to_float_if_float(x["nominal"]) for x in index_data["assets"]
             ]
-            sum_nominal = sum(_index_dict["Nominal Amount"])
-            _index_dict["Nominal Weight"] = [
-                x / sum_nominal for x in _index_dict["Nominal Amount"]
+            sum_nominal = sum(_index_dict["Nominal_Amount"])
+            _index_dict["Nominal_Weight"] = [
+                x / sum_nominal for x in _index_dict["Nominal_Amount"]
             ]
 
-            _index_dict["Market Amount"] = [
-                convert_to_float_if_float(x["market"]) for x in index_data["assets"]
+            _index_dict["Market_Amount"] = [
+                convert_to_float_if_float(x["market"]) if "market" in x else None
+                for x in index_data["assets"]
             ]
-            sum_market = sum(_index_dict["Market Amount"])
-            _index_dict["Market Weight"] = [
-                x / sum_market for x in _index_dict["Market Amount"]
-            ]
+
+            if not _index_dict["Market_Amount"].__contains__(None):
+                sum_market = sum(_index_dict["Market_Amount"])
+                _index_dict["Market_Weight"] = [
+                    x / sum_market for x in _index_dict["Market_Amount"]
+                ]
             _dict[index_data["index_name"]["name"]] = _index_dict
 
         return _dict
