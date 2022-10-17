@@ -1,5 +1,5 @@
 service_name: 'Nordea Analytics Internal'
-test_service_url: 'https://analytics-api-test.oneadr.net/v1/'
+test_service_url: ''
 login: False
 get_proxy_information: False
 user_suffix: ""
