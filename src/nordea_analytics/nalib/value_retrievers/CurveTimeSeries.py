@@ -12,7 +12,12 @@ from nordea_analytics.curve_variable_names import (
 from nordea_analytics.nalib.data_retrieval_client import (
     DataRetrievalServiceClient,
 )
-from nordea_analytics.nalib.exceptions import AnalyticsInputError
+from nordea_analytics.nalib.exceptions import (
+    AnalyticsInputError,
+    AnalyticsWarning,
+    CustomWarning,
+    CustomWarningCheck,
+)
 from nordea_analytics.nalib.util import (
     check_json_response,
     check_json_response_error,
@@ -91,21 +96,59 @@ class CurveTimeSeries(ValueRetriever):
             else None
         )
         self.forward_tenor = self.check_forward(forward_tenor)
-        self._data = self.get_curve_time_series()
+        result = self.get_curve_time_series()
+
+        self._data = self.format_curve_names(result, _curves)
 
     def get_curve_time_series(self) -> List:
         """Retrieves response with curve time series."""
         json_response: List[Any] = []
         for request_dict in self.request:
             _json_response = self.get_response(request_dict)
+            # To throw warning if curve in get_curve_time_series could not be retrieved
+            CustomWarningCheck.curve_time_series_not_retrieved_warning(
+                _json_response, request_dict["curve"]
+            )
+
             json_map = _json_response[config["results"]["curve_time_series"]]
-            json_response.append({"curve": request_dict["curve"], "values": json_map})
+            if json_map:
+                json_response.append(
+                    {"curve": request_dict["curve"], "values": json_map}
+                )
 
         json_response = self._merge_timeseries(json_response)
         output_found = check_json_response(json_response)
         check_json_response_error(output_found)
 
         return json_response
+
+    def format_curve_names(
+        self,
+        data: List,
+        curves: Union[List[str], List[CurveName], List[Union[str, CurveName]]],
+    ) -> List:
+        """Formats curve names to be identical to curves input."""
+        curve_dict = {}
+        for curve_name in curves:
+            curve_name_string: Union[str, ValueError]
+            if type(curve_name) == CurveName:
+                curve_name_string = convert_to_variable_string(curve_name, CurveName)
+                if curve_name_string != ValueError:
+                    curve_name_string = curve_name_string.upper()
+                else:
+                    CustomWarning(
+                        "Conversion of {0} failed.".format(curve_name), AnalyticsWarning
+                    )
+            elif type(curve_name) == str:
+                curve_name_string = curve_name.upper()
+            curve_dict[curve_name_string] = (
+                curve_name.name if type(curve_name) == CurveName else curve_name
+            )
+
+        for curve_result in data:
+            curve_result["curve"] = curve_dict[curve_result["curve"].upper()]
+
+        return data
 
     def check_forward(self, forward_tenor: Union[float, None]) -> Union[str, None]:
         """Check if forward tenor should be given as an argument.

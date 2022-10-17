@@ -4,7 +4,7 @@ from enum import Enum
 class CurveName(Enum):
     """Most common available curves. Availability not limit to this list."""
 
-    ATSGOV = "ATSGOV"
+    # ATSGOV = "ATSGOV"
     BEFGOV = "BEFGOV"
     CHFGOV = "CHFGOV"
     CHFSWAP_Disc_OIS = "CHFSWAP DISC OIS"
@@ -96,7 +96,7 @@ class CurveName(Enum):
     USDSWAP_Libor = "USDSWAP LIBOR"
 
 
-class CurveDefinitionName:
+class CurveDefinitionName(Enum):
     """Most common available curves definition. Availability not limit to this list."""
 
     # Note that curve definition is limited to non-Infinity curves for externals.

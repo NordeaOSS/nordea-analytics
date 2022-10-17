@@ -1,5 +1,7 @@
+import os
 from typing import Dict
 
+from nordea_analytics import NordeaAnalyticsService
 from nordea_analytics.nalib.data_retrieval_client import DataRetrievalServiceClient
 from nordea_analytics.nalib.http.open_banking import (
     OpenBankingClientConfiguration,
@@ -8,7 +10,6 @@ from nordea_analytics.nalib.http.open_banking import (
 from nordea_analytics.nalib.live_keyfigures.open_banking import (
     OpenBankingHttpStreamIterator,
 )
-from nordea_analytics.nordea_analytics_service import NordeaAnalyticsService
 from nordea_analytics.shortcuts.proxy import find_proxy  # type: ignore
 
 DEFAULT_URL = "https://open.nordea.com/instrument-analytics/v1/"
@@ -56,3 +57,15 @@ def get_nordea_analytics_client(
     )
 
     return NordeaAnalyticsService(data_retrieval_service_client)
+
+
+def get_nordea_analytics_test_client(
+    base_url: str = None, use_proxy: bool = False
+) -> NordeaAnalyticsService:
+    """Create and return test instance of NordeaAnalyticsService."""
+    client_id = os.getenv("clientId")
+    client_secret = os.getenv("clientSecret")
+    if client_id is None or client_secret is None:
+        raise ValueError("Test user credentials are not set")
+
+    return get_nordea_analytics_client(client_id, client_secret, base_url, use_proxy)

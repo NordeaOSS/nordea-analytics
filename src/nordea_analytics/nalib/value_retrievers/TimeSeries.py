@@ -57,11 +57,16 @@ class TimeSeries(ValueRetriever):
         _keyfigures: List = keyfigures if type(keyfigures) == list else [keyfigures]
         self.keyfigures = [
             convert_to_variable_string(keyfigure, TimeSeriesKeyFigureName)
+            # if type(keyfigure) == TimeSeriesKeyFigureName
+            # else keyfigure
             for keyfigure in _keyfigures
         ]
         self.from_date = from_date
         self.to_date = to_date
-        self._data = self.get_time_series()
+
+        result = self.get_time_series()
+
+        self._data = self.format_key_figure_names(result, _keyfigures)
 
     def get_time_series(self) -> List:
         """Retrieves response with key figures time series."""
@@ -75,6 +80,42 @@ class TimeSeries(ValueRetriever):
         check_json_response_error(output_found)
 
         return json_response
+
+    def format_key_figure_names(
+        self,
+        data: List,
+        input_keyfigures: Union[
+            List[str],
+            List[TimeSeriesKeyFigureName],
+            List[Union[str, TimeSeriesKeyFigureName]],
+        ],
+    ) -> List:
+        """Formats curve names to be identical to curves input."""
+        for kf in input_keyfigures:
+            input_keyfigure_string: Union[str, ValueError]
+            if type(kf) == TimeSeriesKeyFigureName:
+                input_keyfigure_string = convert_to_variable_string(
+                    kf, TimeSeriesKeyFigureName
+                )
+            elif type(kf) == str:
+                input_keyfigure_string = kf
+
+            for symbol_result in data:
+                for keyfigure_result in symbol_result["timeseries"]:
+                    if (
+                        type(input_keyfigure_string) != ValueError
+                        and type(kf) == TimeSeriesKeyFigureName
+                        and keyfigure_result["keyfigure"] == input_keyfigure_string
+                    ):
+                        keyfigure_result["keyfigure"] = kf.name
+                    elif (
+                        type(kf) == str
+                        and str(keyfigure_result["keyfigure"]).lower()
+                        == str(input_keyfigure_string).lower()
+                    ):
+                        keyfigure_result["keyfigure"] = input_keyfigure_string
+
+        return data
 
     @property
     def url_suffix(self) -> str:
@@ -119,7 +160,7 @@ class TimeSeries(ValueRetriever):
         for symbol_data in self._data:
             _timeseries_dict: Dict[Any, Any] = {}
             for timeseries in symbol_data["timeseries"]:
-                key_figure_name = TimeSeriesKeyFigureName(timeseries["keyfigure"]).name
+                key_figure_name = timeseries["keyfigure"]
                 _timeseries_dict[key_figure_name] = {}
                 _timeseries_dict[key_figure_name]["Date"] = [
                     datetime.strptime(x["key"], "%Y-%m-%dT%H:%M:%S.0000000")

@@ -242,6 +242,7 @@ class TimeSeriesKeyFigureName(Enum):
 class CalculatedBondKeyFigureName(Enum):
     """Bond key figure names that can be calculated in the service."""
 
+    AccruedInterest = "accint"
     ASW_MM = "aswmm"
     AssetSwapSpread = "asw"
     ASW_PP = "aswpp"

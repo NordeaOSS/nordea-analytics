@@ -5,7 +5,7 @@ Install
 -----------
 Run: `pip install nordea-analytics`
 
-Note that in order to retrieve data from the package, access is required.
+Note that in order to retrieve data from the package, access is required and python 3.9 or newer.
 
 Start coding with Nordea Analytics python
 ------------------------------------------
@@ -215,7 +215,7 @@ curve definition can be retrieved, therefore we have a special enumeration class
     from nordea_analytics import CurveDefinitionName
 
     na_service = get_nordea_analytics_client(client_id="Your client id", client_secret="Your client secret")
-    calc_date = datetime.datetime(2021, 1, 1)
+    calc_date = datetime.datetime(2021, 1, 5)
     curve_name = CurveDefinitionName.EURGOV
 
     curve_def = na_service.get_curve_definition(curve_name,
@@ -543,11 +543,11 @@ Live Dash board
     from nordea_analytics import get_nordea_analytics_client
     from nordea_analytics import LiveBondKeyFigureName
 
-    live_service = get_nordea_analytics_client(client_id="Your client id", client_secret="Your client secret")
+    na_service = get_nordea_analytics_client(client_id="Your client id", client_secret="Your client secret")
     isins = ["DK0009398620", "DK0009922320","DK0009924029"]
     keyfigures = [LiveBondKeyFigureName.Quote, LiveBondKeyFigureName.Spread]
 
-    df = live_service.get_bond_live_key_figures(isins,
+    df = na_service.get_bond_live_key_figures(isins,
                                                 keyfigures,
                                                 as_df=True)
     app = Dash(__name__)
@@ -574,7 +574,7 @@ Live Dash board
         ]
     )
     def update_table(n_interval):
-        df_data = live_service.get_bond_live_key_figures(isins,
+        df_data = na_service.get_bond_live_key_figures(isins,
                                                          keyfigures,
                                                          as_df=True)
         return df_data.to_dict(orient='records'), \
@@ -606,7 +606,7 @@ when new live key figures are in.
     from nordea_analytics import TimeSeriesKeyFigureName as kf_ts
     from nordea_analytics import LiveBondKeyFigureName as kf_live
 
-    analytics_api = get_nordea_analytics_client(client_id="Your client id", client_secret="Your client secret")
+    na_service = get_nordea_analytics_client(client_id="Your client id", client_secret="Your client secret")
     from_date = datetime(2022, 3, 1)
     yesterday = datetime.today() - timedelta(1)
     key_figure_name_ts = [kf_ts.Spread]
@@ -614,7 +614,7 @@ when new live key figures are in.
 
     isin = ["DK0009527376", "DK0009527293", "DK0009924029"]
 
-    time_Series = analytics_api.get_time_series(isin,
+    time_Series = na_service.get_time_series(isin,
                                                 key_figure_name_ts,
                                                 from_date,
                                                 yesterday,
@@ -636,7 +636,7 @@ when new live key figures are in.
         Output(component_id='header', component_property='children'),
         Input(component_id='graph-update', component_property='n_intervals'))
     def update_bar_chart(n_interval):
-        live_df = analytics_api.get_bond_live_key_figures(isin,
+        live_df = na_service.get_bond_live_key_figures(isin,
                                                           key_figure_name_live,
                                                           as_df=True)
         live_df = live_df.rename(columns={"timestamp": "Date", "ISIN": "Symbol"})
@@ -661,7 +661,7 @@ Make key figure report on portfolio or index (or both)
     df_index = na_service.get_index_composition("DK0IX0000014", datetime(2022, 2, 28),
                                                     as_df=True).set_index('ISIN')
 
-    df_key_fig = na_service.get_bond_key_figures(isins=df_index.index,
+    df_key_fig = na_service.get_bond_key_figures(symbols=df_index.index,
                                                     calc_date=datetime(2022, 2, 28),
                                                     keyfigures=[BondKeyFigureName.BPV, BondKeyFigureName.CVX],
                                                     as_df=True)
@@ -711,7 +711,7 @@ Plot Curve Time series
     from nordea_analytics import CurveType, TimeConvention, SpotForward, CurveName
 
     na_service = get_nordea_analytics_client(client_id="Your client id", client_secret="Your client secret")
-    na_service.get_curve_time_series(curve=CurveName.DKKGOV,
+    na_service.get_curve_time_series(curves=CurveName.DKKGOV,
                                         from_date=datetime(2020, 1, 2),
                                         to_date=datetime(2022, 2, 28),
                                         curve_type=CurveType.YTMCurve,
@@ -732,7 +732,7 @@ Plot time series key figure
     from nordea_analytics import TimeSeriesKeyFigureName as kf_ts
 
     na_service = get_nordea_analytics_client(client_id="Your client id", client_secret="Your client secret")
-    na_service.get_time_series(symbol=["NDA 1 01oct50 (2)"],
+    na_service.get_time_series(symbols=["NDA 1 01oct50 (2)"],
                                   keyfigures=[kf_ts.PriceClean],
                                   from_date=datetime(2019, 1, 2),
                                   to_date=datetime.now(),
@@ -755,13 +755,13 @@ Plot time series key figure with crispy charts
     na_service = get_nordea_analytics_client(client_id="Your client id", client_secret="Your client secret")
     from_date = datetime(2019, 5, 2)
 
-    df_swap = na_service.get_time_series(symbol=["DKK SWAP 10Y"],
+    df_swap = na_service.get_time_series(symbols=["DKK SWAP 10Y"],
                                             keyfigures=[kf_ts.Quote],
                                             from_date=from_date,
                                             to_date=datetime.now(),
                                             as_df=True).set_index('Date')
 
-    df_price = na_service.get_time_series(symbol=["NDA 1 01oct50 (2)"],
+    df_price = na_service.get_time_series(symbols=["NDA 1 01oct50 (2)"],
                                             keyfigures=[kf_ts.PriceClean],
                                             from_date=from_date,
                                             to_date=datetime.now(),
@@ -823,19 +823,19 @@ Showing why buybacks are making bonds more rich
 
     isin_1 = "NDA 2.5 01oct53 (2)"
     isin_2 = "NDA 1 01oct50 (2)"
-    df_25_53 = na_service.get_time_series(symbol=[isin_1],
+    df_25_53 = na_service.get_time_series(symbols=[isin_1],
                                              keyfigures=[kf_ts.PriceClean, kf_ts.OAS_GOV],
                                              from_date=from_date,
                                              to_date=datetime.now(),
                                              as_df=True).set_index('Date')
-    df_1_50 = na_service.get_time_series(symbol=[isin_2],
+    df_1_50 = na_service.get_time_series(symbols=[isin_2],
                                             keyfigures=[kf_ts.PriceClean, kf_ts.OAS_GOV],
                                             from_date=from_date,
                                             to_date=datetime.now(),
                                             as_df=True).set_index('Date')
 
     df_calc_oas = na_service.calculate_bond_key_figure(calc_date=datetime.now(),
-                                                          isins=[isin_1, isin_2],
+                                                          symbols=[isin_1, isin_2],
                                                           keyfigures=[kf_calc.Spread],
                                                           curves=[CurveName.DKKGOV],
                                                           as_df=True)

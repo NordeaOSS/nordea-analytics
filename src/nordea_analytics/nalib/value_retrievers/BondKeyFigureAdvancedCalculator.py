@@ -21,13 +21,12 @@ from nordea_analytics.nalib.util import (
     float_to_tenor_string,
     get_config,
 )
-from nordea_analytics.nalib.util import get_keyfigure_key
 from nordea_analytics.nalib.value_retriever import ValueRetriever
 
 config = get_config()
 
 
-class BondKeyFigureCalculator(ValueRetriever):
+class BondKeyFigureAdvancedCalculator(ValueRetriever):
     """Retrieves and reformat calculated bond key figure."""
 
     def __init__(
@@ -42,15 +41,7 @@ class BondKeyFigureCalculator(ValueRetriever):
             List[Union[str, CalculatedBondKeyFigureName]],
         ],
         calc_date: datetime,
-        curves: Optional[
-            Union[
-                str,
-                CurveName,
-                List[str],
-                List[CurveName],
-                List[Union[str, CurveName]],
-            ]
-        ] = None,
+        curves: Optional[Union[List[str], str, CurveName, List[CurveName]]] = None,
         rates_shifts: Optional[Union[List[str], str]] = None,
         pp_speed: Optional[float] = None,
         price: Optional[float] = None,
@@ -60,6 +51,7 @@ class BondKeyFigureCalculator(ValueRetriever):
         asw_fix_frequency: Optional[str] = None,
         ladder_definition: Optional[List[str]] = None,
         cashflow_type: Optional[Union[str, CashflowType]] = None,
+        fixed_principal_payment: Optional[Union[str, List[str]]] = None,
     ) -> None:
         """Initialization of class.
 
@@ -83,43 +75,21 @@ class BondKeyFigureCalculator(ValueRetriever):
                 Mandatory input in all ASW calculations.
             ladder_definition: What tenors should be included in BPV ladder calculation.
             cashflow_type: Type of cashflow to calculate with.
+            fixed_principal_payment: Principal payment each cash flow date.
         """
-        super(BondKeyFigureCalculator, self).__init__(client)
+        super(BondKeyFigureAdvancedCalculator, self).__init__(client)
         self._client = client
-        _keyfigures: List = keyfigures if isinstance(keyfigures, list) else [keyfigures]
+        _keyfigures: List = keyfigures if type(keyfigures) == list else [keyfigures]
         self.keyfigures = [
             convert_to_variable_string(keyfigure, CalculatedBondKeyFigureName)
-            if isinstance(keyfigure, CalculatedBondKeyFigureName)
-            else keyfigure.lower()
             for keyfigure in _keyfigures
         ]
-        self.symbols = symbols if isinstance(symbols, list) else [symbols]
+        self.symbols = [symbols] if type(symbols) == str else symbols
         self.calc_date = calc_date
-        self.key_figures_original: Union[
-            List[str],
-            List[CalculatedBondKeyFigureName],
-            List[Union[str, CalculatedBondKeyFigureName]],
-        ] = (
-            keyfigures if isinstance(keyfigures, list) else [keyfigures]
-        )
-        self.curves_original: Union[
-            List[str], List[CurveName], List[Union[str, CurveName]], None
-        ] = (
-            curves
-            if isinstance(curves, list)
-            else [curves]
-            if isinstance(curves, str)
-            else None
-        )
 
-        _curves: Union[List[str], None]
+        _curves: Union[List[Union[str, ValueError]], None]
         if isinstance(curves, list):
-            _curves = [
-                convert_to_variable_string(curve, CurveName)
-                if isinstance(curve, CurveName)
-                else curve
-                for curve in curves
-            ]
+            _curves = [convert_to_variable_string(curve, CurveName) for curve in curves]
         elif curves is not None:
             # mypy doesn't know that curves in this line is never a list
             _curves = [convert_to_variable_string(curves, CurveName)]  # type: ignore
@@ -145,6 +115,7 @@ class BondKeyFigureCalculator(ValueRetriever):
             if cashflow_type is not None
             else None
         )
+        self.fixed_principal_payment = fixed_principal_payment
         self._data = self.calculate_bond_key_figure()
 
     def calculate_bond_key_figure(self) -> Mapping:
@@ -168,7 +139,7 @@ class BondKeyFigureCalculator(ValueRetriever):
     @property
     def url_suffix(self) -> str:
         """Url suffix suffix for a given method."""
-        return config["url_suffix"]["calculate"]
+        return config["url_suffix"]["calculate_advanced"]
 
     @property
     def request(self) -> List[Dict]:
@@ -194,6 +165,7 @@ class BondKeyFigureCalculator(ValueRetriever):
                 "asw_fix_frequency": self.asw_fix_frequency,
                 "ladder_definition": self.ladder_definition,
                 "cashflow_type": self.cashflow_type,
+                "fixed_principal_payment": self.fixed_principal_payment,
             }
             request = {
                 key: initial_request[key]
@@ -203,20 +175,6 @@ class BondKeyFigureCalculator(ValueRetriever):
             request_dict.append(request)
 
         return request_dict
-
-    def get_curve_key(self, curve_name: str) -> str:
-        """Get curve key for dict."""
-        if (
-            self.curves_original is not None and curve_name in self.curves_original
-        ):  # True when curve is input as string
-            curve_key = curve_name
-        else:
-            try:
-                curve_key = CurveName(curve_name).name
-            except Exception:
-                curve_key = curve_name
-
-        return curve_key
 
     def to_dict(self) -> Dict:
         """Reformat the json response to a dictionary."""
@@ -233,7 +191,7 @@ class BondKeyFigureCalculator(ValueRetriever):
         for key_figure in bond_data:
             if key_figure != "price" and key_figure in self.keyfigures:
                 for curve_data in bond_data[key_figure]["values"]:
-                    _data_dict: Dict[Any, Any] = {}
+                    _data_dict = {}
                     if key_figure == "bpvladder":
                         ladder_dict = {
                             float_to_tenor_string(
@@ -242,59 +200,38 @@ class BondKeyFigureCalculator(ValueRetriever):
                             for ladder in curve_data["ladder"]
                         }
                         _data_dict[
-                            get_keyfigure_key(
-                                key_figure,
-                                self.key_figures_original,
-                                CalculatedBondKeyFigureName.__name__,
-                            )
+                            CalculatedBondKeyFigureName(key_figure).name
                         ] = ladder_dict
                     elif key_figure == "expectedcashflow":
                         cashflow_dict = {
-                            datetime.strptime(
-                                cashflow["payment_date"], "%Y-%m-%d"
-                            ).date(): {
-                                "interest": cashflow["interest"],
-                                "principal": cashflow["principal"],
-                            }
-                            for cashflow in curve_data["cashflows"]
+                            cashflows["key"]: convert_to_float_if_float(
+                                cashflows["value"]
+                            )
+                            for cashflows in curve_data["cashflows"]
                         }
                         _data_dict[
-                            get_keyfigure_key(
-                                key_figure,
-                                self.key_figures_original,
-                                CalculatedBondKeyFigureName.__name__,
-                            )
+                            CalculatedBondKeyFigureName(key_figure).name
                         ] = cashflow_dict
                     else:
                         _data_dict[
-                            get_keyfigure_key(
-                                key_figure,
-                                self.key_figures_original,
-                                CalculatedBondKeyFigureName.__name__,
-                            )
+                            CalculatedBondKeyFigureName(key_figure).name
                         ] = convert_to_float_if_float(
                             curve_data["value"]
                         )  # type:ignore
-
-                    curve_key = self.get_curve_key(curve_data["key"])
-                    if curve_key in _dict_bond.keys():
-                        _dict_bond[curve_key].update(_data_dict)
+                    if curve_data["key"] in _dict_bond.keys():
+                        _dict_bond[curve_data["key"]].update(_data_dict)
                     else:
-                        _dict_bond[curve_key] = _data_dict
-
-        # This would be the case if only Price would be selected as key figure
-        # If not, price has no curve to be inserted into
-        if _dict_bond == {}:
-            _dict_bond["No curve found"] = {}
+                        _dict_bond[curve_data["key"]] = _data_dict
+        if (
+            _dict_bond == {}
+        ):  # This would be the case if only Price would be selected as key figure
+            for curve_data in bond_data["bpv"]["values"]:
+                _dict_bond[curve_data["key"]] = {}
 
         if "price" in bond_data and "price" in self.keyfigures:
             for curve in _dict_bond:
                 _dict_bond[curve][
-                    get_keyfigure_key(
-                        "price",
-                        self.key_figures_original,
-                        CalculatedBondKeyFigureName.__name__,
-                    )
+                    CalculatedBondKeyFigureName("price").name
                 ] = bond_data["price"]
 
         return _dict_bond

@@ -21,6 +21,7 @@ from nordea_analytics.nalib.util import (
     convert_to_variable_string,
     get_config,
 )
+from nordea_analytics.nalib.util import get_keyfigure_key
 from nordea_analytics.nalib.value_retriever import ValueRetriever
 
 config = get_config()
@@ -42,7 +43,15 @@ class BondKeyFigureHorizonCalculator(ValueRetriever):
         ],
         calc_date: datetime,
         horizon_date: datetime,
-        curves: Optional[Union[List[str], str, CurveName, List[CurveName]]] = None,
+        curves: Optional[
+            Union[
+                str,
+                CurveName,
+                List[str],
+                List[CurveName],
+                List[Union[str, CurveName]],
+            ]
+        ] = None,
         rates_shifts: Optional[Union[List[str], str]] = None,
         pp_speed: Optional[float] = None,
         price: Optional[float] = None,
@@ -86,29 +95,48 @@ class BondKeyFigureHorizonCalculator(ValueRetriever):
         """
         super(BondKeyFigureHorizonCalculator, self).__init__(client)
         self._client = client
-        _keyfigures: List = keyfigures if type(keyfigures) == list else [keyfigures]
+        _keyfigures = keyfigures if isinstance(keyfigures, list) else [keyfigures]
         self.keyfigures = [
-            convert_to_variable_string(keyfigure, HorizonCalculatedBondKeyFigureName)
-            for keyfigure in _keyfigures
+            convert_to_variable_string(kf, HorizonCalculatedBondKeyFigureName)
+            if isinstance(kf, HorizonCalculatedBondKeyFigureName)
+            else kf.lower()
+            for kf in _keyfigures
         ]
-        self.symbols = [symbols] if type(symbols) == str else symbols
+
+        self.symbols = symbols if isinstance(symbols, list) else [symbols]
         self.calc_date = calc_date
         self.horizon_date = horizon_date
-        _curves: Union[
-            str,
+        self.key_figures_original: Union[
             List[str],
-            ValueError,
-            List[ValueError],
-            List[Union[str, ValueError]],
-            None,
-        ] = None
-        if curves is not None:
-            _curves = (
-                [convert_to_variable_string(curve, CurveName) for curve in curves]
-                if type(curves) == list
-                # mypy doesn't know that curves in this line is never a list
-                else [convert_to_variable_string(curves, CurveName)]  # type: ignore
-            )
+            List[HorizonCalculatedBondKeyFigureName],
+            List[Union[str, HorizonCalculatedBondKeyFigureName]],
+        ] = (
+            keyfigures if isinstance(keyfigures, list) else [keyfigures]
+        )
+        self.curves_original: Union[
+            List[str], List[CurveName], List[Union[str, CurveName]], None
+        ] = (
+            curves
+            if isinstance(curves, list)
+            else [curves]
+            if isinstance(curves, str)
+            else None
+        )
+
+        _curves: Union[List[str], None]
+        if isinstance(curves, list):
+            _curves = [
+                convert_to_variable_string(curve, CurveName)
+                if isinstance(curve, CurveName)
+                else str(curve)
+                for curve in curves
+            ]
+        elif curves is not None:
+            # mypy doesn't know that curves in this line is never a list
+            _curves = [convert_to_variable_string(curves, CurveName)]  # type: ignore
+        else:
+            _curves = None
+
         self.curves = _curves
         self.rates_shifts = rates_shifts
         self.pp_speed = pp_speed
@@ -196,45 +224,70 @@ class BondKeyFigureHorizonCalculator(ValueRetriever):
             request_dict.append(request)
         return request_dict
 
+    def get_curve_key(self, curve_name: str) -> str:
+        """Get curve key for dict."""
+        if (
+            self.curves_original is not None and curve_name in self.curves_original
+        ):  # True when curve is input as string
+            curve_key = curve_name
+        else:
+            try:
+                curve_key = CurveName(curve_name).name
+            except Exception:
+                curve_key = curve_name
+
+        return curve_key
+
     def to_dict(self) -> Dict:
         """Reformat the json response to a dictionary."""
         _dict: Dict[Any, Any] = {}
         for symbol in self._data:
             bond_data = self._data[symbol]
-            _dict_bond: Dict[Any, Any] = {}
-            for key_figure in bond_data:
-                if "price" != key_figure and key_figure in self.keyfigures:
-                    data = (
-                        bond_data[key_figure]
-                        if key_figure in self.fixed_keyfigures
-                        else bond_data[key_figure]["values"]
-                    )
-                    for curve_data in data:
-                        _data_dict = {
-                            HorizonCalculatedBondKeyFigureName(
-                                key_figure
-                            ).name: convert_to_float_if_float(curve_data["value"])
-                        }
-                        if curve_data["key"] in _dict_bond.keys():
-                            _dict_bond[curve_data["key"]].update(_data_dict)
-                        else:
-                            _dict_bond[curve_data["key"]] = _data_dict
-
-            if (
-                _dict_bond == {}
-            ):  # This would be the case if only Price would be selected as key figure
-                for curve_data in bond_data["bpv"]["values"]:
-                    _dict_bond[curve_data["key"]] = {}
-
-            if "price" in bond_data and "price" in self.keyfigures:
-                for curve in _dict_bond:
-                    _dict_bond[curve][
-                        HorizonCalculatedBondKeyFigureName("price").name
-                    ] = bond_data["price"]
-
+            _dict_bond = self.to_dict_bond(bond_data)
             _dict[symbol] = _dict_bond
 
         return _dict
+
+    def to_dict_bond(self, bond_data: Dict) -> Dict:
+        """to_dict function too complicated."""
+        _dict_bond: Dict[Any, Any] = {}
+        for key_figure in bond_data:
+            if "price" != key_figure and key_figure in self.keyfigures:
+                data = (
+                    bond_data[key_figure]
+                    if key_figure in self.fixed_keyfigures
+                    else bond_data[key_figure]["values"]
+                )
+                for curve_data in data:
+                    _data_dict = {
+                        get_keyfigure_key(
+                            key_figure,
+                            self.key_figures_original,
+                            HorizonCalculatedBondKeyFigureName.__name__,
+                        ): convert_to_float_if_float(curve_data["value"])
+                    }
+                    curve_key = self.get_curve_key(curve_data["key"])
+                    if curve_key in _dict_bond.keys():
+                        _dict_bond[curve_key].update(_data_dict)
+                    else:
+                        _dict_bond[curve_key] = _data_dict
+
+        # This would be the case if only Price would be selected as key figure
+        # If not, price has no curve to be inserted into
+        if _dict_bond == {}:
+            _dict_bond["No curve found"] = {}
+
+        if "price" in bond_data and "price" in self.keyfigures:
+            for curve in _dict_bond:
+                _dict_bond[curve][
+                    get_keyfigure_key(
+                        "price",
+                        self.key_figures_original,
+                        HorizonCalculatedBondKeyFigureName.__name__,
+                    )
+                ] = bond_data["price"]
+
+        return _dict_bond
 
     def to_df(self) -> pd.DataFrame:
         """Reformat the json response to a pandas DataFrame."""

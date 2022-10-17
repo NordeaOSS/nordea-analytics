@@ -6,28 +6,27 @@ from typing import Callable, Dict, List, Mapping, Union
 
 import yaml
 
-from nordea_analytics.convention_variable_names import (
+from nordea_analytics import (
+    BondKeyFigureName,
+    CalculatedBondKeyFigureName,
     CashflowType,
-    DateRollConvention,
-    DayCountConvention,
-    Exchange,
-    TimeConvention,
-)
-from nordea_analytics.curve_variable_names import (
     CurveDefinitionName,
     CurveName,
     CurveType,
-    SpotForward,
-)
-from nordea_analytics.forecast_names import YieldCountry, YieldHorizon, YieldType
-from nordea_analytics.key_figure_names import (
-    BondKeyFigureName,
-    CalculatedBondKeyFigureName,
+    DateRollConvention,
+    DayCountConvention,
+    Exchange,
     HorizonCalculatedBondKeyFigureName,
     LiveBondKeyFigureName,
+    SpotForward,
+    TimeConvention,
     TimeSeriesKeyFigureName,
+    YieldCountry,
+    YieldHorizon,
+    YieldType,
 )
 from nordea_analytics.nalib.exceptions import AnalyticsResponseError
+# .search_bond_names must be separate or tests cannot run
 from nordea_analytics.search_bond_names import (
     AmortisationType,
     AssetType,
@@ -55,6 +54,7 @@ def convert_to_float_if_float(string: str) -> Union[str, float]:
 def convert_to_variable_string(
     variable: Union[
         str,
+        AssetType,
         BondKeyFigureName,
         TimeSeriesKeyFigureName,
         CashflowType,
@@ -78,7 +78,7 @@ def convert_to_variable_string(
         LiveBondKeyFigureName,
     ],
     variable_type: Callable,
-) -> Union[str, ValueError]:
+) -> str:
     """Convert of any variable name to string which is available in the service.
 
     Args:
@@ -96,6 +96,7 @@ def convert_to_variable_string(
 
     """
     if type(variable) in (
+        AssetType,
         BondKeyFigureName,
         TimeSeriesKeyFigureName,
         CashflowType,
@@ -110,7 +111,6 @@ def convert_to_variable_string(
         AmortisationType,
         CalculatedBondKeyFigureName,
         HorizonCalculatedBondKeyFigureName,
-        AssetType,
         CapitalCentres,
         CapitalCentreTypes,
         YieldCountry,
@@ -130,6 +130,7 @@ def convert_to_variable_string(
             elif variable.lower() == "impliedforward":
                 return "ImpliedForward"
             elif (
+                # For enum types where string value is fully capitalised
                 variable_type == CashflowType
                 or variable_type == CurveName
                 or variable_type == CurveDefinitionName
@@ -188,7 +189,7 @@ def get_config(config_path: str = None) -> Dict:
 def float_to_tenor_string(float_tenor: Union[str, float]) -> str:
     """Convert float year fraction to tenor string."""
     if float(float_tenor).is_integer():
-        return str(int(float_tenor)) + "Y"
+        return str(int(float(float_tenor))) + "Y"
     else:
         return str(float(float_tenor)) + "Y"
 
@@ -215,3 +216,41 @@ def check_json_response_error(output_found: bool) -> None:
 def pretty_dict_string(d: Dict, indent: int = 4, sort_keys: bool = True) -> str:
     """Print dict content as nice-formatted JSON string."""
     return json.dumps(d, indent=indent, sort_keys=sort_keys) if d else "{}"
+
+
+def get_keyfigure_key(
+    key_figure: str,
+    key_figures_original: Union[
+        List[str],
+        List[CalculatedBondKeyFigureName],
+        List[Union[str, CalculatedBondKeyFigureName]],
+        List[HorizonCalculatedBondKeyFigureName],
+        List[Union[str, HorizonCalculatedBondKeyFigureName]],
+        List[LiveBondKeyFigureName],
+        List[Union[str, LiveBondKeyFigureName]],
+    ],
+    enum_type: str,
+) -> str:
+    """Get keyfigure key for dict."""
+    for kf_original in key_figures_original:
+        if key_figure == kf_original or (
+            type(key_figure) == str
+            and type(kf_original) == str
+            and key_figure.lower() == kf_original.lower()
+        ):
+            return str(kf_original)
+    try:
+        if enum_type == CalculatedBondKeyFigureName.__name__:
+            key_figure_key = CalculatedBondKeyFigureName(key_figure).name
+        elif enum_type == HorizonCalculatedBondKeyFigureName.__name__:
+            key_figure_key = HorizonCalculatedBondKeyFigureName(key_figure).name
+        elif enum_type == LiveBondKeyFigureName.__name__:
+            key_figure_key = LiveBondKeyFigureName(key_figure).name
+        else:
+            raise AnalyticsResponseError(
+                "Keyfigure enum type not handled explicitly, report this to package provider."
+            )
+    except Exception:
+        key_figure_key = key_figure
+
+    return key_figure_key

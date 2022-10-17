@@ -1,3 +1,4 @@
+"""Core functionality to acces API."""
 from datetime import datetime
 from typing import Any, Dict, Iterator, List, Union
 
@@ -55,7 +56,7 @@ from nordea_analytics.search_bond_names import (
 )
 
 
-class NordeaAnalyticsService:
+class NordeaAnalyticsCoreService:
     """Main class for the Nordea Analytics python service."""
 
     def __init__(
@@ -288,7 +289,7 @@ class NordeaAnalyticsService:
 
     def get_bond_static_data(
         self,
-        symbols: Union[List[str], str],
+        symbols: Union[List, str],
         as_df: bool = False,
     ) -> Any:
         """Retrieves latest static data for given ISINs.
@@ -309,20 +310,8 @@ class NordeaAnalyticsService:
         dmb: bool = False,
         country: str = None,
         currency: str = None,
-        issuers: Union[
-            Issuers,
-            str,
-            List[Issuers],
-            List[str],
-            List[Union[Issuers, str]],
-        ] = None,
-        asset_types: Union[
-            AssetType,
-            str,
-            List[AssetType],
-            List[str],
-            List[Union[str, AssetType]],
-        ] = None,
+        issuers: Union[List[Issuers], List[str], Issuers, str] = None,
+        asset_types: Union[List[AssetType], List[str], AssetType, str] = None,
         lower_maturity: datetime = None,
         upper_maturity: datetime = None,
         lower_closing_date: datetime = None,
@@ -333,18 +322,10 @@ class NordeaAnalyticsService:
         upper_outstanding_amount: float = None,
         amortisation_type: Union[AmortisationType, str] = None,
         capital_centres: Union[
-            CapitalCentres,
-            str,
-            List[CapitalCentres],
-            List[str],
-            List[Union[CapitalCentres, str]],
+            List[str], str, List[CapitalCentres], CapitalCentres
         ] = None,
         capital_centre_types: Union[
-            CapitalCentreTypes,
-            str,
-            List[CapitalCentreTypes],
-            List[str],
-            List[Union[CapitalCentreTypes, str]],
+            List[str], str, List[CapitalCentreTypes], CapitalCentreTypes
         ] = None,
         as_df: bool = False,
     ) -> Any:
@@ -411,14 +392,8 @@ class NordeaAnalyticsService:
             List[Union[str, CalculatedBondKeyFigureName]],
         ],
         calc_date: datetime,
-        curves: Union[
-            str,
-            CurveName,
-            List[str],
-            List[CurveName],
-            List[Union[str, CurveName]],
-        ] = None,
-        rates_shifts: Union[str, List[str]] = None,
+        curves: Union[List[str], str, CurveName, List[CurveName]] = None,
+        rates_shifts: Union[List[str], str] = None,
         pp_speed: float = None,
         price: float = None,
         spread: float = None,
@@ -660,11 +635,7 @@ class NordeaAnalyticsService:
         self,
         symbols: Union[str, List[str]],
         keyfigures: Union[
-            LiveBondKeyFigureName,
-            str,
-            List[LiveBondKeyFigureName],
-            List[str],
-            List[Union[LiveBondKeyFigureName, str]],
+            List[LiveBondKeyFigureName], List[str], LiveBondKeyFigureName, str
         ],
         as_df: bool = False,
     ) -> Any:
@@ -689,11 +660,7 @@ class NordeaAnalyticsService:
         self,
         symbols: Union[str, List[str]],
         keyfigures: Union[
-            LiveBondKeyFigureName,
-            str,
-            List[LiveBondKeyFigureName],
-            List[str],
-            List[Union[LiveBondKeyFigureName, str]],
+            List[LiveBondKeyFigureName], List[str], LiveBondKeyFigureName, str
         ],
         as_df: bool = False,
     ) -> Iterator[Any]:

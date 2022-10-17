@@ -57,7 +57,9 @@ class BondKeyFigures(ValueRetriever):
             for keyfigure in _keyfigures
         ]
         self.calc_date = calc_date
-        self._data = self.get_bond_key_figures()
+        result = self.get_bond_key_figures()
+
+        self._data = self.format_key_figure_names(result, _keyfigures)
 
     def get_bond_key_figures(self) -> List:
         """Calls the client and retrieves response with key figures from the service."""
@@ -71,6 +73,34 @@ class BondKeyFigures(ValueRetriever):
         self.check_response(json_response)
 
         return json_response
+
+    def format_key_figure_names(
+        self,
+        data: List,
+        keyfigures: Union[
+            List[str], List[BondKeyFigureName], List[Union[str, BondKeyFigureName]]
+        ],
+    ) -> List:
+        """Formats curve names to be identical to curves input."""
+        for kf in keyfigures:
+            keyfigure_string: Union[str, ValueError]
+            if type(kf) == BondKeyFigureName:
+                keyfigure_string = convert_to_variable_string(kf, BondKeyFigureName)
+            elif type(kf) == str:
+                keyfigure_string = kf
+
+            for bond_result in data:
+                for keyfigure_result in bond_result["values"]:
+                    if (
+                        type(keyfigure_string) == str
+                        and keyfigure_result["keyfigure"].lower()
+                        == keyfigure_string.lower()
+                    ):
+                        keyfigure_result["keyfigure"] = (
+                            kf.name if type(kf) == BondKeyFigureName else kf
+                        )
+
+        return data
 
     @staticmethod
     def check_response(json_response: Union[List, Mapping]) -> None:
@@ -120,7 +150,9 @@ class BondKeyFigures(ValueRetriever):
         for bond_data in self._data:
             _bond_dict = {}
             for key_figure_data in bond_data["values"]:
-                key_figure_name = BondKeyFigureName(key_figure_data["keyfigure"]).name
+                key_figure_name = key_figure_data[
+                    "keyfigure"
+                ]  # BondKeyFigureName(key_figure_data["keyfigure"]).name
                 _bond_dict[key_figure_name] = convert_to_float_if_float(
                     key_figure_data["value"]
                 )
