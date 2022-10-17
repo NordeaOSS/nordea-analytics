@@ -29,7 +29,11 @@ class LiveBondKeyFigures(ValueRetriever):
         symbols: Union[str, List[str]],
         client: DataRetrievalServiceClient,
         keyfigures: Union[
-            List[LiveBondKeyFigureName], List[str], LiveBondKeyFigureName, str
+            LiveBondKeyFigureName,
+            str,
+            List[LiveBondKeyFigureName],
+            List[str],
+            List[Union[LiveBondKeyFigureName, str]],
         ],
         as_df: bool,
     ) -> None:
@@ -48,8 +52,12 @@ class LiveBondKeyFigures(ValueRetriever):
         _keyfigures: List = keyfigures if isinstance(keyfigures, list) else [keyfigures]
         self.keyfigures: List = [
             convert_to_variable_string(keyfigure, LiveBondKeyFigureName)
+            if type(keyfigure) == LiveBondKeyFigureName
+            else keyfigure.lower()
             for keyfigure in _keyfigures
         ]
+
+        self.keyfigures_original = _keyfigures
         self._as_df = as_df
         self._stream_iterator = Iterator[Any]
         self._data = self._client.get_response(self.request, self.url_suffix)[
@@ -82,11 +90,16 @@ class LiveBondKeyFigures(ValueRetriever):
         """Reformat the json response to a dictionary."""
         results: Dict = {}
         for values in self._data:
-            results = results | filter_keyfigures(values, self.keyfigures)
+
+            results = results | filter_keyfigures(
+                values, self.keyfigures, self.keyfigures_original
+            )
         return results
 
     def _response_decorator(self, json_payload: dict) -> Any:
-        json_payload = parse_live_keyfigures_json(json_payload, self.keyfigures)
+        json_payload = parse_live_keyfigures_json(
+            json_payload, self.keyfigures, self.keyfigures_original
+        )
         if self._as_df:
             return to_data_frame(json_payload)
 

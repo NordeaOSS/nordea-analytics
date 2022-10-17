@@ -51,6 +51,8 @@ class DataRetrievalServiceClient(object):
             Response in the form of json.
         """
         response = self._get_response(url_suffix, params=request)
+        self._verify_response(response.json())
+
         response_json = response.json()
         if "info" in response_json and "job_url" in response_json["info"]:
             log_token = response.headers.get("X-Request-ID", None)
@@ -80,6 +82,8 @@ class DataRetrievalServiceClient(object):
             Response in the form of json.
         """
         post_response = self._post_response(request, url_suffix)
+        self._verify_response(post_response.json())
+
         log_token = post_response.headers.get("X-Request-ID", None)
         params = (
             {"headers": {"X-Request-ID-Override": log_token}}
@@ -132,6 +136,11 @@ class DataRetrievalServiceClient(object):
         self._last_request = kwargs
 
     @staticmethod
+    def _verify_response(response: Dict) -> None:
+        if "httpCode" in response and response["httpCode"] != 200:
+            raise exceptions.ApiServerUnauthorized(response["moreInformation"])
+
+    @staticmethod
     def _check_errors(get_response: Response) -> Dict:
         _response = get_response.json()["data"]["response"]
         if "error" in get_response.text:
@@ -162,9 +171,13 @@ class DataRetrievalServiceClient(object):
                 and _response["failed_calculation"]["info"] == ""
             ):
                 del _response["failed_calculation"]
-            else:
+            elif "data" in _response:
                 raise AnalyticsResponseError(
                     _response["data"]["failed_calculation"]["info"]
+                )
+            else:
+                CustomWarning(
+                    str(_response["failed_calculation"]["info"]), AnalyticsWarning
                 )
 
         if "data" in _response.keys():

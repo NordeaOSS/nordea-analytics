@@ -58,7 +58,7 @@ class AnalyticsWarning(Warning):
 
 
 class CustomWarning(Warning):
-    """Throw instead of standard warning to indicate warning came from Analytics API."""
+    """Throw custom instead of standard warning to indicate warning came from Analytics API."""
 
     def __init__(self, message: str, category: Any) -> None:
         """Create new instance of class.
@@ -69,3 +69,14 @@ class CustomWarning(Warning):
         """
         self.message = message
         warnings.warn(self.message, category=category)
+
+
+class CustomWarningCheck:
+    """Class for containing custom warning messages."""
+
+    @staticmethod
+    def curve_time_series_not_retrieved_warning(response: dict, curve: str) -> None:
+        """Throw warning for when curve time series does not return anything."""
+        if "timeseries" in response and response["timeseries"].__len__() == 0:
+            message = curve + " could not be retrieved."
+            CustomWarning(message, AnalyticsWarning)

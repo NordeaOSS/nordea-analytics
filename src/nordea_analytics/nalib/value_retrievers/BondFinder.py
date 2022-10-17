@@ -34,8 +34,14 @@ class BondFinder(ValueRetriever):
         dmb: bool = False,
         country: Optional[str] = None,
         currency: Optional[str] = None,
-        issuers: Optional[Union[List[Issuers], List[str], Issuers, str]] = None,
-        asset_types: Optional[Union[List[AssetType], List[str], AssetType, str]] = None,
+        issuers: Optional[
+            Union[Issuers, str, List[Issuers], List[str], List[Union[Issuers, str]]]
+        ] = None,
+        asset_types: Optional[
+            Union[
+                AssetType, str, List[AssetType], List[str], List[Union[str, AssetType]]
+            ]
+        ] = None,
         lower_maturity: Optional[datetime] = None,
         upper_maturity: Optional[datetime] = None,
         lower_closing_date: Optional[datetime] = None,
@@ -44,10 +50,22 @@ class BondFinder(ValueRetriever):
         upper_coupon: Optional[float] = None,
         amortisation_type: Optional[Union[AmortisationType, str]] = None,
         capital_centres: Optional[
-            Union[List[str], str, CapitalCentres, List[CapitalCentres]]
+            Union[
+                CapitalCentres,
+                str,
+                List[CapitalCentres],
+                List[str],
+                List[Union[CapitalCentres, str]],
+            ]
         ] = None,
         capital_centre_types: Optional[
-            Union[List[str], str, CapitalCentreTypes, List[CapitalCentreTypes]]
+            Union[
+                CapitalCentreTypes,
+                str,
+                List[CapitalCentreTypes],
+                List[str],
+                List[Union[CapitalCentreTypes, str]],
+            ]
         ] = None,
         lower_outstanding_amount: Optional[float] = None,
         upper_outstanding_amount: Optional[float] = None,
@@ -82,10 +100,14 @@ class BondFinder(ValueRetriever):
         self.country = country
         self.currency = currency
         self.issuers = issuers
-        _asset_types: List = asset_types if type(asset_types) == list else [asset_types]
+        _asset_types: List = (
+            asset_types if isinstance(asset_types, list) else [asset_types]
+        )
         self.asset_types = (
             [
                 convert_to_variable_string(asset_type, AssetType)
+                if isinstance(asset_type, AssetType)
+                else asset_type
                 for asset_type in _asset_types
             ]
             if asset_types is not None
@@ -112,33 +134,44 @@ class BondFinder(ValueRetriever):
         self.upper_coupon = str(upper_coupon) if upper_coupon is not None else None
         self.amortisation_type = (
             convert_to_variable_string(amortisation_type, AmortisationType)
-            if amortisation_type is not None
-            else None
+            if isinstance(amortisation_type, AmortisationType)
+            else amortisation_type
         )
-        _capital_centres: List = (
-            capital_centres if type(capital_centres) == list else [capital_centres]
-        )
-        self.capital_centres = (
-            [
+
+        self.capital_centres: Union[list[str], None]
+        if capital_centres is not None:
+            _capital_centres = (
+                capital_centres
+                if isinstance(capital_centres, list)
+                else [capital_centres]
+            )
+
+            self.capital_centres = [
                 convert_to_variable_string(capital_centre, CapitalCentres)
+                if isinstance(capital_centre, CapitalCentres)
+                else capital_centre
                 for capital_centre in _capital_centres
             ]
-            if capital_centres is not None
-            else None
-        )
-        _capital_centre_types: List = (
-            capital_centre_types
-            if type(capital_centre_types) == list
-            else [capital_centre_types]
-        )
-        self.capital_centre_types = (
-            [
+        else:
+            self.capital_centres = None
+
+        self.capital_centre_types: Union[list[str], None]
+        if capital_centre_types is not None:
+            _capital_centre_types = (
+                capital_centre_types
+                if isinstance(capital_centre_types, list)
+                else [capital_centre_types]
+            )
+
+            self.capital_centre_types = [
                 convert_to_variable_string(capital_centre_type, CapitalCentreTypes)
+                if isinstance(capital_centre_type, CapitalCentreTypes)
+                else capital_centre_type
                 for capital_centre_type in _capital_centre_types
             ]
-            if capital_centre_types is not None
-            else None
-        )
+        else:
+            self.capital_centre_types = None
+
         self.lower_outstanding_amount = lower_outstanding_amount
         self.upper_outstanding_amount = upper_outstanding_amount
 
