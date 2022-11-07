@@ -1,6 +1,6 @@
 from datetime import datetime
 import math
-from typing import Any, Dict, List, Mapping, Union
+from typing import Any, Dict, List, Union
 
 import numpy as np
 import pandas as pd
@@ -9,8 +9,6 @@ from nordea_analytics.nalib.data_retrieval_client import (
     DataRetrievalServiceClient,
 )
 from nordea_analytics.nalib.util import (
-    check_json_response,
-    check_json_response_error,
     get_config,
 )
 from nordea_analytics.nalib.value_retriever import ValueRetriever
@@ -46,20 +44,7 @@ class BondStaticData(ValueRetriever):
             json_map = _json_response[config["results"]["bond_static_data"]]
             json_response = list(json_map) + json_response
 
-        self.check_response(json_response)
-
         return json_response
-
-    @staticmethod
-    def check_response(json_response: Union[List, Mapping]) -> None:
-        """Checks if json_reponse contains output, else throws error."""
-        output_found = False
-        for i in range(0, json_response.__len__()):
-            output_found = check_json_response(json_response[i]["static_data"])
-            if output_found:
-                break
-
-        check_json_response_error(output_found)
 
     @property
     def url_suffix(self) -> str:

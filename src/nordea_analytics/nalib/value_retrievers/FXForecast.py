@@ -7,8 +7,6 @@ from nordea_analytics.nalib.data_retrieval_client import (
     DataRetrievalServiceClient,
 )
 from nordea_analytics.nalib.util import (
-    check_json_response,
-    check_json_response_error,
     get_config,
 )
 from nordea_analytics.nalib.value_retriever import ValueRetriever
@@ -40,9 +38,6 @@ class FXForecast(ValueRetriever):
         """Retrieves response with FX forecast."""
         json_response = self.get_response(self.request)
         json_response = json_response[config["results"]["fx_forecast"]]
-
-        output_found = check_json_response(json_response)
-        check_json_response_error(output_found)
 
         return json_response
 

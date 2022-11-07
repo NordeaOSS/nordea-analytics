@@ -7,8 +7,6 @@ from nordea_analytics.nalib.data_retrieval_client import (
     DataRetrievalServiceClient,
 )
 from nordea_analytics.nalib.util import (
-    check_json_response,
-    check_json_response_error,
     convert_to_float_if_float,
     get_config,
 )
@@ -44,9 +42,6 @@ class IndexComposition(ValueRetriever):
         """Calls the client and retrieves response with index comp. from service."""
         json_response = self.get_response(self.request)
         json_response = json_response[config["results"]["index_composition"]]
-
-        output_found = check_json_response(json_response)
-        check_json_response_error(output_found)
 
         return json_response
 
@@ -94,7 +89,7 @@ class IndexComposition(ValueRetriever):
 
     def to_df(self) -> pd.DataFrame:
         """Reformat the json response to a pandas DataFrame."""
-        df = pd.DataFrame.empty
+        df = pd.DataFrame()
         _dict = self.to_dict()
         for index in _dict:
             _df = pd.DataFrame.from_dict(_dict[index])

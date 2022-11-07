@@ -14,7 +14,7 @@ class TestCalculateBondKeyFigure:
     """Test class for calculate key figure."""
 
     @pytest.mark.parametrize(
-        "isin, key_figures, curves, rates_shift, pp_speed, price",
+        "isin, key_figures, curves, rates_shift, pp_speed, prices",
         [
             (
                 "DK0002030337",
@@ -74,7 +74,7 @@ class TestCalculateBondKeyFigure:
         curves: Union[List[str], str, CurveName, List[CurveName]],
         rates_shift: List[str],
         pp_speed: float,
-        price: float,
+        prices: Union[float, List[float]],
     ) -> None:
         """Check if dictionary results are correct."""
         calc_key_figure = na_service.calculate_horizon_bond_key_figure(
@@ -85,7 +85,7 @@ class TestCalculateBondKeyFigure:
             curves=curves,
             rates_shifts=rates_shift,
             pp_speed=pp_speed,
-            price=price,
+            prices=prices,
         )
 
         bond_results = calc_key_figure[isin]
@@ -102,7 +102,7 @@ class TestCalculateBondKeyFigure:
         first_curve = list(bond_results.keys())[0]
         keyfigure_results = bond_results[first_curve]
 
-        assert keyfigure_results.__len__() == key_figures.__len__()
+        assert len(keyfigure_results) == len(key_figures)
 
         for kf in key_figures:
             # Enum value of keyfigure always returned, even if string is input, e.g. 'return_interest' returns ReturnInterest
@@ -157,7 +157,7 @@ class TestCalculateBondKeyFigure:
                 assert curve_string in list(bond_results["Curve"])
 
         results_per_keyfigure = list(bond_results[key_figures[0].name])
-        assert results_per_keyfigure.__len__() == isin.__len__()
+        assert len(results_per_keyfigure) == len(isin)
 
         for kf in key_figures:
             # Enum value of keyfigure always returned, even if string is input, e.g. 'return_interest' returns ReturnInterest

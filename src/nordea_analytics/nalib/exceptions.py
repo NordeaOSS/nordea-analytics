@@ -75,8 +75,23 @@ class CustomWarningCheck:
     """Class for containing custom warning messages."""
 
     @staticmethod
-    def curve_time_series_not_retrieved_warning(response: dict, curve: str) -> None:
-        """Throw warning for when curve time series does not return anything."""
-        if "timeseries" in response and response["timeseries"].__len__() == 0:
+    def curve_not_retrieved_warning(response: dict, curve: str) -> None:
+        """Throw warning when curve time series does not return anything."""
+        if len(response["curve"]["curve"]["values"]) == 0:
             message = curve + " could not be retrieved."
+            CustomWarning(message, AnalyticsWarning)
+
+    @staticmethod
+    def curve_time_series_not_retrieved_warning(response: dict, curve: str) -> None:
+        """Throw warning when curve time series does not return anything."""
+        if "timeseries" in response and len(response["timeseries"]) == 0:
+            message = curve + " could not be retrieved."
+            CustomWarning(message, AnalyticsWarning)
+
+    @staticmethod
+    def post_response_not_retrieved_warning(error: Exception, bond: str) -> None:
+        """Throw warning when post response throws exception to ensure result from remaining bonds is returned."""
+        error_code = error.error_id if isinstance(error, ApiServerError) else ''
+        if len(error.args) > 0 and "Failed to retrieve bond.":
+            message = f"{bond} could not be retrieved. Error code: {error_code}"
             CustomWarning(message, AnalyticsWarning)

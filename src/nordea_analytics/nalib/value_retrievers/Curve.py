@@ -12,10 +12,8 @@ from nordea_analytics.curve_variable_names import (
 from nordea_analytics.nalib.data_retrieval_client import (
     DataRetrievalServiceClient,
 )
-from nordea_analytics.nalib.exceptions import AnalyticsInputError
+from nordea_analytics.nalib.exceptions import AnalyticsInputError, CustomWarningCheck
 from nordea_analytics.nalib.util import (
-    check_json_response,
-    check_json_response_error,
     convert_to_float_if_float,
     convert_to_variable_string,
     get_config,
@@ -98,11 +96,13 @@ class Curve(ValueRetriever):
         json_response: List[Any] = []
         for request_dict in self.request:
             _json_response = self.get_response(request_dict)
+            # To throw warning if curve in get_curve_time_series could not be retrieved
+            CustomWarningCheck.curve_not_retrieved_warning(
+                _json_response, request_dict["curve"]
+            )
+
             json_map = _json_response[config["results"]["curve"]]
             json_response.append(json_map)
-
-        output_found = check_json_response(json_response)
-        check_json_response_error(output_found)
 
         return json_response
 
@@ -126,9 +126,10 @@ class Curve(ValueRetriever):
             )
 
         for curve_result in data:
-            curve_result["curve"]["curve_specification"]["name"] = curve_dict[
-                curve_result["curve"]["curve_specification"]["name"].upper()
-            ]
+            if "name" in curve_result["curve"]["curve_specification"]:
+                curve_result["curve"]["curve_specification"]["name"] = curve_dict[
+                    curve_result["curve"]["curve_specification"]["name"].upper()
+                ]
 
         return data
 
@@ -182,21 +183,22 @@ class Curve(ValueRetriever):
         """Reformat the json response to a dictionary."""
         _dict = {}
         for curve in self._data:
-            _curve = {
-                "type": curve["curve"]["curve_specification"]["type"],
-                "time_convention": curve["curve"]["curve_specification"][
-                    "time_convention"
-                ],
-                "values": [
-                    {
-                        "Tenor": x["tenor"],
-                        "Value": convert_to_float_if_float(x["value"]),
-                    }
-                    for x in curve["curve"]["values"]
-                ],
-            }
+            if len(curve["curve"]["curve_specification"]) > 0:
+                _curve = {
+                    "Type": curve["curve"]["curve_specification"]["type"],
+                    "Time_convention": curve["curve"]["curve_specification"][
+                        "time_convention"
+                    ],
+                    "Level": [
+                        {
+                            "Tenor": x["tenor"],
+                            "Value": convert_to_float_if_float(x["value"]),
+                        }
+                        for x in curve["curve"]["values"]
+                    ],
+                }
 
-            _dict[curve["curve"]["curve_specification"]["name"]] = _curve
+                _dict[curve["curve"]["curve_specification"]["name"]] = _curve
 
         return _dict
 

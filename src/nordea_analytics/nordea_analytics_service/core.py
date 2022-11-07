@@ -395,7 +395,7 @@ class NordeaAnalyticsCoreService:
         curves: Union[List[str], str, CurveName, List[CurveName]] = None,
         rates_shifts: Union[List[str], str] = None,
         pp_speed: float = None,
-        price: float = None,
+        prices: Union[float, List[float]] = None,
         spread: float = None,
         spread_curve: Union[str, CurveName] = None,
         yield_input: float = None,
@@ -414,7 +414,7 @@ class NordeaAnalyticsCoreService:
             rates_shifts: Optional. Shifts in curves("tenor shift in bbp"
                 like "0Y 5" or "30Y -5").
             pp_speed: Optional. Prepayment speed. Default = 1.
-            price: Optional. Fixed price for bond
+            prices: Optional. Fixed price per bond
             spread: Optional. Fixed spread for bond. Mandatory to give
                 spread_curve also as an input.
             spread_curve: Optional. Spread curve to calculate the
@@ -443,7 +443,7 @@ class NordeaAnalyticsCoreService:
                 curves,
                 rates_shifts,
                 pp_speed,
-                price,
+                prices,
                 spread,
                 spread_curve,
                 yield_input,
@@ -469,7 +469,7 @@ class NordeaAnalyticsCoreService:
         curves: Union[List[str], str, CurveName, List[CurveName]] = None,
         rates_shifts: Union[List[str], str] = None,
         pp_speed: float = None,
-        price: float = None,
+        prices: Union[float, List[float]] = None,
         cashflow_type: Union[str, CashflowType] = None,
         fixed_prepayments: float = None,
         reinvest_in_series: bool = None,
@@ -490,7 +490,7 @@ class NordeaAnalyticsCoreService:
                 like "0Y 5" or "30Y -5").
             pp_speed: Prepayment speed. Default = 1.
             cashflow_type: Optional. Type of cashflow to calculate with.
-            price: fixed price for bond.
+            prices: fixed price per bond.
             fixed_prepayments: Prepayments between calc_cate and horizon date.
                 Value of 0.01 would mean that prepayments are set to 1%,
                 but model prepayments are still used after horizon date.
@@ -524,7 +524,7 @@ class NordeaAnalyticsCoreService:
                 curves,
                 rates_shifts,
                 pp_speed,
-                price,
+                prices,
                 cashflow_type,
                 fixed_prepayments,
                 reinvest_in_series,

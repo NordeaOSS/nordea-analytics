@@ -15,7 +15,7 @@ class TestLiveBondKeyFigures:
         "symbols, keyfigures",
         [
             (
-                "DK0009528507",
+                "DK0002050871",
                 LiveBondKeyFigureName.LiborSpread3M,
             ),
         ],
@@ -47,7 +47,7 @@ class TestLiveBondKeyFigures:
         "symbols, keyfigures",
         [
             (
-                "DK0009528507",
+                "DK0002050871",
                 LiveBondKeyFigureName.LiborSpread3M,
             ),
         ],
@@ -78,11 +78,11 @@ class TestLiveBondKeyFigures:
         "symbols, keyfigures",
         [
             (
-                "DK0009528507",
+                "DK0002050871",
                 LiveBondKeyFigureName.LiborSpread3M,
             ),
             (
-                ["DK0009528507", "DK0009918138"],
+                ["DK0002050871", "DK0009918138"],
                 LiveBondKeyFigureName.LiborSpread3M,
             ),
         ],
@@ -114,23 +114,23 @@ class TestLiveBondKeyFigures:
         "symbols, keyfigures",
         [
             (
-                "DK0009528507",
+                "DK0002050871",
                 LiveBondKeyFigureName.LiborSpread6M,
             ),
             (
-                "DK0009528507",
+                "DK0002050871",
                 "libor 6m spread",
             ),
             (
-                "DK0009528507",
+                "DK0002050871",
                 [LiveBondKeyFigureName.LiborSpread6M, LiveBondKeyFigureName.GovSpread],
             ),
             (
-                "DK0009528507",
+                "DK0002050871",
                 ["libor 6m spread", "gov SPREAD"],
             ),
             (
-                "DK0009528507",
+                "DK0002050871",
                 [LiveBondKeyFigureName.LiborSpread6M, "gov spread"],
             ),
         ],

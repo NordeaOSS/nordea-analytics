@@ -2,6 +2,7 @@ from datetime import datetime
 from typing import List, Union
 import warnings
 
+
 from dateutil import relativedelta  # type: ignore
 import pandas as pd
 import pytest
@@ -197,6 +198,44 @@ class TestTimeSeries:
         "symbols, keyfigures",
         [
             (
+                ["DK0009408601"],
+                TimeSeriesKeyFigureName.Spread,
+            )
+        ],
+    )
+    def test_time_series_no_data_is_returned(
+        self,
+        na_service: NordeaAnalyticsService,
+        symbols: List[str],
+        keyfigures: List[Union[str, TimeSeriesKeyFigureName]],
+    ) -> None:
+        """Check if available key figures are returned despite some ISINs having no key figures available."""
+        with warnings.catch_warnings(record=True) as w:
+            # Cause all warnings to always be triggered.
+            warnings.simplefilter("always")
+            # Causes warning to trigger
+
+            from_date = datetime(2021, 7, 4)
+            to_date = datetime(2021, 7, 4)
+            time_series_results = na_service.get_time_series(
+                symbols, keyfigures, from_date, to_date
+            )
+
+            sorted_symbols = sorted(symbols)
+            symbol_no_data = sorted_symbols[0]
+
+            assert symbol_no_data not in time_series_results
+
+            assert len(w) > 0
+            assert (
+                f"Failed to retrieve 'spread' for '{symbol_no_data}"
+                in w[0].message.args[0]  # type: ignore
+            )
+
+    @pytest.mark.parametrize(
+        "symbols, keyfigures",
+        [
+            (
                 [
                     "US91282CBG50",
                     "US912810EP94",
@@ -276,7 +315,7 @@ class TestTimeSeries:
             symbols, keyfigures, from_date, to_date
         )
 
-        assert time_series_results.__len__() == symbols.__len__()
+        assert len(time_series_results) == len(symbols)
 
     @pytest.mark.parametrize(
         "symbols, keyfigures, from_date, to_date",

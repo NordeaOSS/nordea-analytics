@@ -101,9 +101,7 @@ class ShiftDays(ValueRetriever):
         """Reformat the json response to a datetime."""
         shifted_date_string = typing.cast(str, self._data["date"])
 
-        shifted_date = datetime.strptime(
-            shifted_date_string, "%Y-%m-%dT%H:%M:%S.0000000"
-        )
+        shifted_date = datetime.strptime(shifted_date_string, "%Y-%m-%d")
         return shifted_date
 
     def to_dict(self) -> Dict:

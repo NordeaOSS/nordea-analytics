@@ -33,7 +33,8 @@ class TestBondStaticData:
         assert bond_key in bond_results
 
         bond_data: dict = bond_results[bond_key]
-        number_of_data_items = bond_data.__len__()
+        number_of_data_items = len(bond_data)
+
         assert number_of_data_items > 0
 
     @pytest.mark.parametrize(
@@ -88,5 +89,6 @@ class TestBondStaticData:
         assert bond_key in bond_results
 
         bond_data: dict = bond_results[bond_key]
-        number_of_data_items = bond_data.__len__()
+        number_of_data_items = len(bond_data)
+
         assert number_of_data_items > 0

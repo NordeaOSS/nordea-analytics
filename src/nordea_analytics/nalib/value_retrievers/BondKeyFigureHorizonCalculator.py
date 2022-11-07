@@ -14,9 +14,8 @@ from nordea_analytics.key_figure_names import (
 from nordea_analytics.nalib.data_retrieval_client import (
     DataRetrievalServiceClient,
 )
+from nordea_analytics.nalib.exceptions import CustomWarningCheck
 from nordea_analytics.nalib.util import (
-    check_json_response,
-    check_json_response_error,
     convert_to_float_if_float,
     convert_to_variable_string,
     get_config,
@@ -54,7 +53,7 @@ class BondKeyFigureHorizonCalculator(ValueRetriever):
         ] = None,
         rates_shifts: Optional[Union[List[str], str]] = None,
         pp_speed: Optional[float] = None,
-        price: Optional[float] = None,
+        prices: Optional[Union[float, List[float]]] = None,
         cashflow_type: Optional[Union[str, CashflowType]] = None,
         fixed_prepayments: Optional[float] = None,
         reinvest_in_series: Optional[bool] = None,
@@ -75,7 +74,7 @@ class BondKeyFigureHorizonCalculator(ValueRetriever):
             rates_shifts: shifts in curves("tenor shift in bbp"
                 like "0Y 5" or "30Y -5").
             pp_speed: Prepayment speed. Default = 1.
-            price: fixed price for bond.
+            prices: fixed price per bond.
             cashflow_type: Type of cashflow to calculate with.
             fixed_prepayments: repayments between calc_cate and horizon date.
                 Value of 0.01 would mean that prepayments are set to 1%,
@@ -140,7 +139,16 @@ class BondKeyFigureHorizonCalculator(ValueRetriever):
         self.curves = _curves
         self.rates_shifts = rates_shifts
         self.pp_speed = pp_speed
-        self.price = price
+
+        _prices: Union[List[float], None]
+        if isinstance(prices, list):
+            _prices = prices
+        elif prices is not None:
+            _prices = [prices]
+        else:
+            _prices = None
+
+        self.prices = _prices
         self.cashflow_type = (
             convert_to_variable_string(cashflow_type, CashflowType)
             if cashflow_type is not None
@@ -166,19 +174,21 @@ class BondKeyFigureHorizonCalculator(ValueRetriever):
         """Retrieves response with calculated key figures."""
         json_response = self.get_post_get_response()
 
-        output_found = check_json_response(json_response)
-        check_json_response_error(output_found)
-
         return json_response
 
     def get_post_get_response(self) -> Dict:
         """Retrieves response after posting the request."""
         json_response: Dict = {}
         for request_dict in self.request:
-            _json_response = self._client.get_post_get_response(
-                request_dict, self.url_suffix
-            )
-            json_response[request_dict["symbol"]] = _json_response
+            try:
+                _json_response = self._client.get_post_get_response(
+                    request_dict, self.url_suffix
+                )
+                json_response[request_dict["symbol"]] = _json_response
+            except Exception as ex:
+                CustomWarningCheck.post_response_not_retrieved_warning(
+                    ex, request_dict["symbol"]
+                )
 
         return json_response
 
@@ -199,16 +209,18 @@ class BondKeyFigureHorizonCalculator(ValueRetriever):
         if keyfigures == []:  # There has to be some key figure in request,
             # but it will not be returned in final results
             keyfigures = "bpv"  # type:ignore
-        for symbol in self.symbols:
+        for x in range(len(self.symbols)):
             initial_request = {
-                "symbol": symbol,
+                "symbol": self.symbols[x],
                 "date": self.calc_date.strftime("%Y-%m-%d"),
                 "horizon_date": self.horizon_date.strftime("%Y-%m-%d"),
                 "keyfigures": keyfigures,
                 "curves": self.curves,
                 "rates_shift": self.rates_shifts,
                 "pp_speed": self.pp_speed,
-                "price": self.price,
+                "price": self.prices[x]
+                if self.prices is not None and x < len(self.prices)
+                else None,
                 "cashflow_type": self.cashflow_type,
                 "fixed_prepayments": self.fixed_prepayments,
                 "reinvest_in_series": self.reinvest_in_series,

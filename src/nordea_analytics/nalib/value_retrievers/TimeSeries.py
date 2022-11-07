@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, timedelta
 import math
 from typing import Any, Dict, List, Union
 
@@ -12,8 +12,6 @@ from nordea_analytics.nalib.data_retrieval_client import (
     DataRetrievalServiceClient,
 )
 from nordea_analytics.nalib.util import (
-    check_json_response,
-    check_json_response_error,
     convert_to_float_if_float,
     convert_to_variable_string,
     get_config,
@@ -76,9 +74,6 @@ class TimeSeries(ValueRetriever):
             json_map = _json_response[config["results"]["time_series"]]
             json_response = list(json_map) + json_response
 
-        output_found = check_json_response(json_response)
-        check_json_response_error(output_found)
-
         return json_response
 
     def format_key_figure_names(
@@ -129,11 +124,12 @@ class TimeSeries(ValueRetriever):
         date_interv = []
         new_from_date = self.from_date
         while (self.to_date - new_from_date).days > intv:
-            new_to_date = new_from_date.replace(
-                year=new_from_date.year + config["max_years_timeseries"]
-            )
+            new_to_date = new_from_date + timedelta(days=intv)
             date_interv.append({"from": new_from_date, "to": new_to_date})
-            new_from_date = new_to_date.replace(day=new_to_date.day + 1)
+            new_from_date = new_from_date + timedelta(days=intv + 1)
+            if new_from_date > self.to_date:
+                new_from_date = self.to_date
+
         date_interv.append({"from": new_from_date, "to": self.to_date})
 
         split_symbol = np.array_split(
@@ -163,7 +159,7 @@ class TimeSeries(ValueRetriever):
                 key_figure_name = timeseries["keyfigure"]
                 _timeseries_dict[key_figure_name] = {}
                 _timeseries_dict[key_figure_name]["Date"] = [
-                    datetime.strptime(x["key"], "%Y-%m-%dT%H:%M:%S.0000000")
+                    datetime.strptime(x["key"], "%Y-%m-%d")
                     for x in timeseries["values"]
                 ]
                 _timeseries_dict[key_figure_name]["Value"] = [
@@ -200,7 +196,7 @@ class TimeSeries(ValueRetriever):
 
     def to_df(self) -> pd.DataFrame:
         """Reformat the json response to a pandas DataFrame."""
-        df = pd.DataFrame.empty
+        df = pd.DataFrame()
         _dict = self.to_dict()
         for symbol in _dict:
             _df = pd.DataFrame.empty
@@ -215,7 +211,7 @@ class TimeSeries(ValueRetriever):
             _df = _df.sort_values(by="Date")
             _df.insert(0, "Symbol", [symbol] * len(_df))
 
-            if df is pd.DataFrame.empty:
+            if df.empty:
                 df = _df
             else:
                 df = pd.concat([df, _df], axis=0)

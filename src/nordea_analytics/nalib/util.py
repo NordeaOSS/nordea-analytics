@@ -26,7 +26,6 @@ from nordea_analytics import (
     YieldType,
 )
 from nordea_analytics.nalib.exceptions import AnalyticsResponseError
-# .search_bond_names must be separate or tests cannot run
 from nordea_analytics.search_bond_names import (
     AmortisationType,
     AssetType,
