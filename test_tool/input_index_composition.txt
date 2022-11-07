@@ -1,0 +1,5 @@
+client_id=
+client_secret=
+
+indices=DK0IX0000022,DK0IX0000014
+calc_date=20221024

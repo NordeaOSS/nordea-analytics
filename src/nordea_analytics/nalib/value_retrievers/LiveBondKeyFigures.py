@@ -1,6 +1,8 @@
 import json
+import math
 from typing import Any, Dict, Iterator, List, Union
 
+import numpy as np
 import pandas as pd
 
 from nordea_analytics.key_figure_names import (
@@ -60,9 +62,18 @@ class LiveBondKeyFigures(ValueRetriever):
         self.keyfigures_original = _keyfigures
         self._as_df = as_df
         self._stream_iterator = Iterator[Any]
-        self._data = self._client.get_response(self.request, self.url_suffix)[
-            "keyfigure_values"
-        ]
+        self._data = self.get_live_key_figure_response
+
+    @property
+    def get_live_key_figure_response(self) -> List[Dict]:
+        """Returns the latest available live key figures from cache."""
+        json_response: List[Any] = []
+        for request_dict in self.request:
+            json_response += self._client.get_response(request_dict, self.url_suffix)[
+                "keyfigure_values"
+            ]
+
+        return json_response
 
     @property
     def stream_keyfigures(self) -> Iterator[Any]:
@@ -77,14 +88,22 @@ class LiveBondKeyFigures(ValueRetriever):
         return config["url_suffix"]["live_bond_key_figures"]
 
     @property
-    def request(self) -> Dict:
-        """Request dictionary for a given set of bonds, key figures and calc date."""
-        request_dict = {"bonds": str.join(",", self.symbols)}
-        return request_dict
+    def request(self) -> List[Dict]:
+        """Request list of dictionaries for a given set of bonds, key figures and calc date."""
+        if len(self.symbols) > config["max_bonds"]:
+            split_symbols = np.array_split(
+                self.symbols, math.ceil(len(self.symbols) / config["max_bonds"])
+            )
+            request_dict = [
+                {"bonds": list(symbols)}
+                for symbols in split_symbols
+            ]
+        else:
+            request_dict = [
+                {"bonds": self.symbols}
+            ]
 
-    def to_df(self) -> pd.DataFrame:
-        """Reformat the json response to a pandas DataFrame."""
-        return to_data_frame(self.to_dict())
+        return request_dict
 
     def to_dict(self) -> Dict:
         """Reformat the json response to a dictionary."""
@@ -94,7 +113,12 @@ class LiveBondKeyFigures(ValueRetriever):
             results = results | filter_keyfigures(
                 values, self.keyfigures, self.keyfigures_original
             )
+
         return results
+
+    def to_df(self) -> pd.DataFrame:
+        """Reformat the json response to a pandas DataFrame."""
+        return to_data_frame(self.to_dict())
 
     def _response_decorator(self, json_payload: dict) -> Any:
         json_payload = parse_live_keyfigures_json(

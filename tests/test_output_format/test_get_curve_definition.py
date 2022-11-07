@@ -45,7 +45,9 @@ class TestGetCurveDefinition:
         assert curve_string in curve_results
 
         curve_definition: dict = curve_results[curve_string]
-        assert curve_definition.__len__() > 0
+
+        assert len(curve_definition) > 0
+
         quote = list(curve_definition.values())[0]["Quote"]
         weight = list(curve_definition.values())[0]["Weight"]
         maturity = list(curve_definition.values())[0]["Maturity"]
@@ -73,8 +75,10 @@ class TestGetCurveDefinition:
 
         assert curve_string in curve_results.index
 
-        number_of_underlying_bonds = curve_results.Name.__len__()
+        number_of_underlying_bonds = len(curve_results.Name)
+
         assert number_of_underlying_bonds > 0
+
         quote = curve_results.Quote[0]
         weight = curve_results.Weight[0]
         maturity = curve_results.Maturity[0]
@@ -108,7 +112,7 @@ class TestGetCurveDefinition:
         assert curve_string in curve_results
 
         curve_definition: dict = curve_results[curve_string]
-        assert curve_definition.__len__() > 0
+        assert len(curve_definition) > 0
         quote = list(curve_definition.values())[0]["Quote"]
         weight = list(curve_definition.values())[0]["Weight"]
         maturity = list(curve_definition.values())[0]["Maturity"]

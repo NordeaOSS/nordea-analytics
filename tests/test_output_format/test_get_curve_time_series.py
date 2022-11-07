@@ -83,8 +83,9 @@ class TestGetCurveTimeSeries:
                 )
                 assert curve_string in curve_results
 
-                expected_number_of_tenors = _tenors.__len__()
-                actual_number_of_tenors = list(curve_results[curve_string]).__len__()
+                expected_number_of_tenors = len(_tenors)
+                actual_number_of_tenors = len(list(curve_results[curve_string]))
+
                 assert expected_number_of_tenors == actual_number_of_tenors
 
                 curve_tenor_key = self.create_curve_tenor_key(
@@ -92,6 +93,7 @@ class TestGetCurveTimeSeries:
                 )
                 output_key = curve_results[curve_string][curve_tenor_key]["Date"][0]
                 output_value = curve_results[curve_string][curve_tenor_key]["Value"][0]
+
                 assert isinstance(output_key, datetime)
                 assert isinstance(output_value, float)
 
@@ -470,7 +472,48 @@ class TestGetCurveTimeSeries:
                 assert curve_key and "could not be retrieved." in warning_message
                 dkkgov_results = curve_results[curve_key]
                 curve_tenor_key = f"{curve_key}({tenors}Y)"
-                assert dkkgov_results[curve_tenor_key]["Value"].__len__() > 0
+
+                assert len(dkkgov_results[curve_tenor_key]["Value"]) > 0
+            else:
+                raise Exception("Warning expected")
+
+    @pytest.mark.parametrize(
+        "curves, tenors",
+        [(CurveName.DKKSWAP_Disc_OIS, 0.5)],
+    )
+    def test_curve_time_series_no_data_returned(
+        self,
+        na_service: NordeaAnalyticsService,
+        curves: Union[
+            str,
+            CurveName,
+            List[str],
+            List[CurveName],
+            List[Union[str, CurveName]],
+        ],
+        tenors: Union[float, list[float]],
+    ) -> None:
+        """Check if curves input and output match or correspond to Enum.name value."""
+        with warnings.catch_warnings(record=True) as w:
+            # Cause all warnings to always be triggered.
+            warnings.simplefilter("always")
+            _curves = curves if isinstance(curves, list) else [curves]
+            curve_results = na_service.get_curve_time_series(
+                curves=curves,
+                from_date=datetime(2008, 10, 1),
+                to_date=datetime(2008, 10, 1),
+                tenors=tenors,
+            )
+
+            if isinstance(w[0].message, Warning):
+                warning_message = w[0].message.args[0]
+                curve_key = (
+                    _curves[0].value
+                    if isinstance(_curves[0], CurveName)
+                    else _curves[0]
+                )
+                assert curve_key and "could not be retrieved." in warning_message
+                assert len(curve_results) == 0
             else:
                 raise Exception("Warning expected")
 

@@ -11,6 +11,7 @@ from nordea_analytics import (
     SpotForward,
     TimeConvention,
 )
+from nordea_analytics.nalib.exceptions import AnalyticsResponseError
 
 
 @pytest.fixture
@@ -427,9 +428,40 @@ class TestGetCurve:
             assert curve_string in curve_results
             assert curve_string in curve_results_upper
 
-            expected_values = curve_results[curve_string]["values"]
-            actual_values = curve_results_upper[curve_string]["values"]
-            number_of_points = expected_values.__len__()
+            expected_values = curve_results[curve_string]["Level"]
+            actual_values = curve_results_upper[curve_string]["Level"]
+            number_of_points = len(expected_values)
             for i in range(0, number_of_points):
                 assert expected_values[i]["Tenor"] == actual_values[i]["Tenor"]
                 assert expected_values[i]["Value"] == actual_values[i]["Value"]
+
+    @pytest.mark.parametrize(
+        "curves",
+        [
+            CurveName.DKKSWAP_Disc_OIS,  # should be case insensitive
+        ],
+    )
+    # No data returned
+    def test_get_curve_get_result_for_job_id_failed(
+        self,
+        na_service: NordeaAnalyticsService,
+        anchor: datetime,
+        curves: Union[
+            str,
+            CurveName,
+            List[str],
+            List[CurveName],
+            List[Union[str, CurveName]],
+        ],
+    ) -> None:
+        """Check if inputs are case insensitive by comparing result between enums and capitalised string inputs."""
+        try:
+            curve_results = na_service.get_curve(  # noqa
+                curves=curves,
+                calc_date=datetime(2008, 8, 1),
+            )
+        except Exception as exc:
+            if isinstance(exc.args[0], AnalyticsResponseError):
+                assert "Can't get result for jobId:" in exc.args[0].args[0]
+            else:
+                raise Exception("AnalyticsResponseError expected") from exc

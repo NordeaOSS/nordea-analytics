@@ -19,8 +19,6 @@ from nordea_analytics.nalib.exceptions import (
     CustomWarningCheck,
 )
 from nordea_analytics.nalib.util import (
-    check_json_response,
-    check_json_response_error,
     convert_to_float_if_float,
     convert_to_variable_string,
     float_to_tenor_string,
@@ -117,8 +115,6 @@ class CurveTimeSeries(ValueRetriever):
                 )
 
         json_response = self._merge_timeseries(json_response)
-        output_found = check_json_response(json_response)
-        check_json_response_error(output_found)
 
         return json_response
 
@@ -248,18 +244,14 @@ class CurveTimeSeries(ValueRetriever):
                             convert_to_float_if_float(tenor["value"])
                         ]
                         _tenor_dict[curve_and_tenor]["Date"] = [
-                            datetime.strptime(
-                                timeseries["date"].split("T")[0], "%Y-%m-%d"
-                            )
+                            datetime.strptime(timeseries["date"], "%Y-%m-%d")
                         ]
                     else:
                         _tenor_dict[curve_and_tenor]["Value"].append(
                             convert_to_float_if_float(tenor["value"])
                         )
                         _tenor_dict[curve_and_tenor]["Date"].append(
-                            datetime.strptime(
-                                timeseries["date"].split("T")[0], "%Y-%m-%d"
-                            )
+                            datetime.strptime(timeseries["date"], "%Y-%m-%d")
                         )
             _curves_dict[curve_series["curve"]] = _tenor_dict
 
@@ -267,7 +259,7 @@ class CurveTimeSeries(ValueRetriever):
 
     def to_df(self) -> pd.DataFrame:
         """Reformat the json response to a pandas DataFrame."""
-        df = pd.DataFrame.empty
+        df = pd.DataFrame()
         _dict = self.to_dict()
 
         _df = pd.DataFrame.from_dict(_dict, orient="index")
@@ -277,7 +269,7 @@ class CurveTimeSeries(ValueRetriever):
                 _df = pd.DataFrame.from_dict(_dict[curve_series][tenor_series])
                 _df = _df[["Date", "Value"]]
                 _df.columns = ["Date", tenor_series]
-                if df is pd.DataFrame.empty:
+                if df.empty:
                     df = _df
                 else:
                     df = df.merge(_df, on="Date", how="outer")

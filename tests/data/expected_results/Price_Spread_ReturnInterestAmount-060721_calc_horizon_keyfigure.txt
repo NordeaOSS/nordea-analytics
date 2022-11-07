@@ -1,1 +1,0 @@
-{"DK0002046259": {"DKKSWAP DISC OIS": {"Spread": 356.4408098025244, "Price": 70, "ReturnInterestAmount": 0.002463069234989461}}}

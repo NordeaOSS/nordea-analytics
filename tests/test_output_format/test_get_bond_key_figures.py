@@ -9,6 +9,9 @@ from nordea_analytics import (
     BondKeyFigureName,
     NordeaAnalyticsService,
 )
+from nordea_analytics.nalib.util import get_config
+
+config = get_config()
 
 
 class TestBondKeyFigures:
@@ -244,10 +247,55 @@ class TestBondKeyFigures:
             symbol_no_data = symbols_partial_spread_data[0]
             symbol_with_data = symbols_partial_spread_data[1]
 
-            assert list(bond_key_figures[symbol_no_data].keys()).__len__() == 0
-            assert list(bond_key_figures[symbol_with_data].keys()).__len__() == 1
+            assert symbol_no_data not in bond_key_figures
+            assert symbol_with_data in bond_key_figures
 
-            assert w.__len__() > 0
+            assert len(w) > 0
+
+            if isinstance(w[0].message, Warning):
+                warning_message = w[0].message.args[0]
+                assert (
+                    "DK0009408601" and "topic" and "does not exist" in warning_message
+                )
+            else:
+                raise Exception("Warning expected")
+
+    @pytest.mark.parametrize(
+        "symbols_partial_spread_data, keyfigures",
+        [
+            (
+                ["DK0009408601"],
+                [
+                    BondKeyFigureName.Spread,
+                    BondKeyFigureName.PriceClean,
+                ],
+            )
+        ],
+    )
+    def test_get_bond_key_figures_no_data_is_returned(
+        self,
+        na_service: NordeaAnalyticsService,
+        symbols_partial_spread_data: Union[str, List[str]],
+        keyfigures: Union[
+            str,
+            BondKeyFigureName,
+            List[str],
+            List[BondKeyFigureName],
+            List[Union[str, BondKeyFigureName]],
+        ],
+    ) -> None:
+        """Check empty dictionary is returned when no data is available."""
+        with warnings.catch_warnings(record=True) as w:
+            # Cause all warnings to always be triggered.
+            warnings.simplefilter("always")
+            anchor = datetime(2021, 7, 4)
+            bond_key_figures = na_service.get_bond_key_figures(
+                symbols_partial_spread_data, BondKeyFigureName.Spread, anchor
+            )
+
+            assert len(bond_key_figures) == 0
+
+            assert len(w) > 0
 
             if isinstance(w[0].message, Warning):
                 warning_message = w[0].message.args[0]
@@ -371,14 +419,14 @@ class TestBondKeyFigures:
             # Cause all warnings to always be triggered.
             warnings.simplefilter("always")
 
+            max_bonds = config["max_bonds"]
             anchor = datetime(2021, 7, 6)
             bond_key_figures = na_service.get_bond_key_figures(
                 symbols, BondKeyFigureName.Spread, anchor
             )
 
-            assert bond_key_figures.__len__() == symbols.__len__()
-
-            assert w.__len__() > 0
+            assert len(bond_key_figures) > max_bonds
+            assert len(w) > 0
 
             if isinstance(w[0].message, Warning):
                 warning_message = w[0].message.args[0]

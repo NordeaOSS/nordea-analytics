@@ -23,7 +23,7 @@ class TestCalculateBondKeyFigure:
     """Test class for calculate key figure."""
 
     @pytest.mark.parametrize(
-        "symbol, keyfigures, curves, rates_shift, pp_speed, price, spread, "
+        "symbol, keyfigures, curves, rates_shift, pp_speed, prices, spread, "
         "spread_curve, asw_fix_frequency, ladder_definition",
         [
             (
@@ -108,7 +108,7 @@ class TestCalculateBondKeyFigure:
         curves: Union[List[str], str, CurveName, List[CurveName]],
         rates_shift: List[str],
         pp_speed: float,
-        price: float,
+        prices: Union[float, List[float]],
         spread: float,
         spread_curve: Union[str, CurveName],
         asw_fix_frequency: str,
@@ -122,7 +122,7 @@ class TestCalculateBondKeyFigure:
             curves=curves,
             rates_shifts=rates_shift,
             pp_speed=pp_speed,
-            price=price,
+            prices=prices,
             spread=spread,
             spread_curve=spread_curve,
             asw_fix_frequency=asw_fix_frequency,
@@ -143,7 +143,7 @@ class TestCalculateBondKeyFigure:
         first_curve = list(bond_results.keys())[0]
         keyfigure_results = bond_results[first_curve]
 
-        assert keyfigure_results.__len__() == keyfigures.__len__()
+        assert len(keyfigure_results) == len(keyfigures)
 
         for kf in keyfigures:
             # Enum value of keyfigure always returned, even if string is input, e.g. 'asw' returns AssetSwapSpread
@@ -193,7 +193,7 @@ class TestCalculateBondKeyFigure:
                 assert curve_string in list(bond_results["Curve"])
 
         results_per_keyfigure = list(bond_results[keyfigures[0].name])
-        assert results_per_keyfigure.__len__() == symbols.__len__()
+        assert len(results_per_keyfigure) == len(symbols)
 
         for kf in keyfigures:
             # Enum value of keyfigure always returned, even if string is input, e.g. 'asw' returns AssetSwapSpread
@@ -418,7 +418,7 @@ class TestCalculateBondKeyFigure:
             *[x.keys() for x in bond_results[bond_key].values()]
         )  # type: ignore[assignment]
 
-        assert unique_keyfigures.__len__() == keyfigures.__len__()
+        assert len(unique_keyfigures) == len(keyfigures)
 
         for kf in keyfigures:
             # Enum value of keyfigure always returned, even if string is input, e.g. 'asw' returns AssetSwapSpread
@@ -465,7 +465,7 @@ class TestCalculateBondKeyFigure:
             *[x.keys() for x in bond_results[bond_key].values()]
         )  # type: ignore[assignment]
 
-        assert unique_keyfigures.__len__() == keyfigures.__len__()
+        assert len(unique_keyfigures) == len(keyfigures)
 
         for kf in keyfigures:
             kf_enum = (

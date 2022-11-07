@@ -184,8 +184,6 @@ class BondFinder(ValueRetriever):
         _json_response = self.get_response(self.request)
         json_response = _json_response[config["results"]["search"]]
 
-        self.check_response(json_response)
-
         return json_response
 
     @staticmethod

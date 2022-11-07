@@ -33,30 +33,30 @@ class TestIndexComposition:
             assert index_key in indices_results
 
             index_composition = indices_results[index_key]
-            assert index_composition.__len__() > 0
+            assert len(index_composition) > 0
 
             isins = index_composition["ISIN"]
-            assert isins.__len__() > 0
+            assert len(isins) > 0
             assert isinstance(isins[0], str)
 
             names = index_composition["Name"]
-            assert names.__len__() > 0
+            assert len(names) > 0
             assert isinstance(names[0], str)
 
             nominal_amounts = index_composition["Nominal_Amount"]
-            assert nominal_amounts.__len__() > 0
+            assert len(nominal_amounts) > 0
             assert isinstance(nominal_amounts[0], float)
 
             nominal_weights = index_composition["Nominal_Weight"]
-            assert nominal_weights.__len__() > 0
+            assert len(nominal_weights) > 0
             assert isinstance(nominal_weights[0], float)
 
             market_amounts = index_composition["Market_Amount"]
-            assert market_amounts.__len__() > 0
+            assert len(market_amounts) > 0
             assert isinstance(market_amounts[0], float)
 
             market_weights = index_composition["Market_Weight"]
-            assert market_weights.__len__() > 0
+            assert len(market_weights) > 0
             assert isinstance(market_weights[0], float)
 
     @pytest.mark.parametrize(
@@ -80,24 +80,24 @@ class TestIndexComposition:
 
         for index_key in _indices_input:
             index_results = indices_results[indices_results["Index"].isin([index_key])]
-            assert index_results.__len__() > 0
+            assert len(index_results) > 0
 
-            assert index_results.ISIN.__len__() > 0
+            assert len(index_results.ISIN) > 0
             assert type(index_results.ISIN[0]) == str
 
-            assert index_results.Name.__len__() > 0
+            assert len(index_results.Name) > 0
             assert type(index_results.Name[0]) == str
 
-            assert index_results.Nominal_Amount.__len__() > 0
+            assert len(index_results.Nominal_Amount) > 0
             assert type(index_results.Nominal_Amount[0]) == float64
 
-            assert index_results.Nominal_Weight.__len__() > 0
+            assert len(index_results.Nominal_Weight) > 0
             assert type(index_results.Nominal_Weight[0]) == float64
 
-            assert index_results.Market_Amount.__len__() > 0
+            assert len(index_results.Market_Amount) > 0
             assert type(index_results.Market_Amount[0]) == float64
 
-            assert index_results.Market_Weight.__len__() > 0
+            assert len(index_results.Market_Weight) > 0
             assert type(index_results.Market_Weight[0]) == float64
 
     @pytest.mark.parametrize("indices", ["DK Govt", ["DK gOVT", "DK Mtg Callable"]])
@@ -119,41 +119,32 @@ class TestIndexComposition:
             assert index_key in indices_results
 
             index_composition = indices_results[index_key]
-            assert index_composition.__len__() > 0
+            assert len(index_composition) > 0
 
             isins = index_composition["ISIN"]
-            assert isins.__len__() > 0
+            assert len(isins) > 0
             assert type(isins[0]) == str
 
             names = index_composition["Name"]
-            assert names.__len__() > 0
+            assert len(names) > 0
             assert type(names[0]) == str
 
             nominal_amounts = index_composition["Nominal_Amount"]
-            assert nominal_amounts.__len__() > 0
+            assert len(nominal_amounts) > 0
             assert type(nominal_amounts[0]) == float
 
             nominal_weights = index_composition["Nominal_Weight"]
-            assert nominal_weights.__len__() > 0
+            assert len(nominal_weights) > 0
             assert type(nominal_weights[0]) == float
 
             market_amounts = index_composition["Market_Amount"]
-            assert market_amounts.__len__() > 0
+            assert len(market_amounts) > 0
             assert type(market_amounts[0]) == float
 
             market_weights = index_composition["Market_Weight"]
-            assert market_weights.__len__() > 0
+            assert len(market_weights) > 0
             assert type(market_weights[0]) == float
 
-    # @pytest.mark.parametrize(
-    #     "indices, calc_date",
-    #     (
-    #         [
-    #             "DK Govt",
-    #             datetime(2014, 5, 23)
-    #         ]
-    #     ),
-    # )
     @pytest.mark.parametrize(
         "indices, calc_date",
         [("DK Govt", datetime(2011, 10, 3))],
@@ -175,22 +166,22 @@ class TestIndexComposition:
             assert index_key in indices_results
 
             index_composition = indices_results[index_key]
-            assert index_composition.__len__() > 0
+            assert len(index_composition) > 0
 
             isins = index_composition["ISIN"]
-            assert isins.__len__() > 0
+            assert len(isins) > 0
             assert isinstance(isins[0], str)
 
             names = index_composition["Name"]
-            assert names.__len__() > 0
+            assert len(names) > 0
             assert isinstance(names[0], str)
 
             nominal_amounts = index_composition["Nominal_Amount"]
-            assert nominal_amounts.__len__() > 0
+            assert len(nominal_amounts) > 0
             assert isinstance(nominal_amounts[0], float)
 
             nominal_weights = index_composition["Nominal_Weight"]
-            assert nominal_weights.__len__() > 0
+            assert len(nominal_weights) > 0
             assert isinstance(nominal_weights[0], float)
 
             market_amounts = index_composition["Market_Amount"]

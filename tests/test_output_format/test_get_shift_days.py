@@ -113,4 +113,4 @@ class TestShiftDays:
             date=anchor, days=days, date_roll_convention=date_roll_convention
         )
 
-        assert type(shifted_day) == datetime
+        assert isinstance(shifted_day, datetime)

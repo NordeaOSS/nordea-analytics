@@ -14,8 +14,8 @@ from nordea_analytics.key_figure_names import (
 from nordea_analytics.nalib.data_retrieval_client import (
     DataRetrievalServiceClient,
 )
+from nordea_analytics.nalib.exceptions import CustomWarningCheck
 from nordea_analytics.nalib.util import (
-    check_json_response,
     convert_to_float_if_float,
     convert_to_variable_string,
     float_to_tenor_string,
@@ -44,7 +44,7 @@ class BondKeyFigureAdvancedCalculator(ValueRetriever):
         curves: Optional[Union[List[str], str, CurveName, List[CurveName]]] = None,
         rates_shifts: Optional[Union[List[str], str]] = None,
         pp_speed: Optional[float] = None,
-        price: Optional[float] = None,
+        prices: Optional[Union[float, List[float]]] = None,
         spread: Optional[float] = None,
         spread_curve: Optional[Union[str, CurveName]] = None,
         yield_input: Optional[float] = None,
@@ -65,7 +65,7 @@ class BondKeyFigureAdvancedCalculator(ValueRetriever):
             rates_shifts: shifts in curves("tenor shift in bbp"
                 like "0Y 5" or "30Y -5").
             pp_speed: Prepayment speed. Default = 1.
-            price: fixed price for bond.
+            prices: fixed price per bond.
             spread: fixed spread for bond. Mandatory to give
                 spread_curve also as an input.
             spread_curve: spread curve to calculate the
@@ -99,7 +99,16 @@ class BondKeyFigureAdvancedCalculator(ValueRetriever):
         self.curves = _curves
         self.rates_shifts = rates_shifts
         self.pp_speed = pp_speed
-        self.price = price
+
+        _prices: Union[List[float], None]
+        if isinstance(prices, list):
+            _prices = prices
+        elif prices is not None:
+            _prices = [prices]
+        else:
+            _prices = None
+
+        self.prices = _prices
         self.spread = spread
         _spread_curve = (
             convert_to_variable_string(spread_curve, CurveName)
@@ -122,17 +131,21 @@ class BondKeyFigureAdvancedCalculator(ValueRetriever):
         """Retrieves response with calculated key figures."""
         json_response = self.get_post_get_response()
 
-        check_json_response(json_response)
         return json_response
 
     def get_post_get_response(self) -> Dict:
         """Retrieves response after posting the request."""
         json_response: Dict = {}
         for request_dict in self.request:
-            _json_response = self._client.get_post_get_response(
-                request_dict, self.url_suffix
-            )
-            json_response[request_dict["symbol"]] = _json_response
+            try:
+                _json_response = self._client.get_post_get_response(
+                    request_dict, self.url_suffix
+                )
+                json_response[request_dict["symbol"]] = _json_response
+            except Exception as ex:
+                CustomWarningCheck.post_response_not_retrieved_warning(
+                    ex, request_dict["symbol"]
+                )
 
         return json_response
 
@@ -150,15 +163,17 @@ class BondKeyFigureAdvancedCalculator(ValueRetriever):
         if keyfigures == []:  # There has to be some key figure in request,
             # but it will not be returned in final results
             keyfigures = "bpv"  # type:ignore
-        for symbol in self.symbols:
+        for x in range(len(self.symbols)):
             initial_request = {
-                "symbol": symbol,
+                "symbol": self.symbols[x],
                 "date": self.calc_date.strftime("%Y-%m-%d"),
                 "keyfigures": keyfigures,
                 "curves": self.curves,
                 "rates_shift": self.rates_shifts,
                 "pp_speed": self.pp_speed,
-                "price": self.price,
+                "price": self.prices[x]
+                if self.prices is not None and x < len(self.prices)
+                else None,
                 "spread": self.spread,
                 "spread_curve": self.spread_curve,
                 "yield": self.yield_input,

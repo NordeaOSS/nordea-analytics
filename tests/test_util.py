@@ -1,4 +1,3 @@
-from pathlib import Path
 from typing import Callable, Dict, List, Tuple, Union
 
 import pytest
@@ -14,7 +13,6 @@ from nordea_analytics.nalib.util import (
     convert_to_variable_string,
     float_to_tenor_string,
     get_config,
-    get_user,
 )
 
 
@@ -101,24 +99,6 @@ def test_some_keyfigure_fails(
     except ValueError:
         expected_results = True
     assert expected_results
-
-
-def test_get_user_from_file() -> None:
-    """Test that it is possible to read the user info from file."""
-    test_path = (
-        Path(__file__).parent / "data" / "expected_results" / "get_user_from_file.txt"
-    )
-    username = get_user(test_path)
-    assert username == "test_user_name"
-
-
-def test_get_user_not_exists() -> None:
-    """Test that if user info is not available, return empty string."""
-    test_path = (
-        Path(__file__).parent / "data" / "expected_results" / "non_existing_file.txt"
-    )
-    username = get_user(test_path)
-    assert username == ""
 
 
 def test_get_config() -> None:

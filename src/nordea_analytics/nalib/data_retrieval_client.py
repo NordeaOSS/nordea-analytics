@@ -49,6 +49,9 @@ class DataRetrievalServiceClient(object):
 
         Returns:
             Response in the form of json.
+
+        Raises:
+            Exception: If exception is raised from API.
         """
         response = self._get_response(url_suffix, params=request)
         self._verify_response(response.json())
@@ -64,10 +67,20 @@ class DataRetrievalServiceClient(object):
             background_response = self._proceed_background_job(response_json, **params)
             _response = self._check_errors(background_response)
         else:
-            _response = response_json["data"]
-            if "failed_queries" in _response.keys():
-                if not _response["failed_queries"] == []:
-                    CustomWarning(str(_response["failed_queries"]), AnalyticsWarning)
+            if "data" in response_json:
+                _response = response_json["data"]
+                if "failed_queries" in _response.keys():
+                    if not _response["failed_queries"] == []:
+                        CustomWarning(
+                            str(_response["failed_queries"]), AnalyticsWarning
+                        )
+            elif (
+                "response_status" in response_json
+                and "error_code" in response_json["response_status"]
+            ):
+                raise Exception(
+                    AnalyticsResponseError(response_json["response_status"]["message"])
+                )
 
         return _response
 
@@ -143,10 +156,17 @@ class DataRetrievalServiceClient(object):
     @staticmethod
     def _check_errors(get_response: Response) -> Dict:
         _response = get_response.json()["data"]["response"]
-        if "error" in get_response.text:
+        if (
+            "error" in get_response.text
+            and "failed_calculation" not in get_response.text
+        ):
             if "error" in _response.keys() and _response["error"] == {}:
                 del _response["error"]
-            elif _response["data"]["error"] == {}:
+            elif (
+                "data" in _response
+                and "error" in _response["data"]
+                and _response["data"]["error"] == {}
+            ):
                 _response = _response["data"]
                 del _response["error"]
             else:
@@ -162,15 +182,22 @@ class DataRetrievalServiceClient(object):
                 del _response["failed_calculation"]
             elif (
                 "data" in _response.keys()
+                and "info" in _response["data"]["failed_calculation"]
                 and _response["data"]["failed_calculation"]["info"] == ""
             ):
                 _response = _response["data"]
                 del _response["failed_calculation"]
             elif (
                 "failed_calculation" in _response
+                and "info" in _response["failed_calculation"]
                 and _response["failed_calculation"]["info"] == ""
             ):
                 del _response["failed_calculation"]
+            elif (
+                "failed_calculation" in _response
+                and "error" in _response["failed_calculation"]
+            ):
+                raise AnalyticsResponseError(_response["failed_calculation"]["error"])
             elif "data" in _response:
                 raise AnalyticsResponseError(
                     _response["data"]["failed_calculation"]["info"]

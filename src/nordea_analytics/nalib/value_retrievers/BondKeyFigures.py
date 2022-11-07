@@ -1,6 +1,6 @@
 from datetime import datetime
 import math
-from typing import Any, Dict, List, Mapping, Union
+from typing import Any, Dict, List, Union
 
 import numpy as np
 import pandas as pd
@@ -12,8 +12,6 @@ from nordea_analytics.nalib.data_retrieval_client import (
     DataRetrievalServiceClient,
 )
 from nordea_analytics.nalib.util import (
-    check_json_response,
-    check_json_response_error,
     convert_to_float_if_float,
     convert_to_variable_string,
     get_config,
@@ -70,8 +68,6 @@ class BondKeyFigures(ValueRetriever):
             json_map = _json_response[config["results"]["bond_key_figures"]]
             json_response = list(json_map) + json_response
 
-        self.check_response(json_response)
-
         return json_response
 
     def format_key_figure_names(
@@ -102,17 +98,6 @@ class BondKeyFigures(ValueRetriever):
 
         return data
 
-    @staticmethod
-    def check_response(json_response: Union[List, Mapping]) -> None:
-        """Checks if json_reponse contains output, else throws error."""
-        output_found = False
-        for i in range(0, json_response.__len__()):
-            output_found = check_json_response(json_response[i]["values"])
-            if output_found:
-                break
-
-        check_json_response_error(output_found)
-
     @property
     def url_suffix(self) -> str:
         """Url suffix suffix for a given method."""
@@ -120,7 +105,7 @@ class BondKeyFigures(ValueRetriever):
 
     @property
     def request(self) -> List[Dict]:
-        """Request dictionary for a given set of symbols, key figures and calc date."""
+        """Request list of dictionaries for a given set of symbols, key figures and calc date."""
         if len(self.symbols) > config["max_bonds"]:
             split_symbols = np.array_split(
                 self.symbols, math.ceil(len(self.symbols) / config["max_bonds"])
@@ -150,9 +135,7 @@ class BondKeyFigures(ValueRetriever):
         for bond_data in self._data:
             _bond_dict = {}
             for key_figure_data in bond_data["values"]:
-                key_figure_name = key_figure_data[
-                    "keyfigure"
-                ]  # BondKeyFigureName(key_figure_data["keyfigure"]).name
+                key_figure_name = key_figure_data["keyfigure"]
                 _bond_dict[key_figure_name] = convert_to_float_if_float(
                     key_figure_data["value"]
                 )

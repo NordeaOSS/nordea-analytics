@@ -37,12 +37,13 @@ class TestSearchBonds:
             upper_maturity=upper_maturity,
         )
 
-        assert bond_results.__len__() > 0
+        assert len(bond_results) > 0
+
         bond_isin = bond_results[0]["ISIN"]
         bond_name = bond_results[0]["Name"]
         assert type(bond_name) == str
         assert type(bond_isin) == str
-        assert bond_isin.__len__() == 12
+        assert len(bond_isin) == 12
 
     @pytest.mark.parametrize(
         "country, currency, lower_maturity, upper_maturity",
@@ -66,12 +67,13 @@ class TestSearchBonds:
             as_df=True,
         )
 
-        assert bond_results.__len__() > 0
+        assert len(bond_results) > 0
+
         bond_isin = bond_results.ISIN[0]
         bond_name = bond_results.Name[0]
         assert type(bond_name) == str
         assert type(bond_isin) == str
-        assert bond_isin.__len__() == 12
+        assert len(bond_isin) == 12
 
     @pytest.mark.parametrize(
         "country, currency, asset_types",
@@ -118,12 +120,13 @@ class TestSearchBonds:
             asset_types=asset_types,
         )
 
-        assert bond_results.__len__() > 0
+        assert len(bond_results) > 0
+
         bond_isin = bond_results[0]["ISIN"]
         bond_name = bond_results[0]["Name"]
         assert type(bond_name) == str
         assert type(bond_isin) == str
-        assert bond_isin.__len__() == 12
+        assert len(bond_isin) == 12
 
     @pytest.mark.parametrize(
         "country, currency, amortisation_types",
@@ -158,12 +161,13 @@ class TestSearchBonds:
             amortisation_type=amortisation_types,
         )
 
-        assert bond_results.__len__() > 0
+        assert len(bond_results) > 0
+
         bond_isin = bond_results[0]["ISIN"]
         bond_name = bond_results[0]["Name"]
         assert type(bond_name) == str
         assert type(bond_isin) == str
-        assert bond_isin.__len__() == 12
+        assert len(bond_isin) == 12
 
     @pytest.mark.parametrize(
         "issuers",
@@ -183,12 +187,13 @@ class TestSearchBonds:
             issuers=issuers,
         )
 
-        assert bond_results.__len__() > 0
+        assert len(bond_results) > 0
+
         bond_isin = bond_results[0]["ISIN"]
         bond_name = bond_results[0]["Name"]
         assert type(bond_name) == str
         assert type(bond_isin) == str
-        assert bond_isin.__len__() == 12
+        assert len(bond_isin) == 12
 
     @pytest.mark.parametrize(
         "country, currency, capital_centres",
@@ -226,12 +231,13 @@ class TestSearchBonds:
             dmb=True,
         )
 
-        assert bond_results.__len__() > 0
+        assert len(bond_results) > 0
+
         bond_isin = bond_results[0]["ISIN"]
         bond_name = bond_results[0]["Name"]
         assert type(bond_name) == str
         assert type(bond_isin) == str
-        assert bond_isin.__len__() == 12
+        assert len(bond_isin) == 12
 
     @pytest.mark.parametrize(
         "country, currency, capital_centre_types",
@@ -269,9 +275,10 @@ class TestSearchBonds:
             dmb=True,
         )
 
-        assert bond_results.__len__() > 0
+        assert len(bond_results) > 0
+
         bond_isin = bond_results[0]["ISIN"]
         bond_name = bond_results[0]["Name"]
         assert type(bond_name) == str
         assert type(bond_isin) == str
-        assert bond_isin.__len__() == 12
+        assert len(bond_isin) == 12
