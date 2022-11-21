@@ -94,12 +94,14 @@ are shifted up by 5 bps on the 6M, 1Y and 2Y tenor.
     calc_date = datetime.datetime(2021, 12, 15)
     curves = [CurveName.DKKSWAP_Disc_OIS,
               CurveName.DKKSWAP_Libor] #Optional
-    rates_shifts = ["6M 5", "1Y 5", "2Y 5"] #Optional
+    shift_tenors = [0.5, 5, 10] #Optional
+    shift_values = [50, 100, 150] #Optional
     df = na_service.calculate_bond_key_figure(isin,
                                               bond_key_figure,
                                               calc_date,
                                               curves=curves,
-                                              rates_shifts=rates_shifts,
+                                              shift_tenors=shift_tenors,
+                                              shift_values=shift_values,
                                               as_df=True)
 
 Other optional input variables can be found in :meth:`calculate_bond_key_figure()
