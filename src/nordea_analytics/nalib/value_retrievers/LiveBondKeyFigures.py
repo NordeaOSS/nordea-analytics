@@ -17,6 +17,7 @@ from nordea_analytics.nalib.live_keyfigures.parsing import (
 from nordea_analytics.nalib.util import (
     convert_to_variable_string,
     get_config,
+    RequestMethod,
 )
 from nordea_analytics.nalib.value_retriever import ValueRetriever
 
@@ -69,9 +70,9 @@ class LiveBondKeyFigures(ValueRetriever):
         """Returns the latest available live key figures from cache."""
         json_response: List[Any] = []
         for request_dict in self.request:
-            json_response += self._client.get_response(request_dict, self.url_suffix)[
-                "keyfigure_values"
-            ]
+            json_response += self._client.get_response(
+                request_dict, self.url_suffix, RequestMethod.Get
+            )["keyfigure_values"]
 
         return json_response
 
@@ -94,14 +95,9 @@ class LiveBondKeyFigures(ValueRetriever):
             split_symbols = np.array_split(
                 self.symbols, math.ceil(len(self.symbols) / config["max_bonds"])
             )
-            request_dict = [
-                {"bonds": list(symbols)}
-                for symbols in split_symbols
-            ]
+            request_dict = [{"bonds": list(symbols)} for symbols in split_symbols]
         else:
-            request_dict = [
-                {"bonds": self.symbols}
-            ]
+            request_dict = [{"bonds": self.symbols}]
 
         return request_dict
 

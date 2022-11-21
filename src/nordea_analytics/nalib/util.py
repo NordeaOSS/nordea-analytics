@@ -1,5 +1,6 @@
 """Script for various methods for nordea analytics library."""
 from abc import ABC
+from enum import Enum
 import json
 from pathlib import Path
 from typing import Callable, Dict, List, Mapping, Union
@@ -253,3 +254,9 @@ def get_keyfigure_key(
         key_figure_key = key_figure
 
     return key_figure_key
+
+
+class RequestMethod(Enum):
+    """Enum for request methods."""
+    Get = 1
+    Post = 2

@@ -8,6 +8,7 @@ from nordea_analytics.nalib.data_retrieval_client import (
 )
 from nordea_analytics.nalib.util import (
     get_config,
+    RequestMethod,
 )
 
 config = get_config()
@@ -34,7 +35,9 @@ class ValueRetriever(ABC):
         Returns:
             Response from the service for a given method and request.
         """
-        json_response = self._client.get_response(request, self.url_suffix)
+        json_response = self._client.get_response(
+            request, self.url_suffix, RequestMethod.Get
+        )
         return json_response
 
     @property

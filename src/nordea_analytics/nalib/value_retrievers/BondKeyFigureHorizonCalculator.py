@@ -51,7 +51,8 @@ class BondKeyFigureHorizonCalculator(ValueRetriever):
                 List[Union[str, CurveName]],
             ]
         ] = None,
-        rates_shifts: Optional[Union[List[str], str]] = None,
+        shift_tenors: Optional[Union[List[float], float]] = None,
+        shift_values: Optional[Union[List[float], float]] = None,
         pp_speed: Optional[float] = None,
         prices: Optional[Union[float, List[float]]] = None,
         cashflow_type: Optional[Union[str, CashflowType]] = None,
@@ -71,8 +72,8 @@ class BondKeyFigureHorizonCalculator(ValueRetriever):
             calc_date: date of calculation
             horizon_date: future date of calculation
             curves: discount curves for calculation
-            rates_shifts: shifts in curves("tenor shift in bbp"
-                like "0Y 5" or "30Y -5").
+            shift_tenors: Optional. Tenors to shift curves expressed as float. For example [0.25, 0.5, 1, 3, 5].
+            shift_values: Optional. Shift values in basispoints. For example [100, 100, 75, 100, 100].
             pp_speed: Prepayment speed. Default = 1.
             prices: fixed price per bond.
             cashflow_type: Type of cashflow to calculate with.
@@ -137,7 +138,8 @@ class BondKeyFigureHorizonCalculator(ValueRetriever):
             _curves = None
 
         self.curves = _curves
-        self.rates_shifts = rates_shifts
+        self.shift_tenors = shift_tenors
+        self.shift_values = shift_values
         self.pp_speed = pp_speed
 
         _prices: Union[List[float], None]
@@ -181,7 +183,7 @@ class BondKeyFigureHorizonCalculator(ValueRetriever):
         json_response: Dict = {}
         for request_dict in self.request:
             try:
-                _json_response = self._client.get_post_get_response(
+                _json_response = self._client.get_response_asynchronous(
                     request_dict, self.url_suffix
                 )
                 json_response[request_dict["symbol"]] = _json_response
@@ -216,7 +218,8 @@ class BondKeyFigureHorizonCalculator(ValueRetriever):
                 "horizon_date": self.horizon_date.strftime("%Y-%m-%d"),
                 "keyfigures": keyfigures,
                 "curves": self.curves,
-                "rates_shift": self.rates_shifts,
+                "shift_tenors": self.shift_tenors,
+                "shift_values": self.shift_values,
                 "pp_speed": self.pp_speed,
                 "price": self.prices[x]
                 if self.prices is not None and x < len(self.prices)
