@@ -89,9 +89,9 @@ class CustomWarningCheck:
             CustomWarning(message, AnalyticsWarning)
 
     @staticmethod
-    def post_response_not_retrieved_warning(error: Exception, bond: str) -> None:
+    def post_response_not_retrieved_warning(error: Exception, symbol: str) -> None:
         """Throw warning when post response throws exception to ensure result from remaining bonds is returned."""
-        error_code = error.error_id if isinstance(error, ApiServerError) else ''
+        error_code = error.error_id if isinstance(error, ApiServerError) else ""
         if len(error.args) > 0 and "Failed to retrieve bond.":
-            message = f"{bond} could not be retrieved. Error code: {error_code}"
+            message = f"{symbol} could not be retrieved, {error.args[0]} Error code: {error_code}"
             CustomWarning(message, AnalyticsWarning)

@@ -39,6 +39,7 @@ from nordea_analytics.nalib.value_retrievers.Curve import Curve
 from nordea_analytics.nalib.value_retrievers.CurveDefinition import CurveDefinition
 from nordea_analytics.nalib.value_retrievers.CurveTimeSeries import CurveTimeSeries
 from nordea_analytics.nalib.value_retrievers.FXForecast import FXForecast
+from nordea_analytics.nalib.value_retrievers.FXQuotes import FXQuotes
 from nordea_analytics.nalib.value_retrievers.IndexComposition import IndexComposition
 from nordea_analytics.nalib.value_retrievers.LiveBondKeyFigures import (
     LiveBondKeyFigures,
@@ -393,14 +394,15 @@ class NordeaAnalyticsCoreService:
         ],
         calc_date: datetime,
         curves: Union[List[str], str, CurveName, List[CurveName]] = None,
-        rates_shifts: Union[List[str], str] = None,
+        shift_tenors: Union[List[float], float] = None,
+        shift_values: Union[List[float], float] = None,
         pp_speed: float = None,
         prices: Union[float, List[float]] = None,
         spread: float = None,
         spread_curve: Union[str, CurveName] = None,
         yield_input: float = None,
         asw_fix_frequency: str = None,
-        ladder_definition: List[str] = None,
+        ladder_definition: List[float] = None,
         cashflow_type: Union[str, CashflowType] = None,
         as_df: bool = False,
     ) -> Any:
@@ -411,8 +413,8 @@ class NordeaAnalyticsCoreService:
             keyfigures: Bond key figures that should be valued.
             calc_date: Date of calculation
             curves: Optional. Discount curves for calculation
-            rates_shifts: Optional. Shifts in curves("tenor shift in bbp"
-                like "0Y 5" or "30Y -5").
+            shift_tenors: Optional. Tenors to shift curves expressed as float. For example [0.25, 0.5, 1, 3, 5].
+            shift_values: Optional. Shift values in basispoints. For example [100, 100, 75, 100, 100].
             pp_speed: Optional. Prepayment speed. Default = 1.
             prices: Optional. Fixed price per bond
             spread: Optional. Fixed spread for bond. Mandatory to give
@@ -423,8 +425,8 @@ class NordeaAnalyticsCoreService:
             asw_fix_frequency: Optional. Fixing frequency of swap in ASW calculation.
                 Mandatory input in all ASW calculations. "3M", "6M" and "1Y"
                 are supported.
-            ladder_definition: Optional. What tenors should be included in
-                BPV ladder calculation. For example ["1Y", "2Y", "3Y"].
+            ladder_definition: Optional. Tenors should be included in
+                BPV ladder calculation. For example [0.25, 0.5, 1, 3, 5].
             cashflow_type: Optional. Type of cashflow to calculate with.
             as_df: Default False. If True, the results are represented
                 as pandas DataFrame, else as dictionary
@@ -441,7 +443,8 @@ class NordeaAnalyticsCoreService:
                 keyfigures,
                 calc_date,
                 curves,
-                rates_shifts,
+                shift_tenors,
+                shift_values,
                 pp_speed,
                 prices,
                 spread,
@@ -467,7 +470,8 @@ class NordeaAnalyticsCoreService:
         calc_date: datetime,
         horizon_date: datetime,
         curves: Union[List[str], str, CurveName, List[CurveName]] = None,
-        rates_shifts: Union[List[str], str] = None,
+        shift_tenors: Union[List[float], float] = None,
+        shift_values: Union[List[float], float] = None,
         pp_speed: float = None,
         prices: Union[float, List[float]] = None,
         cashflow_type: Union[str, CashflowType] = None,
@@ -486,8 +490,8 @@ class NordeaAnalyticsCoreService:
             calc_date: date of calculation.
             horizon_date: future date of calculation.
             curves: discount curves for calculation.
-            rates_shifts: shifts in curves("tenor shift in bbp"
-                like "0Y 5" or "30Y -5").
+            shift_tenors: Optional. Tenors to shift curves expressed as float. For example [0.25, 0.5, 1, 3, 5].
+            shift_values: Optional. Shift values in basispoints. For example [100, 100, 75, 100, 100].
             pp_speed: Prepayment speed. Default = 1.
             cashflow_type: Optional. Type of cashflow to calculate with.
             prices: fixed price per bond.
@@ -522,7 +526,8 @@ class NordeaAnalyticsCoreService:
                 calc_date,
                 horizon_date,
                 curves,
-                rates_shifts,
+                shift_tenors,
+                shift_values,
                 pp_speed,
                 prices,
                 cashflow_type,

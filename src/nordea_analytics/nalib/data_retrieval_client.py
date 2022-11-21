@@ -8,7 +8,7 @@ from nordea_analytics.nalib import exceptions
 from nordea_analytics.nalib.exceptions import AnalyticsWarning, CustomWarning
 from nordea_analytics.nalib.http.core import RestApiHttpClient
 from nordea_analytics.nalib.live_keyfigures.core import HttpStreamIterator
-from nordea_analytics.nalib.util import AnalyticsResponseError
+from nordea_analytics.nalib.util import AnalyticsResponseError, RequestMethod
 
 
 class DataRetrievalServiceClient(object):
@@ -40,12 +40,15 @@ class DataRetrievalServiceClient(object):
             }
         return diag
 
-    def get_response(self, request: dict, url_suffix: str) -> dict:
+    def get_response(
+        self, request: dict, url_suffix: str, request_method: RequestMethod
+    ) -> dict:
         """Gets the response from _get_response function for a given request.
 
         Args:
             request: Request in the form of dictionary
             url_suffix: Url suffix for a given method
+            request_method: Enum request method
 
         Returns:
             Response in the form of json.
@@ -53,7 +56,12 @@ class DataRetrievalServiceClient(object):
         Raises:
             Exception: If exception is raised from API.
         """
-        response = self._get_response(url_suffix, params=request)
+        response: Response
+        if request_method == RequestMethod.Get:
+            response = self._get_response(url_suffix, params=request)
+        elif request_method == RequestMethod.Post:
+            response = self._post_response(request, url_suffix)
+
         self._verify_response(response.json())
 
         response_json = response.json()
@@ -85,6 +93,19 @@ class DataRetrievalServiceClient(object):
         return _response
 
     def get_post_get_response(self, request: dict, url_suffix: str) -> dict:
+        """Posts a requests for background calculation and gets response.
+
+        Args:
+            request: Request in the form of dictionary
+            url_suffix: Url suffix for a given method
+
+        Returns:
+            Response in the form of json.
+        """
+        response = self.get_response(request, url_suffix, RequestMethod.Post)
+        return response
+
+    def get_response_asynchronous(self, request: dict, url_suffix: str) -> dict:
         """Posts a requests for background calculation and gets response.
 
         Args:

@@ -240,7 +240,10 @@ class TimeSeriesKeyFigureName(Enum):
 
 
 class CalculatedBondKeyFigureName(Enum):
-    """Bond key figure names that can be calculated in the service."""
+    """Bond key figure names that can be calculated in the service.
+
+    Must be lower case.
+    """
 
     AccruedInterest = "accint"
     ASW_MM = "aswmm"
@@ -261,7 +264,10 @@ class CalculatedBondKeyFigureName(Enum):
 
 
 class HorizonCalculatedBondKeyFigureName(Enum):
-    """Bond key figure names that can be horizon calculated in the service."""
+    """Bond key figure names that can be horizon calculated in the service.
+
+    Must be lower case.
+    """
 
     BPV = "bpv"
     CVX = "cvx"

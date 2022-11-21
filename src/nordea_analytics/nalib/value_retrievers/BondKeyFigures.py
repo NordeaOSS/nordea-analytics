@@ -62,7 +62,6 @@ class BondKeyFigures(ValueRetriever):
     def get_bond_key_figures(self) -> List:
         """Calls the client and retrieves response with key figures from the service."""
         json_response: List[Any] = []
-        json_failed_queries: str
         for request_dict in self.request:
             _json_response = self.get_response(request_dict)
             json_map = _json_response[config["results"]["bond_key_figures"]]
