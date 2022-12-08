@@ -41,7 +41,10 @@ class DataRetrievalServiceClient(object):
         return diag
 
     def get_response(
-        self, request: dict, url_suffix: str, request_method: RequestMethod
+        self,
+        request: dict,
+        url_suffix: str,
+        request_method: RequestMethod = RequestMethod.Get,
     ) -> dict:
         """Gets the response from _get_response function for a given request.
 

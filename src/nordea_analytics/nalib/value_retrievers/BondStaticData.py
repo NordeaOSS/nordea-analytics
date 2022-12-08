@@ -10,6 +10,7 @@ from nordea_analytics.nalib.data_retrieval_client import (
 )
 from nordea_analytics.nalib.util import (
     get_config,
+    pascal_case,
 )
 from nordea_analytics.nalib.value_retriever import ValueRetriever
 
@@ -89,11 +90,15 @@ class BondStaticData(ValueRetriever):
                     or key_value_pair["key"] == "maturity"
                     or key_value_pair["key"] == "retrieval_date"
                 ):
-                    _symbol_dict[key_value_pair["key"]] = datetime.strptime(
+                    _symbol_dict[
+                        pascal_case(key_value_pair["key"])
+                    ] = datetime.strptime(
                         key_value_pair["value"], "%Y-%m-%dT%H:%M:%S.0000000"
                     )
                 else:
-                    _symbol_dict[key_value_pair["key"]] = key_value_pair["value"]
+                    _symbol_dict[pascal_case(key_value_pair["key"])] = key_value_pair[
+                        "value"
+                    ]
 
             _dict[bond_data["symbol"]] = _symbol_dict
 

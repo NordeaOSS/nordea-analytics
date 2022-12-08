@@ -4,7 +4,7 @@ from enum import Enum
 class CurveName(Enum):
     """Most common available curves. Availability not limit to this list."""
 
-    # ATSGOV = "ATSGOV"
+    ATSGOV = "ATSGOV"
     BEFGOV = "BEFGOV"
     CHFGOV = "CHFGOV"
     CHFSWAP_Disc_OIS = "CHFSWAP DISC OIS"

@@ -63,10 +63,11 @@ class IndexComposition(ValueRetriever):
         _dict = {}
         for index_data in self._data:
             _index_dict = {}
-            _index_dict["ISIN"] = [x["symbol"] for x in index_data["assets"]]
-            _index_dict["Name"] = [x["name"] for x in index_data["assets"]]
+            _index_dict["ISIN"] = [x["symbol"] for x in index_data["underlyings"]]
+            _index_dict["Name"] = [x["name"] for x in index_data["underlyings"]]
             _index_dict["Nominal_Amount"] = [
-                convert_to_float_if_float(x["nominal"]) for x in index_data["assets"]
+                convert_to_float_if_float(x["nominal"])
+                for x in index_data["underlyings"]
             ]
             sum_nominal = sum(_index_dict["Nominal_Amount"])
             _index_dict["Nominal_Weight"] = [
@@ -75,7 +76,7 @@ class IndexComposition(ValueRetriever):
 
             _index_dict["Market_Amount"] = [
                 convert_to_float_if_float(x["market"]) if "market" in x else None
-                for x in index_data["assets"]
+                for x in index_data["underlyings"]
             ]
 
             if not _index_dict["Market_Amount"].__contains__(None):

@@ -19,8 +19,8 @@ from nordea_analytics.nalib.util import (
     convert_to_float_if_float,
     convert_to_variable_string,
     get_config,
+    get_keyfigure_key,
 )
-from nordea_analytics.nalib.util import get_keyfigure_key
 from nordea_analytics.nalib.value_retriever import ValueRetriever
 
 config = get_config()
@@ -285,6 +285,18 @@ class BondKeyFigureCalculator(ValueRetriever):
                                 CalculatedBondKeyFigureName.__name__,
                             )
                         ] = cashflow_dict
+                    elif key_figure == "vegamatrix":
+                        vega_dict = {
+                            vega_list["key"]: vega_list["value"]
+                            for vega_list in curve_data["vega_points"]
+                        }
+                        _data_dict[
+                            get_keyfigure_key(
+                                key_figure,
+                                self.key_figures_original,
+                                CalculatedBondKeyFigureName.__name__,
+                            )
+                        ] = vega_dict
                     else:
                         _data_dict[
                             get_keyfigure_key(
