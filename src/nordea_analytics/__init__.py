@@ -8,6 +8,7 @@ from .convention_variable_names import (
 )
 from .curve_variable_names import CurveDefinitionName, CurveName, CurveType, SpotForward
 from .forecast_names import YieldCountry, YieldHorizon, YieldType
+from .instrument_variable_names import BenchmarkName
 from .key_figure_names import (
     BondKeyFigureName,
     CalculatedBondKeyFigureName,
@@ -33,13 +34,14 @@ except (NameError, ModuleNotFoundError):
     from .shortcuts.open_banking import get_nordea_analytics_client  # type: ignore
     from .shortcuts.open_banking import get_nordea_analytics_test_client  # type: ignore # noqa: F401
 
-__version__ = "1.4.0"
+__version__ = "1.5.0"
 __all__ = [
     "get_nordea_analytics_client",
     "get_nordea_analytics_test_client",
     "disable_analytics_warnings",
     "AmortisationType",
     "AssetType",
+    "BenchmarkName",
     "BondKeyFigureName",
     "CalculatedBondKeyFigureName",
     "CapitalCentreTypes",

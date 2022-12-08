@@ -3,11 +3,13 @@ from abc import ABC
 from enum import Enum
 import json
 from pathlib import Path
+from re import sub
 from typing import Callable, Dict, List, Mapping, Union
 
 import yaml
 
 from nordea_analytics import (
+    BenchmarkName,
     BondKeyFigureName,
     CalculatedBondKeyFigureName,
     CashflowType,
@@ -55,6 +57,7 @@ def convert_to_variable_string(
     variable: Union[
         str,
         AssetType,
+        BenchmarkName,
         BondKeyFigureName,
         TimeSeriesKeyFigureName,
         CashflowType,
@@ -97,6 +100,7 @@ def convert_to_variable_string(
     """
     if type(variable) in (
         AssetType,
+        BenchmarkName,
         BondKeyFigureName,
         TimeSeriesKeyFigureName,
         CashflowType,
@@ -131,7 +135,8 @@ def convert_to_variable_string(
                 return "ImpliedForward"
             elif (
                 # For enum types where string value is fully capitalised
-                variable_type == CashflowType
+                variable_type == BenchmarkName
+                or variable_type == CashflowType
                 or variable_type == CurveName
                 or variable_type == CurveDefinitionName
                 or variable_type == CapitalCentres
@@ -256,7 +261,14 @@ def get_keyfigure_key(
     return key_figure_key
 
 
+def pascal_case(s: str) -> str:
+    """Convert to PascalCase, only for formatting user output."""
+    s = sub(r"(_|-)+", " ", s).title().replace(" ", "")
+    return "".join([s[0].upper(), s[1:]])
+
+
 class RequestMethod(Enum):
     """Enum for request methods."""
+
     Get = 1
     Post = 2

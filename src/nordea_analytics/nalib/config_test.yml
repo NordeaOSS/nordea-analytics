@@ -38,7 +38,7 @@ results:
   curve_definition: "definition"
   curve_time_series: "timeseries"
   fx_forecast: "fx_forecast"
-  index_composition: "underlyings"
+  index_composition: "indices"
   search: "search"
   shift_days: "date"
   time_series: "timeseries"

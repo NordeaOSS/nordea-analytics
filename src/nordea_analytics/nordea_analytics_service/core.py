@@ -34,16 +34,15 @@ from nordea_analytics.nalib.value_retrievers.BondKeyFigureHorizonCalculator impo
     BondKeyFigureHorizonCalculator,
 )
 from nordea_analytics.nalib.value_retrievers.BondKeyFigures import BondKeyFigures
-from nordea_analytics.nalib.value_retrievers.BondStaticData import BondStaticData
 from nordea_analytics.nalib.value_retrievers.Curve import Curve
 from nordea_analytics.nalib.value_retrievers.CurveDefinition import CurveDefinition
 from nordea_analytics.nalib.value_retrievers.CurveTimeSeries import CurveTimeSeries
 from nordea_analytics.nalib.value_retrievers.FXForecast import FXForecast
-from nordea_analytics.nalib.value_retrievers.FXQuotes import FXQuotes
 from nordea_analytics.nalib.value_retrievers.IndexComposition import IndexComposition
 from nordea_analytics.nalib.value_retrievers.LiveBondKeyFigures import (
     LiveBondKeyFigures,
 )
+from nordea_analytics.nalib.value_retrievers.ShiftDate import ShiftDate
 from nordea_analytics.nalib.value_retrievers.ShiftDays import ShiftDays
 from nordea_analytics.nalib.value_retrievers.TimeSeries import TimeSeries
 from nordea_analytics.nalib.value_retrievers.YearFraction import YearFraction
@@ -288,24 +287,6 @@ class NordeaAnalyticsCoreService:
             CurveDefinition(self._client, curve, calc_date), as_df
         )
 
-    def get_bond_static_data(
-        self,
-        symbols: Union[List, str],
-        as_df: bool = False,
-    ) -> Any:
-        """Retrieves latest static data for given ISINs.
-
-        Args:
-            symbols: List of bonds for which key figures want to be retrieved.
-            as_df: Default False. If True, the results are represented as
-                pandas DataFrame, else as dictionary.
-
-        Returns:
-            Dictionary containing requested data. If as_df is True,
-                the data is in form of a DataFrame.
-        """
-        return self._retrieve_value(BondStaticData(self._client, symbols), as_df)
-
     def search_bonds(
         self,
         dmb: bool = False,
@@ -313,6 +294,8 @@ class NordeaAnalyticsCoreService:
         currency: str = None,
         issuers: Union[List[Issuers], List[str], Issuers, str] = None,
         asset_types: Union[List[AssetType], List[str], AssetType, str] = None,
+        lower_issue_date: datetime = None,
+        upper_issue_date: datetime = None,
         lower_maturity: datetime = None,
         upper_maturity: datetime = None,
         lower_closing_date: datetime = None,
@@ -339,8 +322,10 @@ class NordeaAnalyticsCoreService:
             currency: Optional. Issue currency.
             issuers: Optional. Name of issuers.
             asset_types: Optional. Type of asset.
-            lower_maturity: Optional. Minimum(from) maturity.
-            upper_maturity: Optional. Maximum(to) maturity.
+            lower_issue_date: Optional. Minimum (from) issue date.
+            upper_issue_date: Optional. Maximum (to) issue date.
+            lower_maturity: Optional. Minimum (from) maturity.
+            upper_maturity: Optional. Maximum (to) maturity.
             lower_closing_date: Optional. Minimum(from) closing date.
             upper_closing_date: Optional. Maximum(to) closing date.
             lower_coupon: Optional. Minimum coupon.
@@ -367,6 +352,8 @@ class NordeaAnalyticsCoreService:
                 currency,
                 issuers,
                 asset_types,
+                lower_issue_date,
+                upper_issue_date,
                 lower_maturity,
                 upper_maturity,
                 lower_closing_date,
@@ -581,6 +568,42 @@ class NordeaAnalyticsCoreService:
         return self._retrieve_value(
             YieldForecast(self._client, country, yield_type, yield_horizon), as_df
         )
+
+    def get_shift_date(
+        self,
+        date: datetime,
+        days: int = None,
+        months: int = None,
+        years: int = None,
+        exchange: Union[str, Exchange] = None,
+        date_roll_convention: Union[str, DateRollConvention] = None,
+    ) -> datetime:
+        """Shifts a date using internal holiday calendars.
+
+        Args:
+            date: The date that will be shifted.
+            days: The number of days to shift 'date' with.
+                Negative values move date back in time.
+            months: The number of months to shift 'date' with.
+                Negative values move date back in time.
+            years: The number of years to shift 'date' with.
+                Negative values move date back in time.
+            exchange: The exchange's holiday calendar will be used.
+            date_roll_convention: The convention to use for rolling
+                when a holiday is encountered.
+
+        Returns:
+            The shifted datetime is returned.
+        """
+        return ShiftDate(
+            self._client,
+            date,
+            days,
+            months,
+            years,
+            exchange,
+            date_roll_convention,
+        ).to_datetime()
 
     def get_shift_days(
         self,

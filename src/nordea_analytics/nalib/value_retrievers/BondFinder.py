@@ -42,6 +42,8 @@ class BondFinder(ValueRetriever):
                 AssetType, str, List[AssetType], List[str], List[Union[str, AssetType]]
             ]
         ] = None,
+        lower_issue_date: Optional[datetime] = None,
+        upper_issue_date: Optional[datetime] = None,
         lower_maturity: Optional[datetime] = None,
         upper_maturity: Optional[datetime] = None,
         lower_closing_date: Optional[datetime] = None,
@@ -81,8 +83,10 @@ class BondFinder(ValueRetriever):
             currency: Issue currency.
             issuers: Name of issuers.
             asset_types: Type of asset.
-            lower_maturity: Minimum(from) maturity.
-            upper_maturity: Maximum(to) maturity.
+            lower_issue_date: Minimum (from) issue date.
+            upper_issue_date: Maximum (to) issue date.
+            lower_maturity: Minimum (from) maturity.
+            upper_maturity: Maximum (to) maturity.
             lower_closing_date: Minimum(from) closing date.
             upper_closing_date: Maximum(to) closing date.
             lower_coupon: Minimum coupon.
@@ -114,6 +118,16 @@ class BondFinder(ValueRetriever):
             else None
         )
 
+        self.lower_issue_date = (
+            lower_issue_date.strftime("%Y-%m-%d")
+            if lower_issue_date is not None
+            else None
+        )
+        self.upper_issue_date = (
+            upper_issue_date.strftime("%Y-%m-%d")
+            if upper_issue_date is not None
+            else None
+        )
         self.lower_maturity = (
             lower_maturity.strftime("%Y-%m-%d") if lower_maturity is not None else None
         )
@@ -209,6 +223,8 @@ class BondFinder(ValueRetriever):
             "currency": self.currency,
             "issuers": self.issuers,
             "asset-types": self.asset_types,
+            "lower-issue-date": self.lower_issue_date,
+            "upper-issue-date": self.upper_issue_date,
             "lower-maturity": self.lower_maturity,
             "upper-maturity": self.upper_maturity,
             "lower-closing-date": self.lower_closing_date,

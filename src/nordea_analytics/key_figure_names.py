@@ -250,7 +250,7 @@ class CalculatedBondKeyFigureName(Enum):
     AssetSwapSpread = "asw"
     ASW_PP = "aswpp"
     BPV = "bpv"
-    BPV_Ladder = "bpvladder"
+    BPVLadder = "bpvladder"
     CVX = "cvx"
     DeterministicSpread = "deterministicspread"
     ExpectedCashflow = "expectedcashflow"
@@ -260,6 +260,8 @@ class CalculatedBondKeyFigureName(Enum):
     PVonTS = "pvonts"
     Spread = "spread"
     SpreadRisk = "spreadrisk"
+    VegaMatrix = "vegamatrix"
+    VegaonTS = "vegaonts"
     Yield = "yield"
 
 
