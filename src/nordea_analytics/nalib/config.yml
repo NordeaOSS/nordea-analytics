@@ -20,6 +20,7 @@ url_suffix:
   search_bonds: "search/bonds"
   search_dmb_bonds: "search/danishmortgagebonds"
   live_bond_key_figures: "bonds/live-keyfigures"
+  live_bond_universe: "bonds/live-keyfigures-bonds"
   shift_date: "shift-date"
   shift_days: "shift-days"
   time_series: "timeseries"

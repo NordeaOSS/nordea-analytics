@@ -55,8 +55,8 @@ class TimeSeries(ValueRetriever):
         _keyfigures: List = keyfigures if type(keyfigures) == list else [keyfigures]
         self.keyfigures = [
             convert_to_variable_string(keyfigure, TimeSeriesKeyFigureName)
-            # if type(keyfigure) == TimeSeriesKeyFigureName
-            # else keyfigure
+            if type(keyfigure) == TimeSeriesKeyFigureName
+            else keyfigure
             for keyfigure in _keyfigures
         ]
         self.from_date = from_date

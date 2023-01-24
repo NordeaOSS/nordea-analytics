@@ -58,7 +58,7 @@ class BondKeyFigureCalculator(ValueRetriever):
         spread_curve: Optional[Union[str, CurveName]] = None,
         yield_input: Optional[float] = None,
         asw_fix_frequency: Optional[str] = None,
-        ladder_definition: Optional[List[float]] = None,
+        ladder_definition: Optional[Union[float, List[float]]] = None,
         cashflow_type: Optional[Union[str, CashflowType]] = None,
     ) -> None:
         """Initialization of class.
@@ -70,8 +70,8 @@ class BondKeyFigureCalculator(ValueRetriever):
             keyfigures: Bond key figure that should be valued.
             calc_date: date of calculation.
             curves: discount curves for calculation.
-            shift_tenors: Optional. Tenors to shift curves expressed as float. For example [0.25, 0.5, 1, 3, 5].
-            shift_values: Optional. Shift values in basispoints. For example [100, 100, 75, 100, 100].
+            shift_tenors: Tenors to shift curves expressed as float. For example [0.25, 0.5, 1, 3, 5].
+            shift_values: Shift values in basispoints. For example [100, 100, 75, 100, 100].
             pp_speed: Prepayment speed. Default = 1.
             prices: fixed price per bond.
             spread: fixed spread for bond. Mandatory to give
@@ -152,7 +152,13 @@ class BondKeyFigureCalculator(ValueRetriever):
         self.spread_curve = _spread_curve
         self.yield_input = yield_input
         self.asw_fix_frequency = asw_fix_frequency
-        self.ladder_definition = ladder_definition
+        self.ladder_definition = (
+            ladder_definition
+            if isinstance(ladder_definition, list)
+            else [ladder_definition]
+            if isinstance(ladder_definition, float) or isinstance(ladder_definition, int)
+            else None
+        )
         self.cashflow_type = (
             convert_to_variable_string(cashflow_type, CashflowType)
             if cashflow_type is not None

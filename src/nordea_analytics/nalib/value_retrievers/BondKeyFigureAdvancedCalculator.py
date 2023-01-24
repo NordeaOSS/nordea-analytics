@@ -50,9 +50,11 @@ class BondKeyFigureAdvancedCalculator(ValueRetriever):
         spread_curve: Optional[Union[str, CurveName]] = None,
         yield_input: Optional[float] = None,
         asw_fix_frequency: Optional[str] = None,
-        ladder_definition: Optional[List[float]] = None,
+        ladder_definition: Optional[Union[float, List[float]]] = None,
         cashflow_type: Optional[Union[str, CashflowType]] = None,
         fixed_principal_payment: Optional[Union[str, List[str]]] = None,
+        volatility_date: Optional[datetime] = None,
+        refinancing_curve_date: Optional[datetime] = None,
     ) -> None:
         """Initialization of class.
 
@@ -61,10 +63,10 @@ class BondKeyFigureAdvancedCalculator(ValueRetriever):
                 or DataRetrievalServiceClientTest for testing.
             symbols: ISIN or name of bonds that should be valued.
             keyfigures: Bond key figure that should be valued.
-            calc_date: date of calculation.
-            curves: discount curves for calculation.
-            shift_tenors: Optional. Tenors to shift curves expressed as float. For example [0.25, 0.5, 1, 3, 5].
-            shift_values: Optional. Shift values in basispoints. For example [100, 100, 75, 100, 100].
+            calc_date: Date of calculation.
+            curves: Discount curves for calculation.
+            shift_tenors: Tenors to shift curves expressed as float. For example [0.25, 0.5, 1, 3, 5].
+            shift_values: Shift values in basispoints. For example [100, 100, 75, 100, 100].
             pp_speed: Prepayment speed. Default = 1.
             prices: fixed price per bond.
             spread: fixed spread for bond. Mandatory to give
@@ -74,10 +76,12 @@ class BondKeyFigureAdvancedCalculator(ValueRetriever):
             yield_input: fixed yield for bond.
             asw_fix_frequency: Fixing frequency of swap in ASW calculation.
                 Mandatory input in all ASW calculations.
-            ladder_definition: Optional. Tenors should be included in
+            ladder_definition: Tenors should be included in
                 BPV ladder calculation. For example [0.25, 0.5, 1, 3, 5].
             cashflow_type: Type of cashflow to calculate with.
             fixed_principal_payment: Principal payment each cash flow date.
+            volatility_date: Date of volatility surface.
+            refinancing_curve_date: Date of refinancing curve.
         """
         super(BondKeyFigureAdvancedCalculator, self).__init__(client)
         self._client = client
@@ -127,13 +131,22 @@ class BondKeyFigureAdvancedCalculator(ValueRetriever):
         self.spread_curve = _spread_curve
         self.yield_input = yield_input
         self.asw_fix_frequency = asw_fix_frequency
-        self.ladder_definition = ladder_definition
+        self.ladder_definition = (
+            ladder_definition
+            if isinstance(ladder_definition, list)
+            else [ladder_definition]
+            if isinstance(ladder_definition, float) or isinstance(ladder_definition, int)
+            else None
+        )
         self.cashflow_type = (
             convert_to_variable_string(cashflow_type, CashflowType)
             if cashflow_type is not None
             else None
         )
         self.fixed_principal_payment = fixed_principal_payment
+        self.volatility_date = volatility_date
+        self.refinancing_curve_date = refinancing_curve_date
+
         self._data = self.calculate_bond_key_figure()
 
     def calculate_bond_key_figure(self) -> Mapping:
@@ -191,6 +204,14 @@ class BondKeyFigureAdvancedCalculator(ValueRetriever):
                 "ladder_definition": self.ladder_definition,
                 "cashflow_type": self.cashflow_type,
                 "fixed_principal_payment": self.fixed_principal_payment,
+                "volatility_date": self.volatility_date.strftime("%Y-%m-%d")
+                if self.volatility_date is not None
+                else None,
+                "refinancing_curve_date": self.refinancing_curve_date.strftime(
+                    "%Y-%m-%d"
+                )
+                if self.refinancing_curve_date is not None
+                else None,
             }
             request = {
                 key: initial_request[key]

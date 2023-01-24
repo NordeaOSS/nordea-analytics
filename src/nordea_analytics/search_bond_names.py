@@ -11,7 +11,7 @@ class AmortisationType(Enum):
 
 
 class AssetType(Enum):
-    """Asset Type available when searching bonds."""
+    """Asset Types available when searching bonds."""
 
     BenchmarkBond = "Benchmark Bond"
     DanishCappedFloaters = "Danish Capped Floater"

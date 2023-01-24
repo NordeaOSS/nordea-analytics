@@ -65,7 +65,7 @@ class DataRetrievalServiceClient(object):
         elif request_method == RequestMethod.Post:
             response = self._post_response(request, url_suffix)
 
-        self._verify_response(response.json())
+        self._verify_response(response)
 
         response_json = response.json()
         if "info" in response_json and "job_url" in response_json["info"]:
@@ -119,7 +119,7 @@ class DataRetrievalServiceClient(object):
             Response in the form of json.
         """
         post_response = self._post_response(request, url_suffix)
-        self._verify_response(post_response.json())
+        self._verify_response(post_response)
 
         log_token = post_response.headers.get("X-Request-ID", None)
         params = (
@@ -173,9 +173,19 @@ class DataRetrievalServiceClient(object):
         self._last_request = kwargs
 
     @staticmethod
-    def _verify_response(response: Dict) -> None:
-        if "httpCode" in response and response["httpCode"] != 200:
-            raise exceptions.ApiServerUnauthorized(response["moreInformation"])
+    def _verify_response(response: requests.Response) -> None:
+        is_json_content_type = "application/json" in response.headers.get("content-type", '')
+
+        if is_json_content_type:
+            json_response = response.json()
+            # Open Banking returned additional information under 'moreInformation' on errors
+            if is_json_content_type and response.status_code >= 400 and response.status_code < 500:
+                raise exceptions.ApiServerUnauthorized(json_response.get('moreInformation', "Unknown error"))
+
+        if response.status_code >= 400:
+            raise AnalyticsResponseError(
+                f"Status code: {response.status_code} {response.reason}"
+            )
 
     @staticmethod
     def _check_errors(get_response: Response) -> Dict:
