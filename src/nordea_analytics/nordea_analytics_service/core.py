@@ -42,6 +42,7 @@ from nordea_analytics.nalib.value_retrievers.IndexComposition import IndexCompos
 from nordea_analytics.nalib.value_retrievers.LiveBondKeyFigures import (
     LiveBondKeyFigures,
 )
+from nordea_analytics.nalib.value_retrievers.LiveBondUniverse import LiveBondUniverse
 from nordea_analytics.nalib.value_retrievers.ShiftDate import ShiftDate
 from nordea_analytics.nalib.value_retrievers.ShiftDays import ShiftDays
 from nordea_analytics.nalib.value_retrievers.TimeSeries import TimeSeries
@@ -389,7 +390,7 @@ class NordeaAnalyticsCoreService:
         spread_curve: Union[str, CurveName] = None,
         yield_input: float = None,
         asw_fix_frequency: str = None,
-        ladder_definition: List[float] = None,
+        ladder_definition: Union[float, List[float]] = None,
         cashflow_type: Union[str, CashflowType] = None,
         as_df: bool = False,
     ) -> Any:
@@ -658,6 +659,22 @@ class NordeaAnalyticsCoreService:
             to_date,
             time_convention,
         ).to_float()
+
+    def get_bond_live_universe(
+        self,
+        as_df: bool = False,
+    ) -> Any:
+        """Return universe of bonds with live key figures.
+
+        Args:
+            as_df: Default False. If True, the results are represented
+                as pandas DataFrame, else as dictionary
+
+        Returns:
+            pandas DataFrame or dictionary
+
+        """
+        return self._retrieve_value(LiveBondUniverse(self._client), as_df)
 
     def get_bond_live_key_figures(
         self,

@@ -79,7 +79,7 @@ class BondStaticData(ValueRetriever):
         _dict = {}
         for bond_data in self._data:
             _symbol_dict = {}
-            _symbol_dict["name"] = bond_data["name"]
+            _symbol_dict["Name"] = bond_data["name"]
 
             for static_data_key in bond_data["static_data"]:
                 key_value_pair = bond_data["static_data"][static_data_key]

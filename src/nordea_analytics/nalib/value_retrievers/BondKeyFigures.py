@@ -52,6 +52,8 @@ class BondKeyFigures(ValueRetriever):
         _keyfigures: List = keyfigures if type(keyfigures) == list else [keyfigures]
         self.keyfigures = [
             convert_to_variable_string(keyfigure, BondKeyFigureName)
+            if type(keyfigure) == BondKeyFigureName
+            else keyfigure
             for keyfigure in _keyfigures
         ]
         self.calc_date = calc_date
