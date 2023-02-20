@@ -1,6 +1,8 @@
 from typing import Any
 import warnings
 
+STACKLEVEL = 2
+
 
 class HttpClientImproperlyConfigured(Exception):
     """The http service is somehow improperly configured."""
@@ -68,7 +70,7 @@ class CustomWarning(Warning):
             category: warning category.
         """
         self.message = message
-        warnings.warn(self.message, category=category)
+        warnings.warn(self.message, category=category, stacklevel=STACKLEVEL)
 
 
 class CustomWarningCheck:

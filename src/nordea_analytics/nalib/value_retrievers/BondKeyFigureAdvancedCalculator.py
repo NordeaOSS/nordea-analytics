@@ -135,7 +135,8 @@ class BondKeyFigureAdvancedCalculator(ValueRetriever):
             ladder_definition
             if isinstance(ladder_definition, list)
             else [ladder_definition]
-            if isinstance(ladder_definition, float) or isinstance(ladder_definition, int)
+            if isinstance(ladder_definition, float)
+            or isinstance(ladder_definition, int)
             else None
         )
         self.cashflow_type = (

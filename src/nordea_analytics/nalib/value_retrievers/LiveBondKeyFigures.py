@@ -105,7 +105,6 @@ class LiveBondKeyFigures(ValueRetriever):
         """Reformat the json response to a dictionary."""
         results: Dict = {}
         for values in self._data:
-
             results = results | filter_keyfigures(
                 values, self.keyfigures, self.keyfigures_original
             )

@@ -50,8 +50,12 @@ class BondKeyFigureCalculator(ValueRetriever):
                 List[Union[str, CurveName]],
             ]
         ] = None,
-        shift_tenors: Union[List[float], float] = None,
-        shift_values: Union[List[float], float] = None,
+        shift_tenors: Union[
+            float, List[float], int, List[int], List[Union[float, int]]
+        ] = None,
+        shift_values: Union[
+            float, List[float], int, List[int], List[Union[float, int]]
+        ] = None,
         pp_speed: Optional[float] = None,
         prices: Optional[Union[float, List[float]]] = None,
         spread: Optional[float] = None,
@@ -156,7 +160,8 @@ class BondKeyFigureCalculator(ValueRetriever):
             ladder_definition
             if isinstance(ladder_definition, list)
             else [ladder_definition]
-            if isinstance(ladder_definition, float) or isinstance(ladder_definition, int)
+            if isinstance(ladder_definition, float)
+            or isinstance(ladder_definition, int)
             else None
         )
         self.cashflow_type = (

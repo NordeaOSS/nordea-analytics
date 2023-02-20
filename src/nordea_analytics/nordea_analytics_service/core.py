@@ -37,12 +37,14 @@ from nordea_analytics.nalib.value_retrievers.BondKeyFigures import BondKeyFigure
 from nordea_analytics.nalib.value_retrievers.Curve import Curve
 from nordea_analytics.nalib.value_retrievers.CurveDefinition import CurveDefinition
 from nordea_analytics.nalib.value_retrievers.CurveTimeSeries import CurveTimeSeries
+from nordea_analytics.nalib.value_retrievers.DateSequence import DateSequence
 from nordea_analytics.nalib.value_retrievers.FXForecast import FXForecast
 from nordea_analytics.nalib.value_retrievers.IndexComposition import IndexComposition
 from nordea_analytics.nalib.value_retrievers.LiveBondKeyFigures import (
     LiveBondKeyFigures,
 )
 from nordea_analytics.nalib.value_retrievers.LiveBondUniverse import LiveBondUniverse
+from nordea_analytics.nalib.value_retrievers.Quotes import Quotes
 from nordea_analytics.nalib.value_retrievers.ShiftDate import ShiftDate
 from nordea_analytics.nalib.value_retrievers.ShiftDays import ShiftDays
 from nordea_analytics.nalib.value_retrievers.TimeSeries import TimeSeries
@@ -382,8 +384,12 @@ class NordeaAnalyticsCoreService:
         ],
         calc_date: datetime,
         curves: Union[List[str], str, CurveName, List[CurveName]] = None,
-        shift_tenors: Union[List[float], float] = None,
-        shift_values: Union[List[float], float] = None,
+        shift_tenors: Union[
+            float, List[float], int, List[int], List[Union[float, int]]
+        ] = None,
+        shift_values: Union[
+            float, List[float], int, List[int], List[Union[float, int]]
+        ] = None,
         pp_speed: float = None,
         prices: Union[float, List[float]] = None,
         spread: float = None,
@@ -546,6 +552,26 @@ class NordeaAnalyticsCoreService:
         """
         return self._retrieve_value(FXForecast(self._client, currency_pair), as_df)
 
+    def get_quotes(
+        self,
+        symbols: Union[str, List[str]],
+        calc_date: datetime,
+        as_df: bool = False,
+    ) -> Any:
+        """Retrieves quotes.
+
+        Args:
+            symbols: The symbols for which to retrieve quotes.
+            calc_date: date of price.
+            as_df: Default False. If True, the results are represented
+                as pandas DataFrame, else as dictionary.
+
+        Returns:
+            Dictionary containing requested data. If as_df is True,
+                the data is in form of a DataFrame.
+        """
+        return self._retrieve_value(Quotes(self._client, symbols, calc_date), as_df)
+
     def get_yield_forecasts(
         self,
         country: Union[str, YieldCountry],
@@ -605,6 +631,33 @@ class NordeaAnalyticsCoreService:
             exchange,
             date_roll_convention,
         ).to_datetime()
+
+    def get_date_sequence(
+        self,
+        from_date: datetime,
+        to_date: datetime,
+        exchange: Union[str, Exchange] = None,
+        day_count_convention: Union[str, DayCountConvention] = None,
+    ) -> List:
+        """Shifts a date using internal holiday calendars.
+
+        Args:
+            from_date: The start date of the date sequence.
+            to_date: The end date of the date sequence.
+                Negative values move date back in time.
+            exchange: The exchange's holiday calendar will be used.
+            day_count_convention: The convention to use for counting days.
+
+        Returns:
+            List containing oredered datetimes is returned.
+        """
+        return DateSequence(
+            self._client,
+            from_date,
+            to_date,
+            exchange,
+            day_count_convention,
+        ).to_list_of_datetime()
 
     def get_shift_days(
         self,

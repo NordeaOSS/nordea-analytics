@@ -15,7 +15,7 @@ from nordea_analytics.nalib.value_retriever import ValueRetriever
 config = get_config()
 
 
-class FXQuotes(ValueRetriever):
+class Quotes(ValueRetriever):
     """Retrieves FX quotes ."""
 
     def __init__(
@@ -29,10 +29,10 @@ class FXQuotes(ValueRetriever):
         Args:
             client: DataRetrievalServiceClient
                 or DataRetrievalServiceClientTest for testing
-            symbols: Name of FX instruments for request.
+            symbols: Name of instruments for request.
             calc_date: calculation date for request.
         """
-        super(FXQuotes, self).__init__(client)
+        super(Quotes, self).__init__(client)
 
         self.symbols: List = [symbols] if type(symbols) != list else symbols
         self.calc_date = calc_date
@@ -41,7 +41,7 @@ class FXQuotes(ValueRetriever):
     def get_fx_quotes(self) -> List:
         """Calls the client and retrieves response with key figures from the service."""
         _json_response = self.get_post_get_response()
-        json_response: List[Any] = _json_response[config["results"]["fx_quotes"]]
+        json_response: List[Any] = _json_response[config["results"]["quotes"]]
 
         return json_response
 
@@ -62,7 +62,7 @@ class FXQuotes(ValueRetriever):
     @property
     def url_suffix(self) -> str:
         """Url suffix suffix for a given method."""
-        return config["url_suffix"]["fx_quotes"]
+        return config["url_suffix"]["quotes"]
 
     @property
     def request(self) -> Dict:
@@ -78,15 +78,10 @@ class FXQuotes(ValueRetriever):
         """Reformat the json response to a dictionary."""
         _dict = {}
         for bond_data in self._data:
-            _bond_dict = {
-                "Bid": bond_data["price"]["bid"],
-                "Ask": bond_data["price"]["ask"],
-            }
-
-            _dict[bond_data["symbol"]] = _bond_dict
+            _dict[bond_data["symbol"]] = bond_data["quote"]
 
         return _dict
 
     def to_df(self) -> pd.DataFrame:
         """Reformat the json response to a pandas DataFrame."""
-        return pd.DataFrame.from_dict(self.to_dict(), orient="index")
+        return pd.DataFrame.from_dict(self.to_dict(), orient="index", columns=["Quote"])

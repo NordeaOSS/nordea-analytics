@@ -253,25 +253,29 @@ class BondFinder(ValueRetriever):
             if not self.dmb:
                 warnings.warn(
                     "capital_centres is only relevant for DMB. "
-                    "This variable will be ignored."
+                    "This variable will be ignored.",
+                    stacklevel=2
                 )
         if self.capital_centre_types is not None:
             if not self.dmb:
                 warnings.warn(
                     "capital_centre_types is only relevant for DMB."
-                    " This variable will be ignored."
+                    " This variable will be ignored.",
+                    stacklevel=2
                 )
         if self.lower_outstanding_amount is not None:
             if not self.dmb:
                 warnings.warn(
                     "lower_outstanding_amount is only relevant for DMB. "
-                    "This variable will be ignored."
+                    "This variable will be ignored.",
+                    stacklevel=2
                 )
         if self.upper_outstanding_amount is not None:
             if not self.dmb:
                 warnings.warn(
                     "upper_outstanding_amount is only relevant for DMB. "
-                    "This variable will be ignored."
+                    "This variable will be ignored.",
+                    stacklevel=2
                 )
 
     def to_dict(self) -> Dict:

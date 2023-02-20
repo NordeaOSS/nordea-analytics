@@ -174,13 +174,21 @@ class DataRetrievalServiceClient(object):
 
     @staticmethod
     def _verify_response(response: requests.Response) -> None:
-        is_json_content_type = "application/json" in response.headers.get("content-type", '')
+        is_json_content_type = "application/json" in response.headers.get(
+            "content-type", ""
+        )
 
         if is_json_content_type:
             json_response = response.json()
             # Open Banking returned additional information under 'moreInformation' on errors
-            if is_json_content_type and response.status_code >= 400 and response.status_code < 500:
-                raise exceptions.ApiServerUnauthorized(json_response.get('moreInformation', "Unknown error"))
+            if (
+                is_json_content_type
+                and response.status_code >= 400
+                and response.status_code < 500
+            ):
+                raise exceptions.ApiServerUnauthorized(
+                    json_response.get("moreInformation", "Unknown error")
+                )
 
         if response.status_code >= 400:
             raise AnalyticsResponseError(
