@@ -13,6 +13,7 @@ from nordea_analytics.nalib.data_retrieval_client import (
 )
 from nordea_analytics.nalib.util import (
     convert_to_float_if_float,
+    convert_to_original_format,
     convert_to_variable_string,
     get_config,
 )
@@ -49,17 +50,17 @@ class BondKeyFigures(ValueRetriever):
         super(BondKeyFigures, self).__init__(client)
 
         self.symbols: List = [symbols] if type(symbols) != list else symbols
-        _keyfigures: List = keyfigures if type(keyfigures) == list else [keyfigures]
+        self.keyfigures_original: List = (
+            keyfigures if type(keyfigures) == list else [keyfigures]
+        )
         self.keyfigures = [
             convert_to_variable_string(keyfigure, BondKeyFigureName)
             if type(keyfigure) == BondKeyFigureName
             else keyfigure
-            for keyfigure in _keyfigures
+            for keyfigure in self.keyfigures_original
         ]
         self.calc_date = calc_date
-        result = self.get_bond_key_figures()
-
-        self._data = self.format_key_figure_names(result, _keyfigures)
+        self._data = self.get_bond_key_figures()
 
     def get_bond_key_figures(self) -> List:
         """Calls the client and retrieves response with key figures from the service."""
@@ -71,37 +72,9 @@ class BondKeyFigures(ValueRetriever):
 
         return json_response
 
-    def format_key_figure_names(
-        self,
-        data: List,
-        keyfigures: Union[
-            List[str], List[BondKeyFigureName], List[Union[str, BondKeyFigureName]]
-        ],
-    ) -> List:
-        """Formats curve names to be identical to curves input."""
-        for kf in keyfigures:
-            keyfigure_string: Union[str, ValueError]
-            if type(kf) == BondKeyFigureName:
-                keyfigure_string = convert_to_variable_string(kf, BondKeyFigureName)
-            elif type(kf) == str:
-                keyfigure_string = kf
-
-            for bond_result in data:
-                for keyfigure_result in bond_result["values"]:
-                    if (
-                        type(keyfigure_string) == str
-                        and keyfigure_result["keyfigure"].lower()
-                        == keyfigure_string.lower()
-                    ):
-                        keyfigure_result["keyfigure"] = (
-                            kf.name if type(kf) == BondKeyFigureName else kf
-                        )
-
-        return data
-
     @property
     def url_suffix(self) -> str:
-        """Url suffix suffix for a given method."""
+        """Url suffix for a given method."""
         return config["url_suffix"]["bond_key_figures"]
 
     @property
@@ -136,7 +109,9 @@ class BondKeyFigures(ValueRetriever):
         for bond_data in self._data:
             _bond_dict = {}
             for key_figure_data in bond_data["values"]:
-                key_figure_name = key_figure_data["keyfigure"]
+                key_figure_name = convert_to_original_format(
+                    key_figure_data["keyfigure"], self.keyfigures_original
+                )
                 _bond_dict[key_figure_name] = convert_to_float_if_float(
                     key_figure_data["value"]
                 )

@@ -9,6 +9,7 @@ from nordea_analytics.key_figure_names import (
     LiveBondKeyFigureName,
 )
 from nordea_analytics.nalib.data_retrieval_client import DataRetrievalServiceClient
+from nordea_analytics.nalib.exceptions import CustomWarningCheck
 from nordea_analytics.nalib.live_keyfigures.parsing import (
     filter_keyfigures,
     parse_live_keyfigures_json,
@@ -70,9 +71,15 @@ class LiveBondKeyFigures(ValueRetriever):
         """Returns the latest available live key figures from cache."""
         json_response: List[Any] = []
         for request_dict in self.request:
-            json_response += self._client.get_response(
+            response = self._client.get_response(
                 request_dict, self.url_suffix, RequestMethod.Get
-            )["keyfigure_values"]
+            )
+            json_response += response["keyfigure_values"]
+            CustomWarningCheck.live_key_figure_calculation_not_supported_warning(
+                response
+            )
+            CustomWarningCheck.live_key_figure_data_not_available_warning(response)
+            CustomWarningCheck.live_key_figure_access_restricted(response)
 
         return json_response
 

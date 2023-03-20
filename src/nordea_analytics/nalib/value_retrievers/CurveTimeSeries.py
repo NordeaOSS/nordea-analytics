@@ -14,12 +14,11 @@ from nordea_analytics.nalib.data_retrieval_client import (
 )
 from nordea_analytics.nalib.exceptions import (
     AnalyticsInputError,
-    AnalyticsWarning,
-    CustomWarning,
     CustomWarningCheck,
 )
 from nordea_analytics.nalib.util import (
     convert_to_float_if_float,
+    convert_to_original_format,
     convert_to_variable_string,
     float_to_tenor_string,
     get_config,
@@ -67,12 +66,12 @@ class CurveTimeSeries(ValueRetriever):
         """
         super(CurveTimeSeries, self).__init__(client)
         self._client = client
-        _curves: List = curves if type(curves) == list else [curves]
+        self.curves_original: List = curves if type(curves) == list else [curves]
         self.curves = [
             convert_to_variable_string(curve, CurveName)
             if type(curve) == CurveName
             else curve
-            for curve in _curves
+            for curve in self.curves_original
         ]
         self.from_date = from_date
         self.to_date = to_date
@@ -94,9 +93,8 @@ class CurveTimeSeries(ValueRetriever):
             else None
         )
         self.forward_tenor = self.check_forward(forward_tenor)
-        result = self.get_curve_time_series()
 
-        self._data = self.format_curve_names(result, _curves)
+        self._data = self.get_curve_time_series()
 
     def get_curve_time_series(self) -> List:
         """Retrieves response with curve time series."""
@@ -117,34 +115,6 @@ class CurveTimeSeries(ValueRetriever):
         json_response = self._merge_timeseries(json_response)
 
         return json_response
-
-    def format_curve_names(
-        self,
-        data: List,
-        curves: Union[List[str], List[CurveName], List[Union[str, CurveName]]],
-    ) -> List:
-        """Formats curve names to be identical to curves input."""
-        curve_dict = {}
-        for curve_name in curves:
-            curve_name_string: Union[str, ValueError]
-            if type(curve_name) == CurveName:
-                curve_name_string = convert_to_variable_string(curve_name, CurveName)
-                if curve_name_string != ValueError:
-                    curve_name_string = curve_name_string.upper()
-                else:
-                    CustomWarning(
-                        "Conversion of {0} failed.".format(curve_name), AnalyticsWarning
-                    )
-            elif type(curve_name) == str:
-                curve_name_string = curve_name.upper()
-            curve_dict[curve_name_string] = (
-                curve_name.name if type(curve_name) == CurveName else curve_name
-            )
-
-        for curve_result in data:
-            curve_result["curve"] = curve_dict[curve_result["curve"].upper()]
-
-        return data
 
     def check_forward(self, forward_tenor: Union[float, None]) -> Union[str, None]:
         """Check if forward tenor should be given as an argument.
@@ -171,7 +141,7 @@ class CurveTimeSeries(ValueRetriever):
 
     @property
     def url_suffix(self) -> str:
-        """Url suffix suffix for a given method."""
+        """Url suffix for a given method."""
         return config["url_suffix"]["curve_time_series"]
 
     @property
@@ -219,17 +189,20 @@ class CurveTimeSeries(ValueRetriever):
         for curve_series in self._data:
             _tenor_dict: Dict[Any, Any] = {}
             for timeseries in curve_series["values"]:
+                curve_name = convert_to_original_format(
+                    curve_series["curve"], self.curves_original
+                )
                 for tenor in timeseries["values"]:
                     if self.forward_tenor is None:
                         curve_and_tenor = (
-                            curve_series["curve"]
+                            curve_name
                             + "("
                             + float_to_tenor_string(tenor["tenor"])
                             + ")"
                         )
                     else:
                         curve_and_tenor = (
-                            curve_series["curve"]
+                            curve_name
                             + "("
                             + float_to_tenor_string(self.forward_tenor)
                             + ")"
@@ -253,7 +226,7 @@ class CurveTimeSeries(ValueRetriever):
                         _tenor_dict[curve_and_tenor]["Date"].append(
                             datetime.strptime(timeseries["date"], "%Y-%m-%d")
                         )
-            _curves_dict[curve_series["curve"]] = _tenor_dict
+                _curves_dict[curve_name] = _tenor_dict
 
         return _curves_dict
 

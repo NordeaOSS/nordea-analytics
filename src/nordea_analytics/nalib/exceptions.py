@@ -91,6 +91,33 @@ class CustomWarningCheck:
             CustomWarning(message, AnalyticsWarning)
 
     @staticmethod
+    def live_key_figure_access_restricted(response: dict) -> None:
+        """Throw warning when bond live key figures response includes bonds with no data available."""
+        if "access_restricted" in response and len(response["access_restricted"]) > 0:
+            message = f"Access restricted to the following bonds: {', '.join(response['access_restricted'])}"
+            CustomWarning(message, AnalyticsWarning)
+
+    @staticmethod
+    def live_key_figure_calculation_not_supported_warning(response: dict) -> None:
+        """Throw warning when bond live key figures response includes bonds that are not supported."""
+        if "not_supported" in response and len(response["not_supported"]) > 0:
+            message = f"The following bonds are not supported for live calculation: {', '.join(response['not_supported'])}"
+            CustomWarning(message, AnalyticsWarning)
+
+    @staticmethod
+    def live_key_figure_data_not_available_warning(response: dict) -> None:
+        """Throw warning when bond live key figures response includes bonds with no data available."""
+        if "data_not_available" in response and len(response["data_not_available"]) > 0:
+            message = f"No data available for the following bonds: {', '.join(response['data_not_available'])}"
+            CustomWarning(message, AnalyticsWarning)
+
+    @staticmethod
+    def live_key_figure_no_data_closing_down_warning() -> None:
+        """Throw warning when bond live key figures have no data for 10 minutes."""
+        message = "No data have been received for 10 minutes, closing down the service."
+        CustomWarning(message, AnalyticsWarning)
+
+    @staticmethod
     def post_response_not_retrieved_warning(error: Exception, symbol: str) -> None:
         """Throw warning when post response throws exception to ensure result from remaining bonds is returned."""
         error_code = error.error_id if isinstance(error, ApiServerError) else ""

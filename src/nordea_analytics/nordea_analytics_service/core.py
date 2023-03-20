@@ -16,6 +16,7 @@ from nordea_analytics.curve_variable_names import (
     SpotForward,
 )
 from nordea_analytics.forecast_names import YieldCountry, YieldHorizon, YieldType
+from nordea_analytics.instrument_variable_names import BenchmarkName, BondIndexName
 from nordea_analytics.key_figure_names import (
     BondKeyFigureName,
     CalculatedBondKeyFigureName,
@@ -55,6 +56,7 @@ from nordea_analytics.search_bond_names import (
     AssetType,
     CapitalCentres,
     CapitalCentreTypes,
+    InstrumentGroup,
     Issuers,
 )
 
@@ -127,7 +129,15 @@ class NordeaAnalyticsCoreService:
 
     def get_time_series(
         self,
-        symbols: Union[str, List[str]],
+        symbols: Union[
+            str,
+            BondIndexName,
+            BenchmarkName,
+            List[str],
+            List[BenchmarkName],
+            List[BondIndexName],
+            List[Union[str, BenchmarkName, BondIndexName]],
+        ],
         keyfigures: Union[
             str,
             TimeSeriesKeyFigureName,
@@ -297,6 +307,9 @@ class NordeaAnalyticsCoreService:
         currency: str = None,
         issuers: Union[List[Issuers], List[str], Issuers, str] = None,
         asset_types: Union[List[AssetType], List[str], AssetType, str] = None,
+        instrument_groups: Union[
+            List[InstrumentGroup], List[str], InstrumentGroup, str
+        ] = None,
         lower_issue_date: datetime = None,
         upper_issue_date: datetime = None,
         lower_maturity: datetime = None,
@@ -325,6 +338,7 @@ class NordeaAnalyticsCoreService:
             currency: Optional. Issue currency.
             issuers: Optional. Name of issuers.
             asset_types: Optional. Type of asset.
+            instrument_groups: Optional. Type of instrument.
             lower_issue_date: Optional. Minimum (from) issue date.
             upper_issue_date: Optional. Maximum (to) issue date.
             lower_maturity: Optional. Minimum (from) maturity.
@@ -355,6 +369,7 @@ class NordeaAnalyticsCoreService:
                 currency,
                 issuers,
                 asset_types,
+                instrument_groups,
                 lower_issue_date,
                 upper_issue_date,
                 lower_maturity,

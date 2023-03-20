@@ -15,6 +15,7 @@ from nordea_analytics.nalib.data_retrieval_client import (
 from nordea_analytics.nalib.exceptions import AnalyticsInputError, CustomWarningCheck
 from nordea_analytics.nalib.util import (
     convert_to_float_if_float,
+    convert_to_original_format,
     convert_to_variable_string,
     get_config,
 )
@@ -59,12 +60,12 @@ class Curve(ValueRetriever):
         """
         super(Curve, self).__init__(client)
         self._client = client
-        _curves: List = curves if type(curves) == list else [curves]
+        self.curves_original: List = curves if type(curves) == list else [curves]
         self.curves = [
             convert_to_variable_string(curve, CurveName)
             if type(curve) == CurveName
             else curve
-            for curve in _curves
+            for curve in self.curves_original
         ]
         self.calc_date = calc_date
         self.tenor_frequency = (
@@ -87,9 +88,7 @@ class Curve(ValueRetriever):
         )
         self.forward_tenor = self.check_forward(forward_tenor)
 
-        result = self.get_curve()
-
-        self._data = self.format_curve_names(result, _curves)
+        self._data = self.get_curve()
 
     def get_curve(self) -> List:
         """Retrieves response with curve."""
@@ -105,33 +104,6 @@ class Curve(ValueRetriever):
             json_response.append(json_map)
 
         return json_response
-
-    def format_curve_names(
-        self,
-        data: List,
-        curves: Union[List[str], List[CurveName], List[Union[str, CurveName]]],
-    ) -> List:
-        """Formats curve names to be identical to curves input."""
-        curve_dict = {}
-        for curve_name in curves:
-            curve_name_string: Union[str, ValueError]
-            if type(curve_name) == CurveName:
-                curve_name_string = convert_to_variable_string(
-                    curve_name, CurveName
-                ).upper()
-            elif type(curve_name) == str:
-                curve_name_string = curve_name.upper()
-            curve_dict[curve_name_string] = (
-                curve_name.name if type(curve_name) == CurveName else curve_name
-            )
-
-        for curve_result in data:
-            if "name" in curve_result["curve"]["curve_specification"]:
-                curve_result["curve"]["curve_specification"]["name"] = curve_dict[
-                    curve_result["curve"]["curve_specification"]["name"].upper()
-                ]
-
-        return data
 
     def check_forward(self, forward_tenor: Union[float, None]) -> Union[str, None]:
         """Check if forward tenor should be given as an argument.
@@ -158,7 +130,7 @@ class Curve(ValueRetriever):
 
     @property
     def url_suffix(self) -> str:
-        """Url suffix suffix for a given method."""
+        """Url suffix for a given method."""
         return config["url_suffix"]["curve"]
 
     @property
@@ -197,8 +169,10 @@ class Curve(ValueRetriever):
                         for x in curve["curve"]["values"]
                     ],
                 }
-
-                _dict[curve["curve"]["curve_specification"]["name"]] = _curve
+                curve_name = convert_to_original_format(
+                    curve["curve"]["curve_specification"]["name"], self.curves_original
+                )
+                _dict[curve_name] = _curve
 
         return _dict
 

@@ -38,3 +38,27 @@ class BenchmarkName(Enum):
     NO_5Y = "NO 5Y"
     NO_10Y = "NO 10Y"
     SE_2Y = "SE 2Y"
+
+
+class BondIndexName(Enum):
+    """Bond indices."""
+
+    DK_Govt = "DK GOVT"
+    DK_Govt_CM_2Y = "DK GOVT CM 2Y"
+    DK_Govt_CM_3Y = "DK GOVT CM 3Y"
+    DK_Govt_CM_5Y = "DK GOVT CM 5Y"
+    DK_Govt_CM_6Y = "DK GOVT CM 6Y"
+    DK_Govt_CM_7Y = "DK GOVT CM 7Y"
+    DK_Mortgage = "DK MORTGAGE"
+    DK_Mortgage_CM_2Y = "DK MORTGAGE CM 2Y"
+    DK_Mortgage_CM_3Y = "DK MORTGAGE CM 3Y"
+    DK_Mortgage_CM_5Y = "DK MORTGAGE CM 5Y"
+    DK_Mortgage_Callable = "DK MORTGAGE CALLABLE"
+    DK_Mortgage_Callable_CM_3Y = "DK MORTGAGE CALLABLE CM 3Y"
+    DK_Mortgage_Callable_CM_5Y = "DK MORTGAGE CALLABLE CM 5Y"
+    DK_Mortgage_Callable_CM_7Y = "DK MORTGAGE CALLABLE CM 7Y"
+    DK_Noncallable_Mortgage = "DK NON-CALLBL MTG"
+    DK_Noncallable_Mortgage_Less_1Y = "DK NON-CALLBL MTG <1Y"
+    DK_Noncallable_Mortgage_Greater_1Y = "DK NON-CALLBL MTG >1Y"
+    DK_Noncallable_Mortgage_CM_1Y = "DK NON-CALLBL MTG CM 1Y"
+    DK_Noncallable_Mortgage_CM_3Y = "DK NON-CALLBL MTG CM 3Y"

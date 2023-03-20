@@ -19,6 +19,7 @@ from nordea_analytics.search_bond_names import (
     AssetType,
     CapitalCentres,
     CapitalCentreTypes,
+    InstrumentGroup,
     Issuers,
 )
 
@@ -40,6 +41,15 @@ class BondFinder(ValueRetriever):
         asset_types: Optional[
             Union[
                 AssetType, str, List[AssetType], List[str], List[Union[str, AssetType]]
+            ]
+        ] = None,
+        instrument_groups: Optional[
+            Union[
+                InstrumentGroup,
+                str,
+                List[InstrumentGroup],
+                List[str],
+                List[Union[str, InstrumentGroup]],
             ]
         ] = None,
         lower_issue_date: Optional[datetime] = None,
@@ -83,19 +93,20 @@ class BondFinder(ValueRetriever):
             currency: Issue currency.
             issuers: Name of issuers.
             asset_types: Type of asset.
+            instrument_groups: Type of instrument.
             lower_issue_date: Minimum (from) issue date.
             upper_issue_date: Maximum (to) issue date.
             lower_maturity: Minimum (from) maturity.
             upper_maturity: Maximum (to) maturity.
-            lower_closing_date: Minimum(from) closing date.
-            upper_closing_date: Maximum(to) closing date.
+            lower_closing_date: Minimum(from) closing date - only applicable for DMB.
+            upper_closing_date: Maximum(to) closing date - only applicable for DMB.
             lower_coupon: Minimum coupon.
             upper_coupon: Maximum coupon.
             amortisation_type: Amortisation type of bond.
-            capital_centres: Capital centres names - only relevant for DMB.
-            capital_centre_types: Capital centres types - only relevant for DMB.
-            lower_outstanding_amount: Minimum outstanding amount - only relevant for DMB.
-            upper_outstanding_amount: Maximum outstanding amount - only relevant for DMB.
+            capital_centres: Capital centres names - only applicable for DMB.
+            capital_centre_types: Capital centres types - only applicable for DMB.
+            lower_outstanding_amount: Minimum outstanding amount - only applicable for DMB.
+            upper_outstanding_amount: Maximum outstanding amount - only applicable for DMB.
 
         """
         super(BondFinder, self).__init__(client)
@@ -115,6 +126,21 @@ class BondFinder(ValueRetriever):
                 for asset_type in _asset_types
             ]
             if asset_types is not None
+            else None
+        )
+        _instrument_groups: List = (
+            instrument_groups
+            if isinstance(instrument_groups, list)
+            else [instrument_groups]
+        )
+        self.instrument_groups = (
+            [
+                convert_to_variable_string(instrument_group, InstrumentGroup)
+                if isinstance(instrument_group, InstrumentGroup)
+                else instrument_group
+                for instrument_group in _instrument_groups
+            ]
+            if instrument_groups is not None
             else None
         )
 
@@ -223,6 +249,7 @@ class BondFinder(ValueRetriever):
             "currency": self.currency,
             "issuers": self.issuers,
             "asset-types": self.asset_types,
+            "instrument-groups": self.instrument_groups,
             "lower-issue-date": self.lower_issue_date,
             "upper-issue-date": self.upper_issue_date,
             "lower-maturity": self.lower_maturity,
@@ -254,28 +281,28 @@ class BondFinder(ValueRetriever):
                 warnings.warn(
                     "capital_centres is only relevant for DMB. "
                     "This variable will be ignored.",
-                    stacklevel=2
+                    stacklevel=2,
                 )
         if self.capital_centre_types is not None:
             if not self.dmb:
                 warnings.warn(
                     "capital_centre_types is only relevant for DMB."
                     " This variable will be ignored.",
-                    stacklevel=2
+                    stacklevel=2,
                 )
         if self.lower_outstanding_amount is not None:
             if not self.dmb:
                 warnings.warn(
                     "lower_outstanding_amount is only relevant for DMB. "
                     "This variable will be ignored.",
-                    stacklevel=2
+                    stacklevel=2,
                 )
         if self.upper_outstanding_amount is not None:
             if not self.dmb:
                 warnings.warn(
                     "upper_outstanding_amount is only relevant for DMB. "
                     "This variable will be ignored.",
-                    stacklevel=2
+                    stacklevel=2,
                 )
 
     def to_dict(self) -> Dict:
