@@ -17,10 +17,10 @@ from nordea_analytics.nalib.data_retrieval_client import (
 from nordea_analytics.nalib.exceptions import CustomWarningCheck
 from nordea_analytics.nalib.util import (
     convert_to_float_if_float,
+    convert_to_original_format,
     convert_to_variable_string,
     get_config,
 )
-from nordea_analytics.nalib.util import get_keyfigure_key
 from nordea_analytics.nalib.value_retriever import ValueRetriever
 
 config = get_config()
@@ -95,31 +95,24 @@ class BondKeyFigureHorizonCalculator(ValueRetriever):
         """
         super(BondKeyFigureHorizonCalculator, self).__init__(client)
         self._client = client
-        _keyfigures = keyfigures if isinstance(keyfigures, list) else [keyfigures]
+        self.key_figures_original: List = (
+            keyfigures if isinstance(keyfigures, list) else [keyfigures]
+        )
         self.keyfigures = [
             convert_to_variable_string(kf, HorizonCalculatedBondKeyFigureName)
             if isinstance(kf, HorizonCalculatedBondKeyFigureName)
             else kf.lower()
-            for kf in _keyfigures
+            for kf in self.key_figures_original
         ]
 
         self.symbols = symbols if isinstance(symbols, list) else [symbols]
         self.calc_date = calc_date
         self.horizon_date = horizon_date
-        self.key_figures_original: Union[
-            List[str],
-            List[HorizonCalculatedBondKeyFigureName],
-            List[Union[str, HorizonCalculatedBondKeyFigureName]],
-        ] = (
-            keyfigures if isinstance(keyfigures, list) else [keyfigures]
-        )
-        self.curves_original: Union[
-            List[str], List[CurveName], List[Union[str, CurveName]], None
-        ] = (
+        self.curves_original: Union[List, None] = (
             curves
             if isinstance(curves, list)
             else [curves]
-            if isinstance(curves, str)
+            if isinstance(curves, str) or isinstance(curves, CurveName)
             else None
         )
 
@@ -196,7 +189,7 @@ class BondKeyFigureHorizonCalculator(ValueRetriever):
 
     @property
     def url_suffix(self) -> str:
-        """Url suffix suffix for a given method."""
+        """Url suffix for a given method."""
         return config["url_suffix"]["calculate_horizon"]
 
     @property
@@ -239,20 +232,6 @@ class BondKeyFigureHorizonCalculator(ValueRetriever):
             request_dict.append(request)
         return request_dict
 
-    def get_curve_key(self, curve_name: str) -> str:
-        """Get curve key for dict."""
-        if (
-            self.curves_original is not None and curve_name in self.curves_original
-        ):  # True when curve is input as string
-            curve_key = curve_name
-        else:
-            try:
-                curve_key = CurveName(curve_name).name
-            except Exception:
-                curve_key = curve_name
-
-        return curve_key
-
     def to_dict(self) -> Dict:
         """Reformat the json response to a dictionary."""
         _dict: Dict[Any, Any] = {}
@@ -274,14 +253,20 @@ class BondKeyFigureHorizonCalculator(ValueRetriever):
                     else bond_data[key_figure]["values"]
                 )
                 for curve_data in data:
-                    _data_dict = {
-                        get_keyfigure_key(
-                            key_figure,
-                            self.key_figures_original,
-                            HorizonCalculatedBondKeyFigureName.__name__,
-                        ): convert_to_float_if_float(curve_data["value"])
-                    }
-                    curve_key = self.get_curve_key(curve_data["key"])
+                    _data_dict: Dict[Any, Any] = {}
+                    formatted_result = convert_to_float_if_float(curve_data["value"])
+                    _data_dict[
+                        convert_to_original_format(
+                            key_figure, self.key_figures_original
+                        )
+                    ] = formatted_result
+                    curve_key = (
+                        CurveName(curve_data["key"].upper())
+                        if self.curves_original is None
+                        else convert_to_original_format(
+                            curve_data["key"], self.curves_original  # type:ignore
+                        )
+                    )
                     if curve_key in _dict_bond.keys():
                         _dict_bond[curve_key].update(_data_dict)
                     else:
@@ -295,11 +280,7 @@ class BondKeyFigureHorizonCalculator(ValueRetriever):
         if "price" in bond_data and "price" in self.keyfigures:
             for curve in _dict_bond:
                 _dict_bond[curve][
-                    get_keyfigure_key(
-                        "price",
-                        self.key_figures_original,
-                        HorizonCalculatedBondKeyFigureName.__name__,
-                    )
+                    convert_to_original_format("price", self.key_figures_original)
                 ] = bond_data["price"]
 
         return _dict_bond

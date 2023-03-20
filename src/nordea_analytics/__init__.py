@@ -8,7 +8,7 @@ from .convention_variable_names import (
 )
 from .curve_variable_names import CurveDefinitionName, CurveName, CurveType, SpotForward
 from .forecast_names import YieldCountry, YieldHorizon, YieldType
-from .instrument_variable_names import BenchmarkName
+from .instrument_variable_names import BenchmarkName, BondIndexName
 from .key_figure_names import (
     BondKeyFigureName,
     CalculatedBondKeyFigureName,
@@ -22,6 +22,7 @@ from .search_bond_names import (
     AssetType,
     CapitalCentres,
     CapitalCentreTypes,
+    InstrumentGroup,
     Issuers,
 )
 from .shortcuts.utils import disable_analytics_warnings
@@ -34,7 +35,7 @@ except (NameError, ModuleNotFoundError):
     from .shortcuts.open_banking import get_nordea_analytics_client  # type: ignore
     from .shortcuts.open_banking import get_nordea_analytics_test_client  # type: ignore # noqa: F401
 
-__version__ = "1.7.0"
+__version__ = "1.8.0"
 __all__ = [
     "get_nordea_analytics_client",
     "get_nordea_analytics_test_client",
@@ -42,6 +43,7 @@ __all__ = [
     "AmortisationType",
     "AssetType",
     "BenchmarkName",
+    "BondIndexName",
     "BondKeyFigureName",
     "CalculatedBondKeyFigureName",
     "CapitalCentreTypes",
@@ -54,6 +56,7 @@ __all__ = [
     "DayCountConvention",
     "Exchange",
     "HorizonCalculatedBondKeyFigureName",
+    "InstrumentGroup",
     "Issuers",
     "LiveBondKeyFigureName",
     "NordeaAnalyticsService",

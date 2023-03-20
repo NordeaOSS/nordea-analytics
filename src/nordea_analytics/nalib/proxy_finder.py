@@ -202,7 +202,6 @@ class CtypesStructure:
 
         Returns:
             Proxy info.
-
         """
         # https://docs.microsoft.com/en-us/windows/win32/api/winhttp/
         # ns-winhttp-winhttp_proxy_info

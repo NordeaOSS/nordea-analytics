@@ -10,6 +10,7 @@ import yaml
 
 from nordea_analytics import (
     BenchmarkName,
+    BondIndexName,
     BondKeyFigureName,
     CalculatedBondKeyFigureName,
     CashflowType,
@@ -34,6 +35,7 @@ from nordea_analytics.search_bond_names import (
     AssetType,
     CapitalCentres,
     CapitalCentreTypes,
+    InstrumentGroup,
 )
 
 
@@ -56,10 +58,14 @@ def convert_to_float_if_float(string: str) -> Union[str, float]:
 def convert_to_variable_string(
     variable: Union[
         str,
+        AmortisationType,
         AssetType,
         BenchmarkName,
+        BondIndexName,
         BondKeyFigureName,
-        TimeSeriesKeyFigureName,
+        CalculatedBondKeyFigureName,
+        CapitalCentres,
+        CapitalCentreTypes,
         CashflowType,
         CurveDefinitionName,
         CurveName,
@@ -67,18 +73,15 @@ def convert_to_variable_string(
         DateRollConvention,
         DayCountConvention,
         Exchange,
-        TimeConvention,
-        SpotForward,
-        AmortisationType,
-        CalculatedBondKeyFigureName,
         HorizonCalculatedBondKeyFigureName,
-        AssetType,
-        CapitalCentres,
-        CapitalCentreTypes,
+        InstrumentGroup,
+        LiveBondKeyFigureName,
+        SpotForward,
+        TimeConvention,
+        TimeSeriesKeyFigureName,
         YieldCountry,
         YieldType,
         YieldHorizon,
-        LiveBondKeyFigureName,
     ],
     variable_type: Callable,
 ) -> str:
@@ -99,10 +102,14 @@ def convert_to_variable_string(
 
     """
     if type(variable) in (
+        AmortisationType,
         AssetType,
         BenchmarkName,
+        BondIndexName,
         BondKeyFigureName,
-        TimeSeriesKeyFigureName,
+        CalculatedBondKeyFigureName,
+        CapitalCentres,
+        CapitalCentreTypes,
         CashflowType,
         CurveDefinitionName,
         CurveName,
@@ -110,17 +117,15 @@ def convert_to_variable_string(
         DateRollConvention,
         DayCountConvention,
         Exchange,
-        TimeConvention,
-        SpotForward,
-        AmortisationType,
-        CalculatedBondKeyFigureName,
         HorizonCalculatedBondKeyFigureName,
-        CapitalCentres,
-        CapitalCentreTypes,
+        InstrumentGroup,
+        LiveBondKeyFigureName,
+        TimeConvention,
+        TimeSeriesKeyFigureName,
+        SpotForward,
         YieldCountry,
         YieldType,
         YieldHorizon,
-        LiveBondKeyFigureName,
     ):
         try:
             variable_type(variable.value)  # type:ignore
@@ -136,6 +141,7 @@ def convert_to_variable_string(
             elif (
                 # For enum types where string value is fully capitalised
                 variable_type == BenchmarkName
+                or variable_type == BondIndexName
                 or variable_type == CashflowType
                 or variable_type == CurveName
                 or variable_type == CurveDefinitionName
@@ -259,6 +265,29 @@ def get_keyfigure_key(
         key_figure_key = key_figure
 
     return key_figure_key
+
+
+def convert_to_original_format(
+    new: str,
+    originals: Union[List[Union[str, Enum]], List[str], List[Enum]],
+) -> str:
+    """Convert the output to be the same as the input."""
+    original = originals[
+        [
+            f.lower() if type(f) == str else f.value.lower()  # type:ignore
+            for f in originals
+        ].index(new.lower())
+    ]
+    if type(original) == str:
+        return original
+    else:
+        try:
+            return original.name  # type:ignore
+        except Exception:
+            AnalyticsResponseError(
+                "Conversion function not working properly, report this to package provider."
+            )
+            return new
 
 
 def pascal_case(s: str) -> str:

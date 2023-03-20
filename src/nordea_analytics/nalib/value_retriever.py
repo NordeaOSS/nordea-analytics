@@ -43,7 +43,7 @@ class ValueRetriever(ABC):
     @property
     @abstractmethod
     def url_suffix(self) -> str:
-        """Url suffix suffix for a given method."""
+        """Url suffix for a given method."""
         pass
 
     @property

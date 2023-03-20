@@ -2,7 +2,7 @@ from enum import Enum
 
 
 class AmortisationType(Enum):
-    """Amortisation Type available when searching bonds."""
+    """Amortisation Type available when searching for bonds."""
 
     Annuity = "annuity"
     Bullet = "bullet"
@@ -11,7 +11,7 @@ class AmortisationType(Enum):
 
 
 class AssetType(Enum):
-    """Asset Types available when searching bonds."""
+    """Asset Types available when searching for bonds."""
 
     BenchmarkBond = "Benchmark Bond"
     DanishCappedFloaters = "Danish Capped Floater"
@@ -24,8 +24,20 @@ class AssetType(Enum):
     NonCallableBond = "Non-callable Bond"
 
 
+class InstrumentGroup(Enum):
+    """Instrument Groups available when searching for bonds."""
+
+    CreditBonds = "Credit Bonds"
+    FloatingRateNotes = "FRNs"
+    GovernmentBonds = "Government Bonds"
+    DanishCallableMortgageBonds = "Danish Callable Mortgage Bonds"
+    DanishNonCallableMortgageBonds = "Danish Non-callable Mortgage Bonds"
+    FixedRateBonds = "Fixed Rate Bonds"
+    DanishIndexBonds = "Danish Index Bonds"
+
+
 class CapitalCentres(Enum):
-    """Capital centres available when searching bonds."""
+    """Capital centres available when searching for bonds."""
 
     BRF_B = "B (BRF)"
     BRF_E = "E (BRF)"
@@ -48,7 +60,7 @@ class CapitalCentres(Enum):
 
 
 class CapitalCentreTypes(Enum):
-    """Capital centre types available when searching bonds."""
+    """Capital centre types available when searching for bonds."""
 
     JCB = "JCB"
     RO = "RO"
@@ -57,7 +69,7 @@ class CapitalCentreTypes(Enum):
 
 
 class Issuers:
-    """Most common available issuers. Availability not limit to this list."""
+    """Most common available issuers. Availability not limited to this list."""
 
     Aareal_Bank_AG = "Aareal Bank AG"
     Aareal_Beteiligungen_AG = "Aareal Beteiligungen AG"

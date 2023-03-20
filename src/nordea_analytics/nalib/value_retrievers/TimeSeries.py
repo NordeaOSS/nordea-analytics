@@ -5,6 +5,7 @@ from typing import Any, Dict, List, Union
 import numpy as np
 import pandas as pd
 
+from nordea_analytics.instrument_variable_names import BenchmarkName, BondIndexName
 from nordea_analytics.key_figure_names import (
     TimeSeriesKeyFigureName,
 )
@@ -13,6 +14,7 @@ from nordea_analytics.nalib.data_retrieval_client import (
 )
 from nordea_analytics.nalib.util import (
     convert_to_float_if_float,
+    convert_to_original_format,
     convert_to_variable_string,
     get_config,
 )
@@ -27,7 +29,15 @@ class TimeSeries(ValueRetriever):
     def __init__(
         self,
         client: DataRetrievalServiceClient,
-        symbol: Union[List[str], str],
+        symbols: Union[
+            str,
+            BondIndexName,
+            BenchmarkName,
+            List[str],
+            List[BenchmarkName],
+            List[BondIndexName],
+            List[Union[str, BenchmarkName, BondIndexName]],
+        ],
         keyfigures: Union[
             TimeSeriesKeyFigureName,
             str,
@@ -43,7 +53,7 @@ class TimeSeries(ValueRetriever):
         Args:
             client: DataRetrievalServiceClient
                 or DataRetrievalServiceClientTest for testing.
-            symbol: Bonds, swaps, FX, FX swap point.
+            symbols: Bonds, swaps, FX, FX swap point.
             keyfigures: Key figure names for request. If symbol is
                 something else than a bonds, quote should be chosen.
             from_date: From date for calc date interval.
@@ -51,20 +61,33 @@ class TimeSeries(ValueRetriever):
         """
         super(TimeSeries, self).__init__(client)
         self._client = client
-        self.symbol: List = [symbol] if type(symbol) != list else symbol
-        _keyfigures: List = keyfigures if type(keyfigures) == list else [keyfigures]
+        self.symbols_original: List = (
+            symbols if isinstance(symbols, list) else [symbols]
+        )
+
+        _symbols: List = []
+        for symbol in self.symbols_original:
+            if isinstance(symbol, BenchmarkName):
+                _symbols.append(convert_to_variable_string(symbol, BenchmarkName))
+            elif isinstance(symbol, BondIndexName):
+                _symbols.append(convert_to_variable_string(symbol, BondIndexName))
+            else:
+                _symbols.append(symbol)
+        self.symbols = _symbols
+
+        self.keyfigures_original: List = (
+            keyfigures if isinstance(keyfigures, list) else [keyfigures]
+        )
         self.keyfigures = [
             convert_to_variable_string(keyfigure, TimeSeriesKeyFigureName)
             if type(keyfigure) == TimeSeriesKeyFigureName
             else keyfigure
-            for keyfigure in _keyfigures
+            for keyfigure in self.keyfigures_original
         ]
         self.from_date = from_date
         self.to_date = to_date
 
-        result = self.get_time_series()
-
-        self._data = self.format_key_figure_names(result, _keyfigures)
+        self._data = self.get_time_series()
 
     def get_time_series(self) -> List:
         """Retrieves response with key figures time series."""
@@ -76,45 +99,9 @@ class TimeSeries(ValueRetriever):
 
         return json_response
 
-    def format_key_figure_names(
-        self,
-        data: List,
-        input_keyfigures: Union[
-            List[str],
-            List[TimeSeriesKeyFigureName],
-            List[Union[str, TimeSeriesKeyFigureName]],
-        ],
-    ) -> List:
-        """Formats curve names to be identical to curves input."""
-        for kf in input_keyfigures:
-            input_keyfigure_string: Union[str, ValueError]
-            if type(kf) == TimeSeriesKeyFigureName:
-                input_keyfigure_string = convert_to_variable_string(
-                    kf, TimeSeriesKeyFigureName
-                )
-            elif type(kf) == str:
-                input_keyfigure_string = kf
-
-            for symbol_result in data:
-                for keyfigure_result in symbol_result["timeseries"]:
-                    if (
-                        type(input_keyfigure_string) != ValueError
-                        and type(kf) == TimeSeriesKeyFigureName
-                        and keyfigure_result["keyfigure"] == input_keyfigure_string
-                    ):
-                        keyfigure_result["keyfigure"] = kf.name
-                    elif (
-                        type(kf) == str
-                        and str(keyfigure_result["keyfigure"]).lower()
-                        == str(input_keyfigure_string).lower()
-                    ):
-                        keyfigure_result["keyfigure"] = input_keyfigure_string
-
-        return data
-
     @property
     def url_suffix(self) -> str:
-        """Url suffix suffix for a given method."""
+        """Url suffix for a given method."""
         return config["url_suffix"]["time_series"]
 
     @property
@@ -133,7 +120,7 @@ class TimeSeries(ValueRetriever):
         date_interv.append({"from": new_from_date, "to": self.to_date})
 
         split_symbol = np.array_split(
-            self.symbol, math.ceil(len(self.symbol) / config["max_symbol_timeseries"])
+            self.symbols, math.ceil(len(self.symbols) / config["max_symbol_timeseries"])
         )
 
         request_dict = [
@@ -155,42 +142,47 @@ class TimeSeries(ValueRetriever):
         _dict: Dict[Any, Any] = {}
         for symbol_data in self._data:
             _timeseries_dict: Dict[Any, Any] = {}
+            symbol_original = convert_to_original_format(
+                symbol_data["symbol"], self.symbols_original
+            )
             for timeseries in symbol_data["timeseries"]:
-                key_figure_name = timeseries["keyfigure"]
-                _timeseries_dict[key_figure_name] = {}
-                _timeseries_dict[key_figure_name]["Date"] = [
+                key_figure_original = convert_to_original_format(
+                    timeseries["keyfigure"], self.keyfigures_original
+                )
+                _timeseries_dict[key_figure_original] = {}
+                _timeseries_dict[key_figure_original]["Date"] = [
                     datetime.strptime(x["key"], "%Y-%m-%d")
                     for x in timeseries["values"]
                 ]
-                _timeseries_dict[key_figure_name]["Value"] = [
+                _timeseries_dict[key_figure_original]["Value"] = [
                     convert_to_float_if_float(x["value"]) for x in timeseries["values"]
                 ]
 
                 if symbol_data["symbol"] in _dict.keys():
-                    if key_figure_name in _dict[symbol_data["symbol"]].keys():
+                    if key_figure_original in _dict[symbol_data["symbol"]].keys():
                         if (
-                            _dict[symbol_data["symbol"]][key_figure_name]["Date"][-1]
-                            > _timeseries_dict[key_figure_name]["Date"][0]
+                            _dict[symbol_original][key_figure_original]["Date"][-1]
+                            > _timeseries_dict[key_figure_original]["Date"][0]
                         ):
-                            _dict[symbol_data["symbol"]][key_figure_name][
+                            _dict[symbol_original][key_figure_original][
                                 "Date"
-                            ] += _timeseries_dict[key_figure_name]["Date"]
-                            _dict[symbol_data["symbol"]][key_figure_name][
+                            ] += _timeseries_dict[key_figure_original]["Date"]
+                            _dict[symbol_original][key_figure_original][
                                 "Value"
-                            ] += _timeseries_dict[key_figure_name]["Value"]
+                            ] += _timeseries_dict[key_figure_original]["Value"]
                         else:
-                            _dict[symbol_data["symbol"]][key_figure_name]["Date"] = (
-                                _timeseries_dict[key_figure_name]["Date"]
-                                + _dict[symbol_data["symbol"]][key_figure_name]["Date"]
+                            _dict[symbol_original][key_figure_original]["Date"] = (
+                                _timeseries_dict[key_figure_original]["Date"]
+                                + _dict[symbol_original][key_figure_original]["Date"]
                             )
-                            _dict[symbol_data["symbol"]][key_figure_name]["Value"] = (
-                                _timeseries_dict[key_figure_name]["Value"]
-                                + _dict[symbol_data["symbol"]][key_figure_name]["Value"]
+                            _dict[symbol_original][key_figure_original]["Value"] = (
+                                _timeseries_dict[key_figure_original]["Value"]
+                                + _dict[symbol_original][key_figure_original]["Value"]
                             )
                     else:
-                        _dict[symbol_data["symbol"]].update(_timeseries_dict)
+                        _dict[symbol_original].update(_timeseries_dict)
                 else:
-                    _dict[symbol_data["symbol"]] = _timeseries_dict
+                    _dict[symbol_original] = _timeseries_dict
 
         return _dict
 
