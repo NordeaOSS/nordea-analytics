@@ -42,7 +42,7 @@ def filter_keyfigures(
             _kf, key_figures_original, LiveBondKeyFigureName.__name__
         )
         if _kf not in [x["keyfigure"].lower() for x in chunk["values"]]:
-            result[LiveBondKeyFigureName(key_figure_key).name] = ""
+            result[key_figure_key] = ""
 
     d = {chunk["isin"]: result}
     return d

@@ -157,7 +157,7 @@ The following example retrieves Vega, BPV and CVX for a given set of ISINs and r
 
     isins = ['DK0002000421', 'DK0002004092', 'DK0002013408', 'DK0006344171']
     bond_key_figure_name = [BondKeyFigureName.Vega, BondKeyFigureName.BPV, BondKeyFigureName.CVX]
-    value_date = value_date = datetime(2023, 1, 3)
+    value_date = datetime(2023, 1, 3)
 
     bonds_key_figures = na_service.get_bond_key_figures(symbols=isins,
                                                         keyfigures=bond_key_figure_name,

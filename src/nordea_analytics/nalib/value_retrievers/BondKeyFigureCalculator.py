@@ -200,7 +200,7 @@ class BondKeyFigureCalculator(ValueRetriever):
         keyfigures.remove("price") if "price" in self.keyfigures else keyfigures
         if keyfigures == []:  # There has to be some key figure in request,
             # but it will not be returned in final results
-            keyfigures = "bpv"  # type:ignore
+            keyfigures = "yield"  # type:ignore
         for x in range(len(self.symbols)):
             initial_request = {
                 "symbol": self.symbols[x],
