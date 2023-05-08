@@ -146,6 +146,7 @@ class CtypesStructure:
         Returns:
             Current user proxy config.
         """
+
         # https://docs.microsoft.com/en-us/windows/win32/api/winhttp/
         # ns-winhttp-winhttp_current_user_ie_proxy_config
         class WINHTTP_CURRENT_USER_IE_PROXY_CONFIG(ctypes.Structure):
@@ -168,6 +169,7 @@ class CtypesStructure:
         Returns:
             Auto proxy options.
         """
+
         # https://docs.microsoft.com/en-us/windows/win32/api/winhttp/
         # ns-winhttp-winhttp_autoproxy_options
         class WINHTTP_AUTOPROXY_OPTIONS(ctypes.Structure):
@@ -203,6 +205,7 @@ class CtypesStructure:
         Returns:
             Proxy info.
         """
+
         # https://docs.microsoft.com/en-us/windows/win32/api/winhttp/
         # ns-winhttp-winhttp_proxy_info
         class WINHTTP_PROXY_INFO(ctypes.Structure):

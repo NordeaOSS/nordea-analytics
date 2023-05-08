@@ -23,7 +23,10 @@ config = get_config()
 
 
 class CurveDefinition(ValueRetriever):
-    """Retrieves and reformat curve definition."""
+    """Retrieves and reformats curve definition.
+
+    Inherits from ValueRetriever class.
+    """
 
     def __init__(
         self,
@@ -31,32 +34,39 @@ class CurveDefinition(ValueRetriever):
         curve: Union[str, CurveDefinitionName, CurveName],
         calc_date: datetime,
     ) -> None:
-        """Initialization of class.
+        """Initialize the CurveDefinition class.
 
         Args:
-            client: DataRetrievalServiceClient
-                or DataRetrievalServiceClientTest for testing.
+            client: The client used to retrieve data.
             curve: Name of curve that should be retrieved.
-            calc_date: calculation date for request.
+                Can be a string, CurveDefinitionName enum, or CurveName enum.
+            calc_date: Calculation date for request.
         """
         super(CurveDefinition, self).__init__(client)
-        self._client = client
-        self.curve: str = (
-            convert_to_variable_string(curve, CurveName)
-            if type(curve) == CurveName
-            else convert_to_variable_string(curve, CurveDefinitionName)
-            if type(curve) == CurveDefinitionName
-            else str(curve)
-        )
+
+        # Convert curve to variable string format based on its type
+
+        _curve: str
+        if isinstance(curve, CurveName):
+            _curve = convert_to_variable_string(curve, CurveName)
+        elif isinstance(curve, CurveDefinitionName):
+            _curve = convert_to_variable_string(curve, CurveDefinitionName)
+        else:
+            _curve = str(curve)
+        self.curve = _curve
+
         self.curve_original = curve
         self.calc_date = calc_date
         self._data = self.get_curve_definition()
 
     def get_curve_definition(self) -> Mapping:
-        """Retrieves response with curve definition."""
+        """Retrieve response with curve definition.
+
+        Returns:
+            The curve definition data as a dictionary.
+        """
         json_response = self.get_response(self.request)
         json_response = json_response[config["results"]["curve_definition"]]
-
         return json_response
 
     def format_curve_names(
@@ -64,10 +74,19 @@ class CurveDefinition(ValueRetriever):
         data: List,
         curve_name: Union[str, CurveName],
     ) -> List:
-        """Formats curve names to be identical to curves input."""
+        """Format curve names to be identical to the curves input.
+
+        Args:
+            data: List of curve data.
+            curve_name: Name of the curve to be formatted.
+
+        Returns:
+            List of curve data with formatted curve names.
+        """
         curve_dict = {}
         curve_name_string: Union[str, ValueError]
-        if type(curve_name) == CurveName:
+
+        if isinstance(curve_name, CurveName):
             curve_name_string = convert_to_variable_string(curve_name, CurveName)
             if curve_name_string != ValueError:
                 curve_name_string = curve_name_string.upper()
@@ -75,10 +94,11 @@ class CurveDefinition(ValueRetriever):
                 CustomWarning(
                     "Conversion of {0} failed.".format(curve_name), AnalyticsWarning
                 )
-        elif type(curve_name) == str:
+        elif isinstance(curve_name, str):
             curve_name_string = curve_name.upper()
+
         curve_dict[curve_name_string] = (
-            curve_name.name if type(curve_name) == CurveName else curve_name
+            curve_name.name if isinstance(curve_name, CurveName) else curve_name
         )
 
         for curve_result in data:
@@ -90,7 +110,11 @@ class CurveDefinition(ValueRetriever):
 
     @property
     def url_suffix(self) -> str:
-        """Url suffix suffix for a given method."""
+        """Get the URL suffix for a given method.
+
+        Returns:
+            The URL suffix for the curve definition method.
+        """
         return config["url_suffix"]["curve_definition"]
 
     @property
@@ -113,7 +137,11 @@ class CurveDefinition(ValueRetriever):
         return curve_key
 
     def to_dict(self) -> Dict:
-        """Reformat the json response to a dictionary."""
+        """Converts the JSON response to a dictionary.
+
+        Returns:
+            A dictionary representing the reformatted JSON response.
+        """
         _dict = {}
         _curve_def_dict: Dict[Any, Any] = {}
         for curve_def in self._data["values"]:
@@ -133,7 +161,11 @@ class CurveDefinition(ValueRetriever):
         return {curve_key: _dict}
 
     def to_df(self) -> pd.DataFrame:
-        """Reformat the json response to a pandas DataFrame."""
+        """Converts the JSON response to a pandas DataFrame.
+
+        Returns:
+            A pandas DataFrame representing the reformatted JSON response.
+        """
         _dict = self.to_dict()
 
         curve_key = (

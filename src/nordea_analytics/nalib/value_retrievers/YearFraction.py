@@ -17,7 +17,10 @@ config = get_config()
 
 
 class YearFraction(ValueRetriever):
-    """Calculate the time between two dates in terms of years."""
+    """Calculate the time between two dates in terms of years.
+
+    Inherits from ValueRetriever class.
+    """
 
     def __init__(
         self,
@@ -29,8 +32,7 @@ class YearFraction(ValueRetriever):
         """Initialization of class.
 
         Args:
-            client: DataRetrievalServiceClient
-                or DataRetrievalServiceClientTest for testing.
+            client: The client used to retrieve data.
             from_date: The start date of the time calculation.
             to_date: The end date of the time calculation.
             time_convention: The convention to use for counting time.
@@ -47,19 +49,31 @@ class YearFraction(ValueRetriever):
         self._data = self.year_fraction()
 
     def year_fraction(self) -> Dict:
-        """Retrieves response with year fraction."""
+        """Retrieve response with year fraction.
+
+        Returns:
+            JSON response with year fraction.
+        """
         json_response = self.get_response(self.request)
 
         return json_response[config["results"]["year_fraction"]]
 
     @property
     def url_suffix(self) -> str:
-        """Url suffix for a given method."""
+        """URL suffix for the year_fraction method.
+
+        Returns:
+            URL suffix for year_fraction.
+        """
         return config["url_suffix"]["year_fraction"]
 
     @property
     def request(self) -> dict:
-        """Request year fraction."""
+        """Generate request for year fraction.
+
+        Returns:
+            Request dictionary for year fraction.
+        """
         from_date = self.from_date.strftime("%Y-%m-%d")
         to_date = self.to_date.strftime("%Y-%m-%d")
         time_convention = self.time_convention
@@ -73,15 +87,27 @@ class YearFraction(ValueRetriever):
         return request_dict
 
     def to_float(self) -> float:
-        """Reformat the json response to a float."""
+        """Reformat the JSON response to a float.
+
+        Returns:
+            Year fraction as a float.
+        """
         year_fraction = self._data["year_fraction"]
 
         return year_fraction
 
     def to_dict(self) -> Dict:
-        """Reformat the json response to a dictionary."""
+        """Reformat the JSON response to a dictionary.
+
+        Returns:
+            Year fraction as a dictionary.
+        """
         pass
 
     def to_df(self) -> pd.DataFrame:
-        """Reformat the json response to a pandas DataFrame."""
+        """Reformat the JSON response to a pandas DataFrame.
+
+        Returns:
+            Year fraction as a DataFrame.
+        """
         pass

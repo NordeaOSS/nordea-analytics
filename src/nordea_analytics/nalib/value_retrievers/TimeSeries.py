@@ -24,7 +24,7 @@ config = get_config()
 
 
 class TimeSeries(ValueRetriever):
-    """Retrieves and reformat time series."""
+    """Retrieves and reformats time series data."""
 
     def __init__(
         self,
@@ -48,16 +48,15 @@ class TimeSeries(ValueRetriever):
         from_date: datetime,
         to_date: datetime,
     ) -> None:
-        """Initialization of class.
+        """Initialization of the TimeSeries class.
 
         Args:
-            client: DataRetrievalServiceClient
-                or DataRetrievalServiceClientTest for testing.
+            client: The client used to retrieve data.
             symbols: Bonds, swaps, FX, FX swap point.
-            keyfigures: Key figure names for request. If symbol is
-                something else than a bonds, quote should be chosen.
-            from_date: From date for calc date interval.
-            to_date: To date for calc date interval.
+            keyfigures: Key figure names for request.
+                 If symbol is something else than a bond, quote should be chosen.
+            from_date: From date for calculating date interval.
+            to_date: To date for calculating date interval.
         """
         super(TimeSeries, self).__init__(client)
         self._client = client
@@ -65,6 +64,7 @@ class TimeSeries(ValueRetriever):
             symbols if isinstance(symbols, list) else [symbols]
         )
 
+        # Convert symbol names to variable strings
         _symbols: List = []
         for symbol in self.symbols_original:
             if isinstance(symbol, BenchmarkName):
@@ -78,20 +78,29 @@ class TimeSeries(ValueRetriever):
         self.keyfigures_original: List = (
             keyfigures if isinstance(keyfigures, list) else [keyfigures]
         )
+
+        # Convert key figure names to variable strings
         self.keyfigures = [
             convert_to_variable_string(keyfigure, TimeSeriesKeyFigureName)
-            if type(keyfigure) == TimeSeriesKeyFigureName
+            if isinstance(keyfigure, TimeSeriesKeyFigureName)
             else keyfigure
             for keyfigure in self.keyfigures_original
         ]
+
         self.from_date = from_date
         self.to_date = to_date
 
         self._data = self.get_time_series()
 
     def get_time_series(self) -> List:
-        """Retrieves response with key figures time series."""
+        """Retrieves response with key figures time series.
+
+        Returns:
+            List of JSON response with key figures time series.
+        """
         json_response: List[Any] = []
+
+        # Loop through each request dictionary and get the response
         for request_dict in self.request:
             _json_response = self.get_response(request_dict)
             json_map = _json_response[config["results"]["time_series"]]
@@ -101,15 +110,25 @@ class TimeSeries(ValueRetriever):
 
     @property
     def url_suffix(self) -> str:
-        """Url suffix for a given method."""
+        """Url suffix for a given method.
+
+        Returns:
+            Url suffix for a given method.
+        """
         return config["url_suffix"]["time_series"]
 
     @property
     def request(self) -> List[Dict]:
-        """Request dictionary time series key figures."""
+        """Request dictionary time series key figures.
+
+        Returns:
+            List of request dictionaries for time series key figures.
+        """
         intv = config["max_years_timeseries"] * 365
         date_interv = []
         new_from_date = self.from_date
+
+        # Calculate date intervals for the given from_date and to_date
         while (self.to_date - new_from_date).days > intv:
             new_to_date = new_from_date + timedelta(days=intv)
             date_interv.append({"from": new_from_date, "to": new_to_date})
@@ -119,10 +138,12 @@ class TimeSeries(ValueRetriever):
 
         date_interv.append({"from": new_from_date, "to": self.to_date})
 
+        # Split symbols into smaller chunks to avoid exceeding maximum symbol limit
         split_symbol = np.array_split(
             self.symbols, math.ceil(len(self.symbols) / config["max_symbol_timeseries"])
         )
 
+        # Generate request dictionaries for each date interval, symbol, and key figure
         request_dict = [
             {
                 "symbols": list(symbol),
@@ -138,7 +159,11 @@ class TimeSeries(ValueRetriever):
         return request_dict
 
     def to_dict(self) -> Dict:
-        """Reformat the json response to a dictionary."""
+        """Reformat the JSON response to a dictionary.
+
+        Returns:
+            A dictionary containing the reformatted data.
+        """
         _dict: Dict[Any, Any] = {}
         for symbol_data in self._data:
             _timeseries_dict: Dict[Any, Any] = {}
@@ -187,7 +212,11 @@ class TimeSeries(ValueRetriever):
         return _dict
 
     def to_df(self) -> pd.DataFrame:
-        """Reformat the json response to a pandas DataFrame."""
+        """Reformat the JSON response to a pandas DataFrame.
+
+        Returns:
+            A pandas DataFrame containing the reformatted data.
+        """
         df = pd.DataFrame()
         _dict = self.to_dict()
         for symbol in _dict:

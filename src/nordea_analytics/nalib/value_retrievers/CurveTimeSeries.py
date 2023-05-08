@@ -29,7 +29,7 @@ config = get_config()
 
 
 class CurveTimeSeries(ValueRetriever):
-    """Retrieves and reformat curve time series."""
+    """Retrieves and reformats curve time series."""
 
     def __init__(
         self,
@@ -49,20 +49,20 @@ class CurveTimeSeries(ValueRetriever):
         spot_forward: Optional[Union[str, SpotForward]] = None,
         forward_tenor: Optional[float] = None,
     ) -> None:
-        """Initialization of class.
+        """Initialize the CurveTimeSeries class.
 
         Args:
-            client: DataRetrievalServiceClient
-                or DataRetrievalServiceClientTest for testing.
+            client: The client used to retrieve data.
             curves: Name of curves that should be retrieved.
-            from_date: From date for calc date interval.
-            to_date: To date for calc date interval.
-            tenors: For what tenors should be curve be constructed.
-            curve_type: What type of curve is retrieved.
-            time_convention: Time convention used when curve is constructed.
-            spot_forward: Should the curve be spot, spot forward
-                 or implied forward.
-            forward_tenor: Forward tenor for forward curve or implied forward curve.
+            from_date: From date for calculation date interval.
+            to_date: To date for calculation date interval.
+            tenors: For what tenors should the curve be constructed.
+            curve_type: Type of curve to retrieve. Defaults to None.
+            time_convention: Time convention used when curve is
+                constructed. Defaults to None.
+            spot_forward: Type of curve to retrieve. Defaults to None.
+            forward_tenor: Forward tenor for forward curve or implied forward
+                curve. Defaults to None.
         """
         super(CurveTimeSeries, self).__init__(client)
         self._client = client
@@ -97,11 +97,16 @@ class CurveTimeSeries(ValueRetriever):
         self._data = self.get_curve_time_series()
 
     def get_curve_time_series(self) -> List:
-        """Retrieves response with curve time series."""
+        """Retrieves response with curve time series.
+
+        Returns:
+            List of dictionaries containing curve name and corresponding time series values.
+        """
         json_response: List[Any] = []
         for request_dict in self.request:
             _json_response = self.get_response(request_dict)
-            # To throw warning if curve in get_curve_time_series could not be retrieved
+
+            # Throw a warning if curve in get_curve_time_series could not be retrieved
             CustomWarningCheck.curve_time_series_not_retrieved_warning(
                 _json_response, request_dict["curve"]
             )
@@ -120,7 +125,7 @@ class CurveTimeSeries(ValueRetriever):
         """Check if forward tenor should be given as an argument.
 
         Args:
-            forward_tenor: Given forward tenor to service.
+            forward_tenor (Union[float, None]): Given forward tenor to service.
 
         Returns:
             Forward tenor as a string or None.
@@ -131,8 +136,7 @@ class CurveTimeSeries(ValueRetriever):
         if forward_tenor is None:
             if self.spot_forward == "Forward" or self.spot_forward == "ImpliedForward":
                 raise AnalyticsInputError(
-                    "Forward tenor has to be chosen for forward and"
-                    " implied forward curves"
+                    "Forward tenor has to be chosen for forward and implied forward curves"
                 )
             else:
                 return None
@@ -141,15 +145,25 @@ class CurveTimeSeries(ValueRetriever):
 
     @property
     def url_suffix(self) -> str:
-        """Url suffix for a given method."""
+        """URL suffix for a given method.
+
+        Returns:
+            URL suffix string.
+        """
         return config["url_suffix"]["curve_time_series"]
 
     @property
     def request(self) -> List[Dict]:
-        """Request dictionary curve time series."""
-        intv = config["max_years_timeseries"] * 365
-        date_interv = []
+        """Request dictionary curve time series.
+
+        Returns:
+            A list of request dictionaries for curve time series.
+        """
+        intv = config["max_years_timeseries"] * 365  # Maximum interval in days
+        date_interv = []  # List to store date intervals
         new_from_date = self.from_date
+
+        # Loop to generate date intervals
         while (self.to_date - new_from_date).days > intv:
             new_to_date = new_from_date.replace(
                 year=new_from_date.year + config["max_years_timeseries"]
@@ -158,8 +172,9 @@ class CurveTimeSeries(ValueRetriever):
             new_from_date = new_to_date.replace(day=new_to_date.day + 1)
         date_interv.append({"from": new_from_date, "to": self.to_date})
 
-        request_list = []
+        request_list = []  # List to store request dictionaries
 
+        # Loop to generate request dictionaries for each curve and date interval
         for curve in self.curves:
             for dates in date_interv:
                 _initial_request_dict = {
@@ -173,6 +188,7 @@ class CurveTimeSeries(ValueRetriever):
                     "forward": self.forward_tenor,
                 }
 
+                # Remove None values from request dictionary
                 _request_dict = {
                     key: _initial_request_dict[key]
                     for key in _initial_request_dict.keys()
@@ -184,7 +200,11 @@ class CurveTimeSeries(ValueRetriever):
         return request_list
 
     def to_dict(self) -> Dict:
-        """Reformat the json response to a dictionary."""
+        """Reformat the JSON response to a dictionary.
+
+        Returns:
+            A dictionary containing the processed data.
+        """
         _curves_dict: Dict[Any, Any] = {}
         for curve_series in self._data:
             _tenor_dict: Dict[Any, Any] = {}
@@ -231,7 +251,11 @@ class CurveTimeSeries(ValueRetriever):
         return _curves_dict
 
     def to_df(self) -> pd.DataFrame:
-        """Reformat the json response to a pandas DataFrame."""
+        """Reformat the JSON response to a pandas DataFrame.
+
+        Returns:
+            A pandas DataFrame containing the processed data.
+        """
         df = pd.DataFrame()
         _dict = self.to_dict()
 
@@ -251,30 +275,41 @@ class CurveTimeSeries(ValueRetriever):
         return df
 
     def _merge_timeseries(self, json_response: List[Any]) -> List[Any]:
-        """Merge the timeseries values into one array."""
+        """Merge the timeseries values into one array.
+
+        Args:
+            json_response: The input data in JSON format.
+
+        Returns:
+            A list of dictionaries containing the merged data.
+        """
         merged = {}
         for response in json_response:
-            if response["curve"] not in merged:
-                merged[response["curve"]] = response["values"]
-            elif len(response["values"]) > 0:
+            curve_name = response["curve"]
+            values = response["values"]
+
+            # Merge timeseries values into one array
+            if curve_name not in merged:
+                merged[curve_name] = values
+            elif len(values) > 0:
                 merged_values = []
-                a = response["values"]
-                b = merged[response["curve"]]
+                a = values
+                b = merged[curve_name]
                 i = j = 0
                 while i < len(a) or j < len(b):
                     ai = a[i]["date"] if i < len(a) else str(datetime.min)
                     bj = b[j]["date"] if j < len(b) else str(datetime.min)
                     if ai == bj:
                         merged_values.append(b[j])
-                        j = j + 1
-                        i = i + 1
+                        j += 1
+                        i += 1
                     elif ai > bj:
                         merged_values.append(a[i])
-                        i = i + 1
+                        i += 1
                     else:
                         merged_values.append(b[j])
-                        j = j + 1
+                        j += 1
 
-                merged[response["curve"]] = merged_values
+                merged[curve_name] = merged_values
 
         return [{"curve": key, "values": values} for key, values in merged.items()]

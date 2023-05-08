@@ -16,7 +16,7 @@ config = get_config()
 
 
 class FXQuotes(ValueRetriever):
-    """Retrieves FX quotes ."""
+    """Retrieves FX quotes."""
 
     def __init__(
         self,
@@ -24,13 +24,12 @@ class FXQuotes(ValueRetriever):
         symbols: Union[List[str], str],
         calc_date: datetime,
     ) -> None:
-        """Initialization of class.
+        """Initialize the FXQuotes class.
 
         Args:
-            client: DataRetrievalServiceClient
-                or DataRetrievalServiceClientTest for testing
+            client: The client used to retrieve data.
             symbols: Name of FX instruments for request.
-            calc_date: calculation date for request.
+            calc_date: Calculation date for request.
         """
         super(FXQuotes, self).__init__(client)
 
@@ -39,14 +38,22 @@ class FXQuotes(ValueRetriever):
         self._data = self.get_fx_quotes()
 
     def get_fx_quotes(self) -> List:
-        """Calls the client and retrieves response with key figures from the service."""
+        """Call the client and retrieve response with FX quotes from the service.
+
+        Returns:
+            List of FX quotes retrieved from the service.
+        """
         _json_response = self.get_post_get_response()
         json_response: List[Any] = _json_response[config["results"]["fx_quotes"]]
 
         return json_response
 
     def get_post_get_response(self) -> Dict:
-        """Retrieves response after posting the request."""
+        """Retrieve response after posting the request.
+
+        Returns:
+            JSON response retrieved from the service.
+        """
         json_response: Dict = {}
         try:
             json_response = self._client.get_post_get_response(
@@ -61,12 +68,20 @@ class FXQuotes(ValueRetriever):
 
     @property
     def url_suffix(self) -> str:
-        """Url suffix suffix for a given method."""
+        """URL suffix for the FX quotes API.
+
+        Returns:
+            URL suffix for the FX quotes API.
+        """
         return config["url_suffix"]["fx_quotes"]
 
     @property
     def request(self) -> Dict:
-        """Request list of dictionaries for a given set of symbols, key figures and calc date."""
+        """Request dictionary for a given set of symbols and calculation date.
+
+        Returns:
+            Request dictionary with symbols and calculation date.
+        """
         request_dict = {
             "symbols": self.symbols,
             "date": self.calc_date.strftime("%Y-%m-%d"),
@@ -75,7 +90,11 @@ class FXQuotes(ValueRetriever):
         return request_dict
 
     def to_dict(self) -> Dict:
-        """Reformat the json response to a dictionary."""
+        """Reformat the JSON response to a dictionary.
+
+        Returns:
+            Reformatted dictionary with FX quotes.
+        """
         _dict = {}
         for bond_data in self._data:
             _bond_dict = {
@@ -88,5 +107,9 @@ class FXQuotes(ValueRetriever):
         return _dict
 
     def to_df(self) -> pd.DataFrame:
-        """Reformat the json response to a pandas DataFrame."""
+        """Reformat the JSON response to a pandas DataFrame.
+
+        Returns:
+            Reformatted pandas DataFrame with FX quotes.
+        """
         return pd.DataFrame.from_dict(self.to_dict(), orient="index")

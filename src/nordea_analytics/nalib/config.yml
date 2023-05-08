@@ -10,6 +10,7 @@ url_suffix:
   calculate: "bonds-calculation"
   calculate_advanced: "bonds-advanced-calculation"
   calculate_horizon: "bonds-horizoncalculation"
+  calculate_repo: "bonds-repo-calculation"
   bond_static_data: "bonds/static-data"
   curve: "curves"
   curve_definition: "curves/definition"

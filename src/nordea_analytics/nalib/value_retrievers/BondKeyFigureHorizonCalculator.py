@@ -65,15 +65,14 @@ class BondKeyFigureHorizonCalculator(ValueRetriever):
         """Initialization of class.
 
         Args:
-            client: DataRetrievalServiceClient
-                or DataRetrievalServiceClientTest for testing.
+            client: The client used to retrieve data.
             symbols: ISIN or name of bonds that should be valued.
             keyfigures: Bond key figure that should be valued.
             calc_date: date of calculation
             horizon_date: future date of calculation
             curves: discount curves for calculation
-            shift_tenors: Optional. Tenors to shift curves expressed as float. For example [0.25, 0.5, 1, 3, 5].
-            shift_values: Optional. Shift values in basispoints. For example [100, 100, 75, 100, 100].
+            shift_tenors: Tenors to shift curves expressed as float. For example [0.25, 0.5, 1, 3, 5].
+            shift_values: Shift values in basispoints. For example [100, 100, 75, 100, 100].
             pp_speed: Prepayment speed. Default = 1.
             prices: fixed price per bond.
             cashflow_type: Type of cashflow to calculate with.
@@ -161,49 +160,70 @@ class BondKeyFigureHorizonCalculator(ValueRetriever):
             "return_interest_amount",
             "return_principal",
             "return_principal_amount",
+            "prepayments",
         ]
 
         self._data = self.calculate_horizon_bond_key_figure()
 
     def calculate_horizon_bond_key_figure(self) -> Mapping:
-        """Retrieves response with calculated key figures."""
-        json_response = self.get_post_get_response()
+        """Retrieves response with calculated key figures for horizon bond key figure calculation.
 
+        Returns:
+            A dictionary containing the calculated key figures, with symbols as keys and responses as values.
+        """
+        json_response = (
+            self.get_post_get_response()
+        )  # Call helper method to get response
         return json_response
 
     def get_post_get_response(self) -> Dict:
-        """Retrieves response after posting the request."""
+        """Retrieves response after posting the request to the API.
+
+        Returns:
+            A dictionary containing the response for each symbol in the request, with symbols as keys and responses as values.
+        """
         json_response: Dict = {}
         for request_dict in self.request:
             try:
+                # Call asynchronous method to get response and store it in json_response dictionary
                 _json_response = self._client.get_response_asynchronous(
                     request_dict, self.url_suffix
                 )
                 json_response[request_dict["symbol"]] = _json_response
             except Exception as ex:
+                # Catch and handle exceptions for unsuccessful responses
                 CustomWarningCheck.post_response_not_retrieved_warning(
                     ex, request_dict["symbol"]
                 )
-
         return json_response
 
     @property
     def url_suffix(self) -> str:
-        """Url suffix for a given method."""
+        """URL suffix for horizon bond key figure calculation.
+
+        Returns:
+            The URL suffix for the horizon bond key figure calculation method.
+        """
         return config["url_suffix"]["calculate_horizon"]
 
     @property
     def request(self) -> List[Dict]:
-        """Post request dictionary calculate bond key figure."""
+        """Property that generates the post request dictionary for calculating bond key figures.
+
+        Returns:
+            A list of dictionaries, each containing the request parameters for a specific bond symbol.
+        """
         request_dict = []
         keyfigures = copy.deepcopy(self.keyfigures)
         for kf in self.fixed_keyfigures:
             if kf in self.keyfigures:
                 keyfigures.remove(kf)
 
-        if keyfigures == []:  # There has to be some key figure in request,
-            # but it will not be returned in final results
-            keyfigures = "bpv"  # type:ignore
+        if not keyfigures:
+            # There has to be at least one key figure in request,
+            # but it will not be returned in the final results
+            keyfigures = ["yield"]  # type:ignore
+
         for x in range(len(self.symbols)):
             initial_request = {
                 "symbol": self.symbols[x],
@@ -215,7 +235,7 @@ class BondKeyFigureHorizonCalculator(ValueRetriever):
                 "shift_values": self.shift_values,
                 "pp_speed": self.pp_speed,
                 "price": self.prices[x]
-                if self.prices is not None and x < len(self.prices)
+                if self.prices and x < len(self.prices)
                 else None,
                 "cashflow_type": self.cashflow_type,
                 "fixed_prepayments": self.fixed_prepayments,
@@ -233,7 +253,11 @@ class BondKeyFigureHorizonCalculator(ValueRetriever):
         return request_dict
 
     def to_dict(self) -> Dict:
-        """Reformat the json response to a dictionary."""
+        """Convert the json response to a dictionary.
+
+        Returns:
+            A dictionary containing the bond data, with bond symbols as keys and bond information as values.
+        """
         _dict: Dict[Any, Any] = {}
         for symbol in self._data:
             bond_data = self._data[symbol]
@@ -243,10 +267,21 @@ class BondKeyFigureHorizonCalculator(ValueRetriever):
         return _dict
 
     def to_dict_bond(self, bond_data: Dict) -> Dict:
-        """to_dict function too complicated."""
+        """Convert bond_data to a dictionary with curve data.
+
+        Args:
+            bond_data (Dict): Bond data in JSON format.
+
+        Returns:
+            Dictionary with curve data extracted from bond_data.
+        """
         _dict_bond: Dict[Any, Any] = {}
         for key_figure in bond_data:
-            if "price" != key_figure and key_figure in self.keyfigures:
+            if (
+                "price" != key_figure
+                and "prepayments" != key_figure
+                and key_figure in self.keyfigures
+            ):
                 data = (
                     bond_data[key_figure]
                     if key_figure in self.fixed_keyfigures
@@ -261,7 +296,7 @@ class BondKeyFigureHorizonCalculator(ValueRetriever):
                         )
                     ] = formatted_result
                     curve_key = (
-                        CurveName(curve_data["key"].upper())
+                        CurveName(curve_data["key"].upper()).name
                         if self.curves_original is None
                         else convert_to_original_format(
                             curve_data["key"], self.curves_original  # type:ignore
@@ -283,10 +318,25 @@ class BondKeyFigureHorizonCalculator(ValueRetriever):
                     convert_to_original_format("price", self.key_figures_original)
                 ] = bond_data["price"]
 
+        if "prepayments" in self.keyfigures and "prepayments" in bond_data:
+            for curve in _dict_bond:
+                _dict_bond[curve][
+                    convert_to_original_format("prepayments", self.key_figures_original)
+                ] = {
+                    convert_to_float_if_float(pp["key"]): convert_to_float_if_float(
+                        pp["value"]
+                    )
+                    for pp in bond_data["prepayments"]["values"]
+                }
+
         return _dict_bond
 
     def to_df(self) -> pd.DataFrame:
-        """Reformat the json response to a pandas DataFrame."""
+        """Convert bond data to a pandas DataFrame.
+
+        Returns:
+            Pandas DataFrame with bond data.
+        """
         _dict = self.to_dict()
         df = pd.DataFrame()
         for symbol in _dict:

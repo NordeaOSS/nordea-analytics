@@ -13,28 +13,33 @@ config = get_config()
 
 
 class LiveBondUniverse(ValueRetriever):
-    """Retrieves supported live bond universe."""
+    """Retrieves the supported live bond universe.
 
-    def __init__(
-        self,
-        client: DataRetrievalServiceClient,
-    ) -> None:
-        """Initialization of class.
+    This class inherits from ValueRetriever and provides methods to retrieve and reformat data
+    from the live bond universe using a DataRetrievalServiceClient instance.
+    """
+
+    def __init__(self, client: DataRetrievalServiceClient) -> None:
+        """Initializes the LiveBondUniverse instance.
 
         Args:
-            client: LiveDataRetrivalServiceClient
+            client: The client used to retrieve data.
         """
         super(LiveBondUniverse, self).__init__(client)
-
         self._data = self.get_live_bond_universe_response
 
     @property
     def get_live_bond_universe_response(self) -> Dict:
-        """Returns the latest available live key figures from cache."""
+        """Returns the latest available live key figures from the cache.
+
+        Returns:
+            A dictionary containing the latest available live key figures.
+        """
         json_response = self._client.get_response(
             self.request, self.url_suffix, RequestMethod.Get
         )
 
+        # Remove unnecessary keys from the response
         json_response.pop("count")
         json_response.pop("restricted")
 
@@ -42,20 +47,36 @@ class LiveBondUniverse(ValueRetriever):
 
     @property
     def url_suffix(self) -> str:
-        """Url suffix suffix for a given method."""
+        """Returns the URL suffix for the live bond universe.
+
+        Returns:
+            The URL suffix for the live bond universe.
+        """
         return config["url_suffix"]["live_bond_universe"]
 
     @property
     def request(self) -> Dict:
-        """Request should be empty, endpoint does not have any inputs."""
+        """Returns an empty request, as the live bond universe endpoint does not have any inputs.
+
+        Returns:
+            An empty dictionary representing the request.
+        """
         return {}
 
     def to_dict(self) -> Dict:
-        """Reformat the json response to a dictionary."""
+        """Reformats the JSON response to a dictionary.
+
+        Returns:
+            A dictionary containing the reformatted data from the JSON response.
+        """
         return self._data
 
     def to_df(self) -> pd.DataFrame:
-        """Reformat the json response to a pandas DataFrame."""
+        """Reformats the JSON response to a pandas DataFrame.
+
+        Returns:
+            A pandas DataFrame containing the reformatted data from the JSON response.
+        """
         _dict = self.to_dict()
         df = pd.DataFrame({k: pd.Series(v) for k, v in _dict.items()})
 

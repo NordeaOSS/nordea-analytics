@@ -11,8 +11,8 @@ and thus have option adjusted(OA) key figures. In these cases the prepayment mod
 adjusted spread(OAS, described below) is used for the estimation. This is embedded where relevant, and thus
 does not need to be specified when retrieving the key figure values.
 
-Note, all bond key figures available in the library are listed in the :class:`BondKeyFigureName <nordea_analytics.key_figure_names.KeyFigureName>`
-class and can be retrieved with the function :meth:`get_bond_key_figures() <nordea_analytics.nordea_analytics_service.NordeaAnalyticsService.get_bond_key_figures>`.
+Note, all bond key figures available in the library are listed in the :class:`BondKeyFigureName <nordea_analytics.key_figure_names.BondKeyFigureName>`
+class and can be retrieved with the function :meth:`get_bond_key_figures() <nordea_analytics.nordea_analytics_service.core.NordeaAnalyticsCoreService.get_bond_key_figures>`.
 
 Present Value (PV)
 --------------------

@@ -36,12 +36,11 @@ class ShiftDays(ValueRetriever):
         """Initialization of class.
 
         Args:
-            client: DataRetrievalServiceClient
-                or DataRetrievalServiceClientTest for testing.
+            client: The client used to retrieve data.
             date: The date that will be shifted.
             days: The number of days to shift 'date' with.
                 Negative values move date back in time.
-            exchange: The exchange's holiday calendar will be used.
+            exchange: The exchange's holiday calendar to be used.
             day_count_convention: The convention to use for counting days.
             date_roll_convention: The convention to use for rolling
                 when a holiday is encountered.
@@ -68,19 +67,31 @@ class ShiftDays(ValueRetriever):
         self._data = self.shift_days()
 
     def shift_days(self) -> Dict:
-        """Retrieves response with shifted date."""
+        """Shifts the date by the specified number of days and retrieves the response with the shifted date.
+
+        Returns:
+            The JSON response with the shifted date.
+        """
         json_response = self.get_response(self.request)
 
         return json_response[config["results"]["shift_days"]]
 
     @property
     def url_suffix(self) -> str:
-        """Url suffix for a given method."""
+        """Get the URL suffix for the API endpoint.
+
+        Returns:
+            The URL suffix for the API endpoint.
+        """
         return config["url_suffix"]["shift_days"]
 
     @property
     def request(self) -> dict:
-        """Request shifted date."""
+        """Construct the request dictionary for the API call.
+
+        Returns:
+            The request dictionary for the API call.
+        """
         date = self.date.strftime("%Y-%m-%d")
         days = self.days
         exchange = self.exchange
@@ -98,16 +109,28 @@ class ShiftDays(ValueRetriever):
         return request_dict
 
     def to_datetime(self) -> datetime:
-        """Reformat the json response to a datetime."""
+        """Convert the JSON response to a datetime object.
+
+        Returns:
+            The datetime object representing the shifted date.
+        """
         shifted_date_string = typing.cast(str, self._data["date"])
 
         shifted_date = datetime.strptime(shifted_date_string, "%Y-%m-%d")
         return shifted_date
 
     def to_dict(self) -> Dict:
-        """Reformat the json response to a dictionary."""
+        """Convert the JSON response to a dictionary.
+
+        Returns:
+            The dictionary representing the JSON response.
+        """
         pass
 
     def to_df(self) -> pd.DataFrame:
-        """Reformat the json response to a pandas DataFrame."""
+        """Convert the JSON response to a pandas DataFrame.
+
+        Returns:
+            The pandas DataFrame representing the JSON response.
+        """
         pass

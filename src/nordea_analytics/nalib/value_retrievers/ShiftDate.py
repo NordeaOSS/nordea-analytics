@@ -36,18 +36,15 @@ class ShiftDate(ValueRetriever):
         """Initialization of class.
 
         Args:
-            client: DataRetrievalServiceClient
-                or DataRetrievalServiceClientTest for testing.
+            client: The client used to retrieve data.
             date: The date that will be shifted.
-            days: The number of days to shift 'date' with.
-                Negative values move date back in time.
-            months: The number of months to shift 'date' with.
-                Negative values move date back in time.
-            years: The number of years to shift 'date' with.
-                Negative values move date back in time.
-            exchange: The exchange's holiday calendar will be used.
-            date_roll_convention: The convention to use for rolling
-                when a holiday is encountered.
+            days: The number of days to shift 'date' with. Negative values move date back in time.
+            months: The number of months to shift 'date' with. Negative values move date back in time.
+            years: The number of years to shift 'date' with. Negative values move date back in time.
+            exchange: The exchange's holiday calendar will be used. If an Exchange object is provided,
+                it will be converted to a string.
+            date_roll_convention: The convention to use for rolling when a holiday is encountered.
+                If a DateRollConvention object is provided, it will be converted to a string.
         """
         super(ShiftDate, self).__init__(client)
         self._client = client
@@ -68,19 +65,31 @@ class ShiftDate(ValueRetriever):
         self._data = self.shift_date()
 
     def shift_date(self) -> Dict:
-        """Retrieves response with shifted date."""
+        """Shifts the date by the specified number of days, months, and years.
+
+        Returns:
+            A dictionary containing the shifted date.
+        """
         json_response = self.get_response(self.request)
 
         return json_response[config["results"]["shift_date"]]
 
     @property
     def url_suffix(self) -> str:
-        """Url suffix for a given method."""
+        """Get the URL suffix for the shift date API method.
+
+        Returns:
+            The URL suffix for the shift date API method.
+        """
         return config["url_suffix"]["shift_date"]
 
     @property
     def request(self) -> dict:
-        """Request shifted date."""
+        """Generate the request payload for the shift date API method.
+
+        Returns:
+            The request payload as a dictionary.
+        """
         date = self.date.strftime("%Y-%m-%d")
         days = self.days
         months = (self.months,)
@@ -100,16 +109,28 @@ class ShiftDate(ValueRetriever):
         return request_dict
 
     def to_datetime(self) -> datetime:
-        """Reformat the json response to a datetime."""
+        """Convert the JSON response to a datetime object.
+
+        Returns:
+            The converted datetime object.
+        """
         shifted_date_string = typing.cast(str, self._data["date"])
 
         shifted_date = datetime.strptime(shifted_date_string, "%Y-%m-%d")
         return shifted_date
 
-    def to_dict(self) -> Dict:
-        """Reformat the json response to a dictionary."""
+    def to_dict(self) -> dict:
+        """Convert the JSON response to a dictionary.
+
+        Returns:
+            The converted dictionary.
+        """
         pass
 
     def to_df(self) -> pd.DataFrame:
-        """Reformat the json response to a pandas DataFrame."""
+        """Convert the JSON response to a pandas DataFrame.
+
+        Returns:
+            The converted pandas DataFrame.
+        """
         pass

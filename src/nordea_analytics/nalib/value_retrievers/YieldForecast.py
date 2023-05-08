@@ -17,7 +17,7 @@ config = get_config()
 
 
 class YieldForecast(ValueRetriever):
-    """Retrieves and reformat Yield forecast."""
+    """Retrieves and reformats yield forecast."""
 
     def __init__(
         self,
@@ -26,12 +26,11 @@ class YieldForecast(ValueRetriever):
         yield_type: Union[str, YieldType],
         yield_horizon: Union[str, YieldHorizon],
     ) -> None:
-        """Initialization of class.
+        """Initializes the YieldForecast class.
 
         Args:
-            client: DataRetrievalServiceClient
-                or DataRetrievalServiceClientTest for testing.
-            country: Country of the yield for which to retrieve forecasts.
+            client: The client used to retrieve data.
+            country : Country of the yield for which to retrieve forecasts.
             yield_type: Type of yield for which to retrieve forecasts.
             yield_horizon: Horizon for which to retrieve forecasts.
         """
@@ -43,7 +42,11 @@ class YieldForecast(ValueRetriever):
         self._data = self.get_yield_forecast()
 
     def get_yield_forecast(self) -> Mapping:
-        """Retrieves response with yield forecast."""
+        """Retrieves response with yield forecast.
+
+        Returns:
+            JSON response containing the yield forecast.
+        """
         json_response = self.get_response(self.request)
         json_response = json_response[config["results"]["yield_forecast"]]
 
@@ -51,12 +54,20 @@ class YieldForecast(ValueRetriever):
 
     @property
     def url_suffix(self) -> str:
-        """Url suffix for a given method."""
+        """Returns the URL suffix for the yield forecast API endpoint.
+
+        Returns:
+            URL suffix for the yield forecast API endpoint.
+        """
         return config["url_suffix"]["yield_forecast"]
 
     @property
     def request(self) -> Dict:
-        """Request dictionary yield forecast."""
+        """Returns the request dictionary for the yield forecast API call.
+
+        Returns:
+            Request dictionary for the yield forecast API call.
+        """
         country = self.country
         yield_type = self.yield_type
         yield_horizon = self.yield_horizon
@@ -70,14 +81,18 @@ class YieldForecast(ValueRetriever):
         return request_dict
 
     def to_dict(self) -> Dict:
-        """Reformat the json response to a dictionary."""
+        """Reformat the JSON response to a dictionary.
+
+        Returns:
+            Reformatted dictionary containing yield forecast data.
+        """
         _dict: Dict[Any, Any] = {}
 
         forecast_data = {}
 
         for yield_type_data in self._data["forecasts"]:
             yield_type_forecast_data = {}
-            type = yield_type_data["type"]
+            yield_type = yield_type_data["type"]
 
             for data in yield_type_data["forecast"]:
                 values = {}
@@ -89,14 +104,18 @@ class YieldForecast(ValueRetriever):
                 values["Value"] = data["value"]
                 yield_type_forecast_data[data["horizon"]] = values
 
-            forecast_data[type] = yield_type_forecast_data
+            forecast_data[yield_type] = yield_type_forecast_data
 
         _dict[self._data["symbol"]] = forecast_data
 
         return _dict
 
     def to_df(self) -> pd.DataFrame:
-        """Reformat the json response to a pandas DataFrame."""
+        """Reformat the JSON response to a pandas DataFrame.
+
+        Returns:
+            Reformatted pandas DataFrame containing yield forecast data.
+        """
         _dict = self.to_dict()
 
         df = pd.DataFrame.from_dict(

@@ -29,6 +29,7 @@ from nordea_analytics import (
     YieldHorizon,
     YieldType,
 )
+from nordea_analytics.key_figure_names import CalculatedRepoBondKeyFigureName
 from nordea_analytics.nalib.exceptions import AnalyticsResponseError
 from nordea_analytics.search_bond_names import (
     AmortisationType,
@@ -74,6 +75,7 @@ def convert_to_variable_string(
         DayCountConvention,
         Exchange,
         HorizonCalculatedBondKeyFigureName,
+        CalculatedRepoBondKeyFigureName,
         InstrumentGroup,
         LiveBondKeyFigureName,
         SpotForward,
@@ -118,6 +120,7 @@ def convert_to_variable_string(
         DayCountConvention,
         Exchange,
         HorizonCalculatedBondKeyFigureName,
+        CalculatedRepoBondKeyFigureName,
         InstrumentGroup,
         LiveBondKeyFigureName,
         TimeConvention,
