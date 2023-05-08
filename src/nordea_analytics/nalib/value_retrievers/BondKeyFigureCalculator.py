@@ -27,7 +27,29 @@ config = get_config()
 
 
 class BondKeyFigureCalculator(ValueRetriever):
-    """Retrieves and reformat calculated bond key figure."""
+    """Retrieves and reformats calculated bond key figures.
+
+    Args:
+        client: The client used to retrieve data.
+        symbols: ISIN or name of bonds that should be valued.
+        keyfigures: Bond key figures that should be valued.
+        calc_date: date of calculation.
+        curves: discount curves for calculation.
+        shift_tenors: Tenors to shift curves expressed as float.
+                      For example [0.25, 0.5, 1, 3, 5].
+        shift_values: Shift values in basis points.
+                      For example [100, 100, 75, 100, 100].
+        pp_speed: Prepayment speed. Default = 1.
+        prices: fixed price per bond.
+        spread: fixed spread for bond. Mandatory to give spread_curve also as an input.
+        spread_curve: spread curve to calculate the key figures when a fixed spread is given.
+        yield_input: fixed yield for bond.
+        asw_fix_frequency: Fixing frequency of swap in ASW calculation.
+                            Mandatory input in all ASW calculations.
+        ladder_definition: Optional. Tenors should be included in BPV ladder calculation.
+                            For example [0.25, 0.5, 1, 3, 5].
+        cashflow_type: Type of cashflow to calculate with.
+    """
 
     def __init__(
         self,
@@ -68,8 +90,7 @@ class BondKeyFigureCalculator(ValueRetriever):
         """Initialization of class.
 
         Args:
-            client: DataRetrievalServiceClient
-                or DataRetrievalServiceClientTest for testing.
+            client: The client used to retrieve data.
             symbols: ISIN or name of bonds that should be valued.
             keyfigures: Bond key figure that should be valued.
             calc_date: date of calculation.
@@ -85,7 +106,7 @@ class BondKeyFigureCalculator(ValueRetriever):
             yield_input: fixed yield for bond.
             asw_fix_frequency: Fixing frequency of swap in ASW calculation.
                 Mandatory input in all ASW calculations.
-            ladder_definition: Optional. Tenors should be included in
+            ladder_definition: Tenors should be included in
                 BPV ladder calculation. For example [0.25, 0.5, 1, 3, 5].
             cashflow_type: Type of cashflow to calculate with.
         """
@@ -166,15 +187,24 @@ class BondKeyFigureCalculator(ValueRetriever):
             self._data = self.calculate_bond_key_figure()
 
     def calculate_bond_key_figure(self) -> Mapping:
-        """Retrieves response with calculated key figures."""
-        json_response = self.get_post_get_response()
+        """Retrieves response with calculated key figures.
 
+        Returns:
+            The calculated key figures as a dictionary with bond symbols as keys.
+        """
+        json_response = (
+            self.get_post_get_response()
+        )  # Call internal method to get response
         return json_response
 
     def get_post_get_response(self) -> Dict:
-        """Retrieves response after posting the request."""
+        """Retrieves response after posting the request.
+
+        Returns:
+            The response received after posting the request as a dictionary.
+        """
         json_response: Dict = {}
-        for request_dict in self.request:
+        for request_dict in self.request:  # Iterate over request dictionary
             try:
                 _json_response = self._client.get_response_asynchronous(
                     request_dict, self.url_suffix
@@ -184,23 +214,29 @@ class BondKeyFigureCalculator(ValueRetriever):
                 CustomWarningCheck.post_response_not_retrieved_warning(
                     ex, request_dict["symbol"]
                 )
-
         return json_response
 
     @property
     def url_suffix(self) -> str:
-        """Url suffix for a given method."""
+        """Url suffix for a given method.
+
+        Returns:
+            The URL suffix for the bond calculator method.
+        """
         return config["url_suffix"]["calculate"]
 
     @property
     def request(self) -> List[Dict]:
-        """Post request dictionary calculate bond key figure."""
+        """Post request dictionary to calculate bond key figures.
+
+        Returns:
+            The list of request dictionaries to calculate bond key figures.
+        """
         request_dict = []
         keyfigures = copy.deepcopy(self.keyfigures)
         keyfigures.remove("price") if "price" in self.keyfigures else keyfigures
-        if keyfigures == []:  # There has to be some key figure in request,
-            # but it will not be returned in final results
-            keyfigures = "bpv"  # type:ignore
+        if keyfigures == []:
+            keyfigures = ["yield"]
         for x in range(len(self.symbols)):
             initial_request = {
                 "symbol": self.symbols[x],
@@ -226,11 +262,14 @@ class BondKeyFigureCalculator(ValueRetriever):
                 if initial_request[key] is not None
             }
             request_dict.append(request)
-
         return request_dict
 
     def to_dict(self) -> Dict:
-        """Reformat the json response to a dictionary."""
+        """Reformat the JSON response to a dictionary.
+
+        Returns:
+            A dictionary containing the reformatted JSON data.
+        """
         _dict: Dict[Any, Any] = {}
         for symbol in self._data:
             bond_data = self._data[symbol]
@@ -239,21 +278,30 @@ class BondKeyFigureCalculator(ValueRetriever):
         return _dict
 
     def to_dict_bond(self, bond_data: Dict) -> Dict:
-        """to_dict function too complicated."""
+        """Reformat the JSON bond data to a dictionary.
+
+        Args:
+            bond_data: The JSON data of a bond.
+
+        Returns:
+            A dictionary containing the reformatted bond data.
+        """
         _dict_bond: Dict[Any, Any] = {}
         for key_figure in bond_data:
             if key_figure != "price" and key_figure in self.keyfigures:
                 for curve_data in bond_data[key_figure]["values"]:
                     _data_dict: Dict[Any, Any] = {}
                     if key_figure == "bpvladder":
+                        # Convert ladder data to dictionary
                         ladder_dict = {
                             convert_to_float_if_float(
                                 ladder["key"]
                             ): convert_to_float_if_float(ladder["value"])
                             for ladder in curve_data["ladder"]
                         }
-                        formatted_result = ladder_dict
+                        formatted_result = ladder_dict  # type:ignore
                     elif key_figure == "expectedcashflow":
+                        # Convert cashflow data to dictionary with datetime object as key
                         cashflow_dict = {
                             datetime.strptime(
                                 cashflow["payment_date"], "%Y-%m-%d"
@@ -265,11 +313,12 @@ class BondKeyFigureCalculator(ValueRetriever):
                         }
                         formatted_result = cashflow_dict  # type:ignore
                     elif key_figure == "vegamatrix":
+                        # Convert vega points data to dictionary
                         vega_dict = {
                             vega_list["key"]: vega_list["value"]
                             for vega_list in curve_data["vega_points"]
                         }
-                        formatted_result = vega_dict
+                        formatted_result = vega_dict  # type:ignore
                     else:
                         formatted_result = convert_to_float_if_float(
                             curve_data["value"]
@@ -282,10 +331,10 @@ class BondKeyFigureCalculator(ValueRetriever):
                     ] = formatted_result
 
                     curve_key = (
-                        CurveName(curve_data["key"].upper())
+                        CurveName(curve_data["key"].upper()).name
                         if self.curves_original is None
                         else convert_to_original_format(
-                            curve_data["key"], self.curves_original  # type:ignore
+                            curve_data["key"], self.curves_original
                         )
                     )
                     if curve_key in _dict_bond.keys():
@@ -307,14 +356,24 @@ class BondKeyFigureCalculator(ValueRetriever):
         return _dict_bond
 
     def to_df(self) -> pd.DataFrame:
-        """Reformat the json response to a pandas DataFrame."""
-        _dict = self.to_dict()
+        """Reformat the JSON response of bond data to a pandas DataFrame.
+
+        Returns:
+            A pandas DataFrame containing the reformatted bond data.
+        """
+        bond_data_dict = self.to_dict()
         df = pd.DataFrame()
-        for symbol in _dict:
-            _df = pd.DataFrame.from_dict(_dict[symbol]).transpose()
-            _df = _df.reset_index().rename(columns={"index": "Curve"})
-            _df.index = [symbol] * len(_df)
-            df = pd.concat([df, _df], axis=0)
+
+        for symbol in bond_data_dict:
+            # Convert the data for the symbol to a DataFrame and transpose it
+            symbol_df = pd.DataFrame.from_dict(bond_data_dict[symbol]).transpose()
+            # Reset the index and rename the columns to "Curve"
+            symbol_df = symbol_df.reset_index().rename(columns={"index": "Curve"})
+            symbol_df.index = [symbol] * len(symbol_df)
+
+            # Concatenate the symbol DataFrame to the main DataFrame along the rows
+            df = pd.concat([df, symbol_df], axis=0)
+
         return df
 
 
@@ -348,32 +407,28 @@ class BondKeyFigureAdvancedCalculator(BondKeyFigureCalculator):
         volatility_date: Optional[datetime] = None,
         refinancing_curve_date: Optional[datetime] = None,
     ) -> None:
-        """Initialization of class.
+        """Initialization of the class.
 
         Args:
-            client: DataRetrievalServiceClient
-                or DataRetrievalServiceClientTest for testing.
+            client: The client used to retrieve data.
             symbols: ISIN or name of bonds that should be valued.
             keyfigures: Bond key figure that should be valued.
             calc_date: Date of calculation.
             curves: Discount curves for calculation.
             shift_tenors: Tenors to shift curves expressed as float. For example [0.25, 0.5, 1, 3, 5].
-            shift_values: Shift values in basispoints. For example [100, 100, 75, 100, 100].
+            shift_values: Shift values in basis points. For example [100, 100, 75, 100, 100].
             pp_speed: Prepayment speed. Default = 1.
-            prices: fixed price per bond.
-            spread: fixed spread for bond. Mandatory to give
-                spread_curve also as an input.
-            spread_curve: spread curve to calculate the
-                key figures when a fixed spread is given.
-            yield_input: fixed yield for bond.
+            prices: Fixed price per bond.
+            spread: Fixed spread for bond. Mandatory to give spread_curve also as an input.
+            spread_curve: Spread curve to calculate the key figures when a fixed spread is given.
+            yield_input: Fixed yield for bond.
             asw_fix_frequency: Fixing frequency of swap in ASW calculation.
                 Mandatory input in all ASW calculations.
-            ladder_definition: Tenors should be included in
-                BPV ladder calculation. For example [0.25, 0.5, 1, 3, 5].
+            ladder_definition: Tenors should be included in BPV ladder calculation. For example [0.25, 0.5, 1, 3, 5].
             cashflow_type: Type of cashflow to calculate with.
             fixed_principal_payment: Principal payment each cash flow date.
-            volatility_date: Date of volatility surface.
-            refinancing_curve_date: Date of refinancing curve.
+            volatility_date: Date of the volatility surface.
+            refinancing_curve_date: Date of the refinancing curve.
         """
         super(BondKeyFigureAdvancedCalculator, self).__init__(
             client,
@@ -400,19 +455,31 @@ class BondKeyFigureAdvancedCalculator(BondKeyFigureCalculator):
         self._data = self.calculate_bond_key_figure_advanced()
 
     def calculate_bond_key_figure_advanced(self) -> Mapping:
-        """Retrieves response with calculated key figures."""
+        """Retrieves response with calculated key figures.
+
+        Returns:
+            The JSON response with calculated key figures.
+        """
         json_response = self.get_post_get_response()
 
         return json_response
 
     @property
     def url_suffix(self) -> str:
-        """Url suffix for a given method."""
+        """Get the URL suffix for the given method.
+
+        Returns:
+            The URL suffix.
+        """
         return config["url_suffix"]["calculate_advanced"]
 
     @property
     def request(self) -> List[Dict]:
-        """Post request dictionary calculate bond key figure."""
+        """Get the post request dictionary for calculating bond key figure.
+
+        Returns:
+            The list of dictionaries representing the post request data.
+        """
         request_dict = []
         keyfigures = copy.deepcopy(self.keyfigures)
         keyfigures.remove("price") if "price" in self.keyfigures else keyfigures

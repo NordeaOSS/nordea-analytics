@@ -8,7 +8,7 @@ from nordea_analytics.nalib.exceptions import ApiServerError
 from nordea_analytics.nalib.exceptions import HttpClientImproperlyConfigured
 
 
-class HttpClientConfiguration(object):
+class HttpClientConfiguration:
     """Contain parameters for HTTP requests."""
 
     def __init__(
@@ -16,6 +16,7 @@ class HttpClientConfiguration(object):
         base_url: str,
         headers: Dict[str, str] = None,
         proxies: Dict[str, str] = None,
+        max_retries: int = 10,
     ) -> None:
         """Constructs a :class:`HttpClientConfiguration <HttpClientConfiguration>`.
 
@@ -23,10 +24,10 @@ class HttpClientConfiguration(object):
             base_url: base URL for all http requests.
             headers: (optional) Dictionary of HTTP Headers to send with the request.
             proxies: (optional) Dictionary mapping protocol or protocol and hostname to the URL of the proxy.
+            max_retries: (optional) Maximum number of retries for HTTP requests.
 
         Raises:
-            HttpClientImproperlyConfigured: If configuration is not correct.
-
+            HttpClientImproperlyConfigured: If `base_url` is not set.
         """
         if not base_url:
             raise HttpClientImproperlyConfigured("base_url is not set.")
@@ -35,7 +36,7 @@ class HttpClientConfiguration(object):
         self.base_url = base_url
         self.headers = headers or {}
         self.proxies = proxies or {}
-        self.max_retries = 10
+        self.max_retries = max_retries
 
 
 class RestApiHttpClient(ABC):
@@ -43,16 +44,16 @@ class RestApiHttpClient(ABC):
 
     def __init__(self) -> None:
         """Create new instance of RestApiHttpClient."""
-        self._history: List = []
+        self._history: List[requests.Response] = []
 
     @property
-    def history(self) -> List:
+    def history(self) -> List[requests.Response]:
         """A list of :class:`Response <Response>` objects with the history of the Responses.
 
         Any responses will end up here. The list is sorted from the oldest to the most recent response.
 
         Returns:
-            A list of objects
+            A list of :class:`Response <Response>` objects.
         """
         return self._history
 
@@ -71,7 +72,7 @@ class RestApiHttpClient(ABC):
             **kwargs: parameters for HTTP Request.
 
         Returns:
-            requests.Response instance.
+            A :class:`Response <Response>` object.
         """
         pass
 
@@ -81,11 +82,11 @@ class RestApiHttpClient(ABC):
 
         Args:
             url_suffix: url path where requested will be sent.
-            json: data in format of dict or json
+            json: data in format of dict or json.
             **kwargs: parameters for HTTP Request.
 
         Returns:
-            requests.Response instance.
+            A :class:`Response <Response>` object.
         """
         pass
 
@@ -95,15 +96,11 @@ class RestApiHttpClient(ABC):
         Args:
             params: parameters for HTTP Request.
         """
-        if "headers" in params:
-            params["headers"] = params["headers"] | self.config.headers
-        else:
-            params["headers"] = self.config.headers
+        headers = params.setdefault("headers", {})
+        headers.update(self.config.headers)
 
-        if "proxies" in params:
-            params["proxies"] = params["proxies"] | self.config.proxies
-        else:
-            params["proxies"] = self.config.proxies
+        proxies = params.setdefault("proxies", {})
+        proxies.update(self.config.proxies)
 
     def _proceed_response(
         self, max_retries: int, send_callable: Callable[[], requests.Response]
@@ -123,13 +120,13 @@ class RestApiHttpClient(ABC):
             # 503 Service Temporarily Unavailable == Too Many Requests
             if max_retries > 0 and response.status_code == 503:
                 time.sleep(0.2)
-                continue
+            elif "error_description" in response.text:
+                error_json = response.json()
+                raise ApiServerError(
+                    error_id=response.headers.get("x-request-id"),
+                    error_description=f'{error_json["error_description"]}',
+                )
             else:
-                if "error_description" in response.text:
-                    error_json = response.json()
-                    raise ApiServerError(
-                        error_id=response.headers["x-request-id"],
-                        error_description=f'{error_json["error_description"]}',
-                    )
+                break
 
-            return response
+        return response

@@ -26,7 +26,15 @@ config = get_config()
 
 
 class LiveBondKeyFigures(ValueRetriever):
-    """Retrieves and reformats calculated live bond key figure."""
+    """Retrieves and reformats calculated live bond key figures.
+
+    Args:
+        symbols: ISIN or name of bonds that should be retrieved live.
+        client: The client used to retrieve data.
+        keyfigures: List of bond key figures
+                        which should be streamed. Can be a list of LiveBondKeyFigureNames or string.
+        as_df: If True, the results are represented as pd.DataFrame, else as dictionary.
+    """
 
     def __init__(
         self,
@@ -41,16 +49,7 @@ class LiveBondKeyFigures(ValueRetriever):
         ],
         as_df: bool,
     ) -> None:
-        """Initialization of class.
-
-        Args:
-            symbols: ISIN or name of bonds that should be retrieved live
-            client: LiveDataRetrivalServiceClient
-            keyfigures: List of bond key figures which should be streamed.
-                Can be a list of LiveBondKeyFigureNames or string.
-            as_df: if True, the results are represented
-                as pd.DataFrame, else as dictionary
-        """
+        """Initialize the LiveBondKeyFigures class."""
         super(LiveBondKeyFigures, self).__init__(client)
         self.symbols: List = [symbols] if isinstance(symbols, str) else symbols
         _keyfigures: List = keyfigures if isinstance(keyfigures, list) else [keyfigures]
@@ -68,7 +67,11 @@ class LiveBondKeyFigures(ValueRetriever):
 
     @property
     def get_live_key_figure_response(self) -> List[Dict]:
-        """Returns the latest available live key figures from cache."""
+        """Returns the latest available live key figures from cache.
+
+        Returns:
+            A list of dictionaries containing the live key figure values.
+        """
         json_response: List[Any] = []
         for request_dict in self.request:
             response = self._client.get_response(
@@ -85,19 +88,31 @@ class LiveBondKeyFigures(ValueRetriever):
 
     @property
     def stream_keyfigures(self) -> Iterator[Any]:
-        """Returns the stream listener which controls the live stream."""
+        """Returns the stream listener which controls the live stream.
+
+        Yields:
+            Stream chunks containing live key figure values.
+        """
         for stream_chunk in self._client.get_live_streamer().stream(self.symbols):
             json_payload = json.loads(stream_chunk)
             yield self._response_decorator(json_payload)
 
     @property
     def url_suffix(self) -> str:
-        """Url suffix suffix for a given method."""
+        """URL suffix for the given method.
+
+        Returns:
+            URL suffix for live bond key figures.
+        """
         return config["url_suffix"]["live_bond_key_figures"]
 
     @property
     def request(self) -> List[Dict]:
-        """Request list of dictionaries for a given set of bonds, key figures and calc date."""
+        """Request list of dictionaries for a given set of bonds, key figures and calc date.
+
+        Returns:
+            A list of request dictionaries.
+        """
         if len(self.symbols) > config["max_bonds"]:
             split_symbols = np.array_split(
                 self.symbols, math.ceil(len(self.symbols) / config["max_bonds"])
@@ -109,8 +124,13 @@ class LiveBondKeyFigures(ValueRetriever):
         return request_dict
 
     def to_dict(self) -> Dict:
-        """Reformat the json response to a dictionary."""
+        """Reformat the JSON response to a dictionary.
+
+        Returns:
+            A dictionary containing the reformatted live key figure values.
+        """
         results: Dict = {}
+
         for values in self._data:
             results = results | filter_keyfigures(
                 values, self.keyfigures, self.keyfigures_original
@@ -119,10 +139,22 @@ class LiveBondKeyFigures(ValueRetriever):
         return results
 
     def to_df(self) -> pd.DataFrame:
-        """Reformat the json response to a pandas DataFrame."""
+        """Reformat the JSON response to a pandas DataFrame.
+
+        Returns:
+            A pandas DataFrame containing the reformatted live key figure values.
+        """
         return to_data_frame(self.to_dict())
 
     def _response_decorator(self, json_payload: dict) -> Any:
+        """Decorator to process the payload and return appropriate response.
+
+        Args:
+            json_payload: Payload containing live key figure values.
+
+        Returns:
+            Either a pandas DataFrame or a dictionary containing the reformatted live key figure values.
+        """
         json_payload = parse_live_keyfigures_json(
             json_payload, self.keyfigures, self.keyfigures_original
         )

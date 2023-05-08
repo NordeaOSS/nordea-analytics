@@ -31,15 +31,16 @@ class DateSequence(ValueRetriever):
         exchange: Union[str, Exchange] = None,
         day_count_convention: Union[str, DayCountConvention] = None,
     ) -> None:
-        """Initialization of class.
+        """Initialize the DateSequence class.
 
         Args:
-            client: DataRetrievalServiceClient
-                or DataRetrievalServiceClientTest for testing.
+            client: The client used to retrieve data.
             from_date: The start date of the date sequence.
             to_date: The end date of the date sequence.
-            exchange: The exchange's holiday calendar will be used.
-            day_count_convention: The convention to use for counting days.
+            exchange : The exchange's holiday calendar
+                to be used. Defaults to None.
+            day_count_convention:
+                The convention to use for counting days. Defaults to None.
         """
         super(DateSequence, self).__init__(client)
         self._client = client
@@ -59,19 +60,30 @@ class DateSequence(ValueRetriever):
         self._data = self.date_sequence()
 
     def date_sequence(self) -> Dict:
-        """Retrieves response with date sequence."""
-        json_response = self.get_response(self.request)
+        """Retrieve response with date sequence.
 
+        Returns:
+            A dictionary containing the date sequence data.
+        """
+        json_response = self.get_response(self.request)
         return json_response[config["results"]["date_sequence"]]
 
     @property
     def url_suffix(self) -> str:
-        """Url suffix for a given method."""
+        """Get the URL suffix for the date_sequence method.
+
+        Returns:
+            The URL suffix for the date_sequence method.
+        """
         return config["url_suffix"]["date_sequence"]
 
     @property
     def request(self) -> dict:
-        """Request shifted date."""
+        """Get the request dictionary for the shifted date.
+
+        Returns:
+            The request dictionary for the shifted date.
+        """
         from_date = self.from_date.strftime("%Y-%m-%d")
         to_date = self.to_date.strftime("%Y-%m-%d")
         exchange = self.exchange
@@ -87,18 +99,30 @@ class DateSequence(ValueRetriever):
         return request_dict
 
     def to_list_of_datetime(self) -> List:
-        """Reformat the json response to a list of datetimes."""
+        """Reformat the json response to a list of datetimes.
+
+        Returns:
+            A list of datetime objects representing the date sequence.
+        """
         date_sequence_strings = typing.cast(List, self._data["dates"])
 
         date_sequence = [
-            datetime.strptime(date, "%Y-%m-%d").date() for date in date_sequence_strings
+            datetime.strptime(date, "%Y-%m-%d") for date in date_sequence_strings
         ]
         return date_sequence
 
     def to_dict(self) -> Dict:
-        """Reformat the json response to a dictionary."""
+        """Reformat the JSON response to a dictionary.
+
+        Returns:
+            A dictionary containing the processed data.
+        """
         pass
 
     def to_df(self) -> pd.DataFrame:
-        """Reformat the json response to a pandas DataFrame."""
+        """Reformat the JSON response to a pandas DataFrame.
+
+        Returns:
+            A pandas DataFrame containing the processed data.
+        """
         pass

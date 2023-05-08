@@ -24,15 +24,15 @@ class OpenBankingClientConfiguration(HttpClientConfiguration):
         if not client_secret:
             raise HttpClientImproperlyConfigured("client_secret is not set.")
 
-        if headers is None:
-            headers = {}
-
-        headers["X-IBM-client-id"] = client_id
-        headers["X-IBM-client-secret"] = client_secret
-
-        super(OpenBankingClientConfiguration, self).__init__(
-            base_url=base_url, headers=headers, proxies=proxies
+        headers = headers or {}
+        headers.update(
+            {
+                "X-IBM-client-id": client_id,
+                "X-IBM-client-secret": client_secret,
+            }
         )
+
+        super().__init__(base_url=base_url, headers=headers, proxies=proxies)
 
 
 class OpenBankingHttpClient(RestApiHttpClient):
@@ -40,7 +40,7 @@ class OpenBankingHttpClient(RestApiHttpClient):
 
     def __init__(self, conf: OpenBankingClientConfiguration) -> None:
         """Constructs a :class:`OpenBankingHttpClient <OpenBankingHttpClient>`."""
-        super(OpenBankingHttpClient, self).__init__()
+        super().__init__()
         self.conf = conf
 
     @property
@@ -59,7 +59,7 @@ class OpenBankingHttpClient(RestApiHttpClient):
             requests.Response instance.
         """
         max_retries = self.conf.max_retries
-        return super(OpenBankingHttpClient, self)._proceed_response(
+        return self._proceed_response(
             max_retries, lambda: self._request("get", url_suffix, **kwargs)
         )
 
@@ -76,7 +76,7 @@ class OpenBankingHttpClient(RestApiHttpClient):
         """
         max_retries = self.conf.max_retries
         kwargs["json"] = json
-        return super(OpenBankingHttpClient, self)._proceed_response(
+        return self._proceed_response(
             max_retries, lambda: self._request("post", url_suffix, **kwargs)
         )
 

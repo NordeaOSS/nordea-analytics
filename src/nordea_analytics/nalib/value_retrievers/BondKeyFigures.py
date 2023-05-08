@@ -23,7 +23,10 @@ config = get_config()
 
 
 class BondKeyFigures(ValueRetriever):
-    """Retrieves and reformat given bond key figures for given bonds and calc date."""
+    """Retrieves and reformats given bond key figures for given bonds and calculation date.
+
+    Inherits from ValueRetriever class.
+    """
 
     def __init__(
         self,
@@ -38,32 +41,45 @@ class BondKeyFigures(ValueRetriever):
         ],
         calc_date: datetime,
     ) -> None:
-        """Initialization of class.
+        """Initialize the BondKeyFigures class.
 
         Args:
-            client:  DataRetrievalServiceClient
-                or DataRetrievalServiceClientTest for testing
+            client: The client used to retrieve data.
             symbols: ISIN or name of bonds for requests.
+                List of bond symbols or a single bond symbol.
             keyfigures: Bond key figure names for request.
-            calc_date: calculation date for request.
+                Can be a single key figure name or a list of key figure names.
+                Alternatively, can be a single BondKeyFigureName or a list of BondKeyFigureName enums,
+                or a list of strings or BondKeyFigureName enums.
+            calc_date: Calculation date for request.
         """
         super(BondKeyFigures, self).__init__(client)
 
-        self.symbols: List = [symbols] if type(symbols) != list else symbols
+        # Convert symbols to a list if it's not already a list
+        self.symbols: List = [symbols] if not isinstance(symbols, list) else symbols
+
+        # Convert keyfigures to a list of strings
         self.keyfigures_original: List = (
-            keyfigures if type(keyfigures) == list else [keyfigures]
+            keyfigures if isinstance(keyfigures, list) else [keyfigures]
         )
+
+        # Convert keyfigures to variable string format if it's a BondKeyFigureName enum
         self.keyfigures = [
             convert_to_variable_string(keyfigure, BondKeyFigureName)
-            if type(keyfigure) == BondKeyFigureName
+            if isinstance(keyfigure, BondKeyFigureName)
             else keyfigure
             for keyfigure in self.keyfigures_original
         ]
+
         self.calc_date = calc_date
         self._data = self.get_bond_key_figures()
 
     def get_bond_key_figures(self) -> List:
-        """Calls the client and retrieves response with key figures from the service."""
+        """Calls the client and retrieves response with key figures from the service.
+
+        Returns:
+            A list of key figures retrieved from the service.
+        """
         json_response: List[Any] = []
         for request_dict in self.request:
             _json_response = self.get_response(request_dict)
@@ -74,13 +90,22 @@ class BondKeyFigures(ValueRetriever):
 
     @property
     def url_suffix(self) -> str:
-        """Url suffix for a given method."""
+        """Url suffix for a given method.
+
+        Returns:
+            The URL suffix for the method.
+        """
         return config["url_suffix"]["bond_key_figures"]
 
     @property
     def request(self) -> List[Dict]:
-        """Request list of dictionaries for a given set of symbols, key figures and calc date."""
+        """Request list of dictionaries for a given set of symbols, key figures and calc date.
+
+        Returns:
+            A list of dictionaries containing request parameters for each batch of symbols.
+        """
         if len(self.symbols) > config["max_bonds"]:
+            # Split symbols into smaller lists if it exceeds the maximum number of bonds
             split_symbols = np.array_split(
                 self.symbols, math.ceil(len(self.symbols) / config["max_bonds"])
             )
@@ -104,7 +129,11 @@ class BondKeyFigures(ValueRetriever):
         return request_dict
 
     def to_dict(self) -> Dict:
-        """Reformat the json response to a dictionary."""
+        """Reformat the json response to a dictionary.
+
+        Returns:
+            A dictionary containing bond symbols as keys and their respective key figures as values.
+        """
         _dict = {}
         for bond_data in self._data:
             _bond_dict = {}
@@ -121,5 +150,9 @@ class BondKeyFigures(ValueRetriever):
         return _dict
 
     def to_df(self) -> pd.DataFrame:
-        """Reformat the json response to a pandas DataFrame."""
+        """Reformat the json response to a pandas DataFrame.
+
+        Returns:
+            A pandas DataFrame containing bond symbols, key figures, and their values.
+        """
         return pd.DataFrame.from_dict(self.to_dict(), orient="index")

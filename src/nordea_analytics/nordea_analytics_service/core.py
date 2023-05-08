@@ -20,6 +20,7 @@ from nordea_analytics.instrument_variable_names import BenchmarkName, BondIndexN
 from nordea_analytics.key_figure_names import (
     BondKeyFigureName,
     CalculatedBondKeyFigureName,
+    CalculatedRepoBondKeyFigureName,
     HorizonCalculatedBondKeyFigureName,
     LiveBondKeyFigureName,
     TimeSeriesKeyFigureName,
@@ -35,6 +36,9 @@ from nordea_analytics.nalib.value_retrievers.BondKeyFigureHorizonCalculator impo
     BondKeyFigureHorizonCalculator,
 )
 from nordea_analytics.nalib.value_retrievers.BondKeyFigures import BondKeyFigures
+from nordea_analytics.nalib.value_retrievers.BondRepoCalculator import (
+    BondRepoCalculator,
+)
 from nordea_analytics.nalib.value_retrievers.Curve import Curve
 from nordea_analytics.nalib.value_retrievers.CurveDefinition import CurveDefinition
 from nordea_analytics.nalib.value_retrievers.CurveTimeSeries import CurveTimeSeries
@@ -545,6 +549,55 @@ class NordeaAnalyticsCoreService:
                 reinvestment_rate,
                 spread_change_horizon,
                 align_to_forward_curve,
+            ),
+            as_df,
+        )
+
+    def calculate_repo_bond_key_figure(
+        self,
+        symbols: Union[str, List[str]],
+        keyfigures: Union[
+            str,
+            CalculatedRepoBondKeyFigureName,
+            List[str],
+            List[CalculatedRepoBondKeyFigureName],
+            List[Union[str, CalculatedRepoBondKeyFigureName]],
+        ],
+        calc_date: datetime,
+        forward_date: datetime,
+        prices: Union[float, List[float]] = None,
+        forward_prices: Union[float, List[float]] = None,
+        repo_rates: Union[float, List[float]] = None,
+        as_df: bool = False,
+    ) -> Any:
+        """Calculate repo rate, price or forward price for given bonds.
+
+        Args:
+            symbols: ISIN or name of bonds that should be valued.
+            keyfigures: Repo bond key figure that should be valued.
+            calc_date: date of calculation.
+            forward_date: future date of calculation.
+            prices: current price of bond.
+            forward_prices: future price of bond.
+            repo_rates: Repo rate of bond.
+            as_df: Default False. If True, the results are represented
+                as pandas DataFrame, else as dictionary
+
+
+        Returns:
+            Dictionary containing requested data. if as_df is True,
+                the data is in form of a DataFrame.
+        """
+        return self._retrieve_value(
+            BondRepoCalculator(
+                self._client,
+                symbols,
+                keyfigures,
+                calc_date,
+                forward_date,
+                prices,
+                forward_prices,
+                repo_rates,
             ),
             as_df,
         )

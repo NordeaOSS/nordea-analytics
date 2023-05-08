@@ -271,24 +271,46 @@ class HorizonCalculatedBondKeyFigureName(Enum):
 
     BPV = "bpv"
     CVX = "cvx"
+    PrePayments = "prepayments"
     PriceAtHorizon = "price_at_horizon"
     PriceClean = "price"
     ReturnInterest = "return_interest"
+    """Return on coupon payments (fixed or floating) in percentage value, given that interest rate follow the """
+    """rate curve."""
     ReturnInterestAmount = "return_interest_amount"
+    """Same as ReturnInterest, but in money value."""
     ReturnPrincipal = "return_principal"
+    """The return of the principal change, while the bond price rolls down the curve towards 100. This is driven by """
+    """interest rates and sum of prepayments over a period, where the reinvestment options are taken into account. """
+    """The results are presented in percentage value."""
     ReturnPrincipalAmount = "return_principal_amount"
+    "Same as ReturnPrincipal, but in money value."
     Spread = "spread"
+    Yield = "yield"
+
+
+class CalculatedRepoBondKeyFigureName(Enum):
+    """Repo Bond key figure names that can be calculated in the service.
+
+    Must be lower case.
+    """
+    ForwardPrice = "forward_price"
+    ForwardYield = "forward_yield"
+    Price = "price"
+    RepoRate = "repo_rate"
 
 
 class LiveBondKeyFigureName(Enum):
     """Bond key figure names available live in the service."""
 
-    CVX = "cvx"
+    ASWMM = "asw mm"
     BPV = "bpv"
+    CVX = "cvx"
+    FlexSpread = "flex spread"
     GovSpread = "gov spread"
     LiborSpread3M = "libor 3m spread"
     LiborSpread6M = "libor 6m spread"
-    LiborSpread6MActual = "Libor 6M Actual Spread"
+    LiborSpread6MActual = "libor 6m actual spread"
     Quote = "quote"
     Spread = "spread"
     SpreadRisk = "spread risk"

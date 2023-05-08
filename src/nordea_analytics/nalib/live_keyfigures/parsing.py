@@ -41,11 +41,11 @@ def filter_keyfigures(
         key_figure_key = get_keyfigure_key(
             _kf, key_figures_original, LiveBondKeyFigureName.__name__
         )
-        if _kf not in [x["keyfigure"].lower() for x in chunk["values"]]:
-            result[LiveBondKeyFigureName(key_figure_key).name] = ""
 
-    d = {chunk["isin"]: result}
-    return d
+    if result != {}:
+        return {chunk["isin"]: result}
+    else:
+        return {}  # should not add row in dict for isin if no results found
 
 
 def to_data_frame(live_keyfigures_dict: Dict) -> pd.DataFrame:
@@ -58,10 +58,11 @@ def to_data_frame(live_keyfigures_dict: Dict) -> pd.DataFrame:
         Instance of pd.DataFrame.
     """
     df = pd.DataFrame.from_dict(live_keyfigures_dict, orient="index")
-    if df.empty:
-        return df
-    col = df.pop("timestamp")
-    df.insert(len(df.columns), col.name, col)
+    if df.empty or df.isnull().values.all():
+        return pd.DataFrame()
+
+    timestamp_col = df.pop("timestamp")
+    df.insert(len(df.columns), timestamp_col.name, timestamp_col)
     df.index.name = "ISIN"
     return df.reset_index()
 

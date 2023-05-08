@@ -23,26 +23,27 @@ The second package everything from the first and real-time bond endpoints
 
 The first package:
 
-* :meth:`get_bond_key_figures() <nordea_analytics.nordea_analytics_service.NordeaAnalyticsService.get_bond_key_figures>`.
-* :meth:`get_curve() <nordea_analytics.nordea_analytics_service.NordeaAnalyticsService.get_curve>`.
-* :meth:`get_curve_definition() <nordea_analytics.nordea_analytics_service.NordeaAnalyticsService.get_curve_definition>`.
-* :meth:`get_curve_time_series() <nordea_analytics.nordea_analytics_service.NordeaAnalyticsService.get_curve_time_series>`.
-* :meth:`get_date_sequence() <nordea_analytics.nordea_analytics_service.NordeaAnalyticsService.get_date_sequence>`.
-* :meth:`get_fx_forecasts() <nordea_analytics.nordea_analytics_service.NordeaAnalyticsService.get_fx_forecasts>`.
-* :meth:`get_index_composition() <nordea_analytics.nordea_analytics_service.NordeaAnalyticsService.get_index_composition>`.
-* :meth:`get_quotes() <nordea_analytics.nordea_analytics_service.NordeaAnalyticsService.get_quotes>`.
-* :meth:`get_shift_days() <nordea_analytics.nordea_analytics_service.NordeaAnalyticsService.get_shift_days>`.
-* :meth:`get_time_series() <nordea_analytics.nordea_analytics_service.NordeaAnalyticsService.get_time_series>`.
-* :meth:`get_year_fraction() <nordea_analytics.nordea_analytics_service.NordeaAnalyticsService.get_year_fractionget_year_fraction>`.
-* :meth:`get_yield_forecasts() <nordea_analytics.nordea_analytics_service.NordeaAnalyticsService.get_yield_forecasts>`.
-* :meth:`search_bonds() <nordea_analytics.nordea_analytics_service.NordeaAnalyticsService.search_bonds>`
+* :meth:`get_bond_key_figures() <nordea_analytics.nordea_analytics_service.core.NordeaAnalyticsCoreService.get_bond_key_figures>`.
+* :meth:`get_curve() <nordea_analytics.nordea_analytics_service.core.NordeaAnalyticsCoreService.get_curve>`.
+* :meth:`get_curve_definition() <nordea_analytics.nordea_analytics_service.core.NordeaAnalyticsCoreService.get_curve_definition>`.
+* :meth:`get_curve_time_series() <nordea_analytics.nordea_analytics_service.core.NordeaAnalyticsCoreService.get_curve_time_series>`.
+* :meth:`get_date_sequence() <nordea_analytics.nordea_analytics_service.core.NordeaAnalyticsCoreService.get_date_sequence>`.
+* :meth:`get_fx_forecasts() <nordea_analytics.nordea_analytics_service.core.NordeaAnalyticsCoreService.get_fx_forecasts>`.
+* :meth:`get_index_composition() <nordea_analytics.nordea_analytics_service.core.NordeaAnalyticsCoreService.get_index_composition>`.
+* :meth:`get_quotes() <nordea_analytics.nordea_analytics_service.core.NordeaAnalyticsCoreService.get_quotes>`.
+* :meth:`get_shift_days() <nordea_analytics.nordea_analytics_service.core.NordeaAnalyticsCoreService.get_shift_days>`.
+* :meth:`get_time_series() <nordea_analytics.nordea_analytics_service.core.NordeaAnalyticsCoreService.get_time_series>`.
+* :meth:`get_year_fraction() <nordea_analytics.nordea_analytics_service.core.NordeaAnalyticsCoreService.get_year_fractionget_year_fraction>`.
+* :meth:`get_yield_forecasts() <nordea_analytics.nordea_analytics_service.core.NordeaAnalyticsCoreService.get_yield_forecasts>`.
+* :meth:`search_bonds() <nordea_analytics.nordea_analytics_service.core.NordeaAnalyticsCoreService.search_bonds>`
 
 The second package:
 
 * Includes all endpoints from the first package
-* :meth:`calculate_bond_key_figure() <nordea_analytics.nordea_analytics_service.NordeaAnalyticsService.calculate_bond_key_figure>`.
-* :meth:`calculate_horizon_bond_key_figure() <nordea_analytics.nordea_analytics_service.NordeaAnalyticsService.calculate_horizon_bond_key_figure>`.
-* :meth:`get_bond_live_key_figures() <nordea_analytics.nordea_analytics_service.NordeaAnalyticsLiveService.get_bond_live_key_figures>`.
+* :meth:`calculate_bond_key_figure() <nordea_analytics.nordea_analytics_service.core.NordeaAnalyticsCoreService.calculate_bond_key_figure>`.
+* :meth:`calculate_horizon_bond_key_figure() <nordea_analytics.nordea_analytics_service.core.NordeaAnalyticsCoreService.calculate_horizon_bond_key_figure>`.
+* :meth:`calculate_repo_bond_key_figure() <nordea_analytics.nordea_analytics_service.core.NordeaAnalyticsCoreService.calculate_repo_bond_key_figure>`.
+* :meth:`get_bond_live_key_figures() <nordea_analytics.nordea_analytics_service.core.NordeaAnalyticsCoreService.get_bond_live_key_figures>`.
 
 Enumeration classes for input parameters
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -55,6 +56,7 @@ For keyfigures
 * :meth:`CalculatedBondKeyFigureName <nordea_analytics.key_figure_names.CalculatedBondKeyFigureName>`
 * :meth:`HorizonCalculatedBondKeyFigureName <nordea_analytics.key_figure_names.HorizonCalculatedBondKeyFigureName>`
 * :meth:`LiveBondKeyFigureName <nordea_analytics.key_figure_names.LiveBondKeyFigureName>`
+* :meth:`CalculatedRepoBondKeyFigureName <nordea_analytics.key_figure_names.CalculatedRepoBondKeyFigureName>`
 
 For curves
 
@@ -77,6 +79,11 @@ For forecasts
 * :meth:`YieldCountry <nordea_analytics.forecast_names.YieldCountry>`
 * :meth:`YieldType <nordea_analytics.forecast_names.YieldType>`
 * :meth:`YieldHorizon <nordea_analytics.forecast_names.YieldHorizon>`
+
+For instruments
+
+* :meth:`YieldType <nordea_analytics.instrument_variable_names.BenchmarkName>`
+* :meth:`YieldType <nordea_analytics.instrument_variable_names.BondIndexName>`
 
 
 Basic examples
@@ -112,7 +119,7 @@ are shifted up by 5 bps on the 6M, 1Y and 2Y tenor.
                                                              as_df=True)
 
 Other optional input variables can be found in :meth:`calculate_bond_key_figure()
-<nordea_analytics.nordea_analytics_service.NordeaAnalyticsService.calculate_bond_key_figure>`
+<nordea_analytics.nordea_analytics_service.core.NordeaAnalyticsCoreService.calculate_bond_key_figure>`
 
 Calculate Horizon Bond Key Figure
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -141,7 +148,43 @@ at 14th of February 2022 for the ISIN `DK0002000421`. Key figure "PriceClean" sh
                                                                      as_df=True)
 
 Other optional input variables can be found in :meth:`calculate_horizon_bond_key_figure()
-<nordea_analytics.nordea_analytics_service.NordeaAnalyticsService.calculate_horizon_bond_key_figure>`
+<nordea_analytics.nordea_analytics_service.core.NordeaAnalyticsCoreService.calculate_horizon_bond_key_figure>`
+
+Calculate Repo Bond Key Figure
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+The following example calculates the Repo Rate and Forward Yield for the future date 13th of February 2024, given information
+at 13th of February 2023 for the ISIN `DK0002044551` and `DK0002000421`, and returns it in a DataFrame format.
+
+.. code-block:: python
+
+    from datetime import datetime
+    from nordea_analytics import get_nordea_analytics_client
+    from nordea_analytics import CalculatedRepoBondKeyFigureName
+
+    na_service = get_nordea_analytics_client(client_id="Your client id", client_secret="Your client secret")
+
+    isin = ['dk0002044551', 'DK0002000421']
+    bond_key_figures = [CalculatedRepoBondKeyFigureName.RepoRate,
+                        CalculatedRepoBondKeyFigureName.ForwardYield]
+    calc_date = datetime.datetime(2023, 2, 13)
+    forward_date = datetime.datetime(2024, 2, 13)
+    prices = [47, 101]
+    forward_price = [50, 100]
+    df = na_service.calculate_repo_bond_key_figure(isin,
+                                                bond_key_figures,
+                                                calc_date,
+                                                forward_date,
+                                                prices,
+                                                forward_price,
+                                                as_df=True)
+
+
+Price, Forward Price and Repo Rate are all optional inputs, but two of them always need to be given in order to
+solve for the third one. As in the example above, we want to solve for repo rate, an give therefor price and forward
+price as inputs.
+Note that if one wants to calculate repo bond key figures for multiple ISINs, as many prices, forward prices or repo
+rates need to be given and the values need to be located in the list at the same place as their respective ISIN.
+
 
 Get Bond Key Figures
 ^^^^^^^^^^^^^^^^^^^^^
@@ -157,7 +200,7 @@ The following example retrieves Vega, BPV and CVX for a given set of ISINs and r
 
     isins = ['DK0002000421', 'DK0002004092', 'DK0002013408', 'DK0006344171']
     bond_key_figure_name = [BondKeyFigureName.Vega, BondKeyFigureName.BPV, BondKeyFigureName.CVX]
-    value_date = value_date = datetime(2023, 1, 3)
+    value_date = datetime(2023, 1, 3)
 
     bonds_key_figures = na_service.get_bond_key_figures(symbols=isins,
                                                         keyfigures=bond_key_figure_name,
@@ -419,7 +462,7 @@ Get Time Series
 ^^^^^^^^^^^^^^^^
 The following example retrieves daily Vega, BPV and Convexity for a given set of ISINs for the last 365 days
 and returns the results in a python dictionary. The
-:meth:`get_time_series() <nordea_analytics.nordea_analytics_service.NordeaAnalyticsService.get_time_series>` function
+:meth:`get_time_series() <nordea_analytics.nordea_analytics_service.core.NordeaAnalyticsCoreService.get_time_series>` function
 can also retrieve time series for swaps, FX, FX swap point, then the key figure name should be `TimeSeriesKeyFigureName.Quote`.
 
 .. code-block:: python
@@ -571,7 +614,7 @@ To search specifically for normal floaters set lower_coupon = 100,000.
                                     as_df=True)
 
 Other serach criterias are listed in :meth:`search_bonds()
-<nordea_analytics.nordea_analytics_service.NordeaAnalyticsService.search_bonds>`
+<nordea_analytics.nordea_analytics_service.core.NordeaAnalyticsCoreService.search_bonds>`
 
 
 
