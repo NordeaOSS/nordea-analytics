@@ -33,7 +33,7 @@ class FXQuotes(ValueRetriever):
         """
         super(FXQuotes, self).__init__(client)
 
-        self.symbols: List = [symbols] if type(symbols) != list else symbols
+        self.symbols: List = symbols if isinstance(symbols, list) else [symbols]
         self.calc_date = calc_date
         self._data = self.get_fx_quotes()
 

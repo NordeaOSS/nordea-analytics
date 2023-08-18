@@ -55,7 +55,7 @@ class LiveBondKeyFigures(ValueRetriever):
         _keyfigures: List = keyfigures if isinstance(keyfigures, list) else [keyfigures]
         self.keyfigures: List = [
             convert_to_variable_string(keyfigure, LiveBondKeyFigureName)
-            if type(keyfigure) == LiveBondKeyFigureName
+            if isinstance(keyfigure, LiveBondKeyFigureName)
             else keyfigure.lower()
             for keyfigure in _keyfigures
         ]

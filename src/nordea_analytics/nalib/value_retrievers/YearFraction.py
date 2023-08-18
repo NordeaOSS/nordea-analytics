@@ -43,7 +43,7 @@ class YearFraction(ValueRetriever):
         self.to_date = to_date
         self.time_convention = (
             convert_to_variable_string(time_convention, TimeConvention)
-            if type(time_convention) == TimeConvention
+            if isinstance(time_convention, TimeConvention)
             else time_convention
         )
         self._data = self.year_fraction()

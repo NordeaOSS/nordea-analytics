@@ -38,7 +38,7 @@ class Quotes(ValueRetriever):
         super(Quotes, self).__init__(client)
 
         # Convert symbols to list if it's not already a list
-        self.symbols: List = [symbols] if type(symbols) != list else symbols
+        self.symbols: List = symbols if isinstance(symbols, list) else [symbols]
         self.calc_date = calc_date
         self._data = self.get_fx_quotes()
 
