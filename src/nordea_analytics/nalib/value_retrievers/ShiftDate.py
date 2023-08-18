@@ -54,12 +54,12 @@ class ShiftDate(ValueRetriever):
         self.years = years
         self.exchange = (
             convert_to_variable_string(exchange, Exchange)
-            if type(exchange) == Exchange
+            if isinstance(exchange, Exchange)
             else exchange
         )
         self.date_roll_convention = (
             convert_to_variable_string(date_roll_convention, DateRollConvention)
-            if type(date_roll_convention) == DateRollConvention
+            if isinstance(date_roll_convention, DateRollConvention)
             else date_roll_convention
         )
         self._data = self.shift_date()

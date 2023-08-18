@@ -66,16 +66,16 @@ class CurveTimeSeries(ValueRetriever):
         """
         super(CurveTimeSeries, self).__init__(client)
         self._client = client
-        self.curves_original: List = curves if type(curves) == list else [curves]
+        self.curves_original: List = curves if isinstance(curves, list) else [curves]
         self.curves = [
             convert_to_variable_string(curve, CurveName)
-            if type(curve) == CurveName
+            if isinstance(curve, CurveName)
             else curve
             for curve in self.curves_original
         ]
         self.from_date = from_date
         self.to_date = to_date
-        _tenors: List = tenors if type(tenors) == list else [tenors]  # type:ignore
+        _tenors: List = tenors if isinstance(tenors, list) else [tenors]  # type:ignore
         self.tenors = [str(t) for t in _tenors]
         self.curve_type = (
             convert_to_variable_string(curve_type, CurveType)
