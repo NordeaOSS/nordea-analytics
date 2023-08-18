@@ -3,4 +3,4 @@ client_secret=
 
 symbols=DE0001102424,DK0002030337
 key_figures=spread,yield
-calc_date=20221022
+calc_date=20221021

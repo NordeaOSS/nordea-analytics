@@ -48,12 +48,12 @@ class DateSequence(ValueRetriever):
         self.to_date = to_date
         self.exchange = (
             convert_to_variable_string(exchange, Exchange)
-            if type(exchange) == Exchange
+            if isinstance(exchange, Exchange)
             else exchange
         )
         self.day_count_convention = (
             convert_to_variable_string(day_count_convention, DayCountConvention)
-            if type(day_count_convention) == DayCountConvention
+            if isinstance(day_count_convention, DayCountConvention)
             else day_count_convention
         )
 

@@ -211,7 +211,7 @@ def float_to_tenor_string(float_tenor: Union[str, float]) -> str:
 def check_json_response(json_response: Union[List, Mapping]) -> bool:
     """Check if json_response is empty and returns False, else True."""
     if not json_response or (
-        type(json_response) == dict and all(not json_response[d] for d in json_response)
+        isinstance(json_response, dict) and all(not json_response[d] for d in json_response)
     ):
         return False
     else:
@@ -248,8 +248,8 @@ def get_keyfigure_key(
     """Get keyfigure key for dict."""
     for kf_original in key_figures_original:
         if key_figure == kf_original or (
-            type(key_figure) == str
-            and type(kf_original) == str
+            isinstance(key_figure, str)
+            and isinstance(kf_original, str)
             and key_figure.lower() == kf_original.lower()
         ):
             return str(kf_original)
@@ -277,11 +277,11 @@ def convert_to_original_format(
     """Convert the output to be the same as the input."""
     original = originals[
         [
-            f.lower() if type(f) == str else f.value.lower()  # type:ignore
+            f.lower() if isinstance(f, str) else f.value.lower()  # type:ignore
             for f in originals
         ].index(new.lower())
     ]
-    if type(original) == str:
+    if isinstance(original, str):
         return original
     else:
         try:
