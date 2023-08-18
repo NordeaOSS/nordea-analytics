@@ -170,8 +170,8 @@ class CurveDefinition(ValueRetriever):
 
         curve_key = (
             self.curve_original.name
-            if type(self.curve_original) == CurveName
-            or type(self.curve_original) == CurveDefinitionName
+            if isinstance(self.curve_original, CurveName)
+            or isinstance(self.curve_original, CurveDefinitionName)
             else self.curve_original
         )
 

@@ -51,17 +51,17 @@ class ShiftDays(ValueRetriever):
         self.days = days
         self.exchange = (
             convert_to_variable_string(exchange, Exchange)
-            if type(exchange) == Exchange
+            if isinstance(exchange, Exchange)
             else exchange
         )
         self.day_count_convention = (
             convert_to_variable_string(day_count_convention, DayCountConvention)
-            if type(day_count_convention) == DayCountConvention
+            if isinstance(day_count_convention, DayCountConvention)
             else day_count_convention
         )
         self.date_roll_convention = (
             convert_to_variable_string(date_roll_convention, DateRollConvention)
-            if type(date_roll_convention) == DateRollConvention
+            if isinstance(date_roll_convention, DateRollConvention)
             else date_roll_convention
         )
         self._data = self.shift_days()

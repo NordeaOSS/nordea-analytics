@@ -1,6 +1,6 @@
 -c requirements.txt
 mypy==0.910
-nox==2021.10.1
+nox==2023.04.22
 pygit2==1.11.1
 pytest==7.1.1
 xlwings==0.30.1

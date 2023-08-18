@@ -7,7 +7,7 @@ ECHO Setting up virtual environment
 if not exist "%WORKPATH%\venv" py -m venv %WORKPATH%\venv
 
 ECHO Activating virtual environment
-CALL %WORKPATH%\venv\Scripts\activate
+CALL "%WORKPATH%\venv\Scripts\activate"
 
 ECHO Installing nordea-analytics python
 pip install nordea-analytics >nul
