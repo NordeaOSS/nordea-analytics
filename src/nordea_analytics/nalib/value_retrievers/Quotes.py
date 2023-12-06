@@ -7,9 +7,8 @@ from nordea_analytics.nalib.data_retrieval_client import (
     DataRetrievalServiceClient,
 )
 from nordea_analytics.nalib.exceptions import CustomWarningCheck
-from nordea_analytics.nalib.util import (
-    get_config,
-)
+from nordea_analytics.nalib.http.errors import BadRequestError
+from nordea_analytics.nalib.util import get_config
 from nordea_analytics.nalib.value_retriever import ValueRetriever
 
 config = get_config()
@@ -48,12 +47,12 @@ class Quotes(ValueRetriever):
         Returns:
             A list of dictionaries containing FX quote data.
         """
-        _json_response = self.get_post_get_response()
+        _json_response = self.retrieve_response()
         json_response: List[Any] = _json_response[config["results"]["quotes"]]
 
         return json_response
 
-    def get_post_get_response(self) -> Dict:
+    def retrieve_response(self) -> Dict:
         """Retrieves response after posting the request.
 
         Returns:
@@ -61,13 +60,9 @@ class Quotes(ValueRetriever):
         """
         json_response: Dict = {}
         try:
-            json_response = self._client.get_post_get_response(
-                self.request, self.url_suffix
-            )
-        except Exception as ex:
-            CustomWarningCheck.post_response_not_retrieved_warning(
-                ex, "One or more symbols "
-            )
+            json_response = self._client.post(self.request, self.url_suffix)
+        except BadRequestError as bad_request:
+            CustomWarningCheck.bad_request_warning(bad_request, "One or more symbols")
 
         return json_response
 

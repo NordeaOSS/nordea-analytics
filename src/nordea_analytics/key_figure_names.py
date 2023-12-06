@@ -76,6 +76,7 @@ class BondKeyFigureName(Enum):
     MacauleyDuration_Deterministic = "macauley_duration"
     MaxOutstandingAmount = "max_outstanding_amount"
     ModifiedDuration_Deterministic = "modduration"
+    OALife = "oalife"
     OAModifiedDuration = "modified_bpv"
     OAS_GOV = "govoas"
     OAS_OIS = "oas"
@@ -294,6 +295,7 @@ class CalculatedRepoBondKeyFigureName(Enum):
 
     Must be lower case.
     """
+
     ForwardPrice = "forward_price"
     ForwardYield = "forward_yield"
     Price = "price"

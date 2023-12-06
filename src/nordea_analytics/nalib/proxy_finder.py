@@ -2,7 +2,7 @@ import ast
 import ctypes.wintypes
 from pathlib import Path
 import platform
-from typing import Any, Dict, Union
+from typing import Optional, Any, Dict, Union
 import urllib.parse
 import urllib.request
 
@@ -10,7 +10,7 @@ import urllib.request
 class ProxyFinder:
     """Retrieves proxy information when needed."""
 
-    def __init__(self, url: str, proxy_path: Path = None) -> None:
+    def __init__(self, url: str, proxy_path: Optional[Path] = None) -> None:
         """Initialization of the class.
 
         Args:

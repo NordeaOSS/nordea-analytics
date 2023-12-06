@@ -1,6 +1,6 @@
 """Core functionality to acces API."""
 from datetime import datetime
-from typing import Any, Dict, Iterator, List, Union
+from typing import Optional, Any, Dict, Iterator, List, Union
 
 from nordea_analytics.convention_variable_names import (
     CashflowType,
@@ -185,10 +185,10 @@ class NordeaAnalyticsCoreService:
         from_date: datetime,
         to_date: datetime,
         tenors: Union[float, List[float]],
-        curve_type: Union[str, CurveType] = None,
-        time_convention: Union[str, TimeConvention] = None,
-        spot_forward: Union[str, SpotForward] = None,
-        forward_tenor: float = None,
+        curve_type: Optional[Union[str, CurveType]] = None,
+        time_convention: Optional[Union[str, TimeConvention]] = None,
+        spot_forward: Optional[Union[str, SpotForward]] = None,
+        forward_tenor: Optional[float] = None,
         as_df: bool = False,
     ) -> Any:
         """Retrieves historical time series of curve points for a given tenor.
@@ -238,11 +238,11 @@ class NordeaAnalyticsCoreService:
             List[Union[str, CurveName]],
         ],
         calc_date: datetime,
-        curve_type: Union[str, CurveType] = None,
-        tenor_frequency: float = None,
-        time_convention: Union[str, TimeConvention] = None,
-        spot_forward: Union[str, SpotForward] = None,
-        forward_tenor: float = None,
+        curve_type: Optional[Union[str, CurveType]] = None,
+        tenor_frequency: Optional[float] = None,
+        time_convention: Optional[Union[str, TimeConvention]] = None,
+        spot_forward: Optional[Union[str, SpotForward]] = None,
+        forward_tenor: Optional[float] = None,
         as_df: bool = False,
     ) -> Any:
         """Retrieves a curve for a given calculation date.
@@ -307,29 +307,29 @@ class NordeaAnalyticsCoreService:
     def search_bonds(
         self,
         dmb: bool = False,
-        country: str = None,
-        currency: str = None,
-        issuers: Union[List[Issuers], List[str], Issuers, str] = None,
-        asset_types: Union[List[AssetType], List[str], AssetType, str] = None,
-        instrument_groups: Union[
-            List[InstrumentGroup], List[str], InstrumentGroup, str
+        country: Optional[str] = None,
+        currency: Optional[str] = None,
+        issuers: Optional[Union[List[Issuers], List[str], Issuers, str]] = None,
+        asset_types: Optional[Union[List[AssetType], List[str], AssetType, str]] = None,
+        instrument_groups: Optional[
+            Union[List[InstrumentGroup], List[str], InstrumentGroup, str]
         ] = None,
-        lower_issue_date: datetime = None,
-        upper_issue_date: datetime = None,
-        lower_maturity: datetime = None,
-        upper_maturity: datetime = None,
-        lower_closing_date: datetime = None,
-        upper_closing_date: datetime = None,
-        lower_coupon: float = None,
-        upper_coupon: float = None,
-        lower_outstanding_amount: float = None,
-        upper_outstanding_amount: float = None,
-        amortisation_type: Union[AmortisationType, str] = None,
-        capital_centres: Union[
-            List[str], str, List[CapitalCentres], CapitalCentres
+        lower_issue_date: Optional[datetime] = None,
+        upper_issue_date: Optional[datetime] = None,
+        lower_maturity: Optional[datetime] = None,
+        upper_maturity: Optional[datetime] = None,
+        lower_closing_date: Optional[datetime] = None,
+        upper_closing_date: Optional[datetime] = None,
+        lower_coupon: Optional[float] = None,
+        upper_coupon: Optional[float] = None,
+        lower_outstanding_amount: Optional[float] = None,
+        upper_outstanding_amount: Optional[float] = None,
+        amortisation_type: Optional[Union[AmortisationType, str]] = None,
+        capital_centres: Optional[
+            Union[List[str], str, List[CapitalCentres], CapitalCentres]
         ] = None,
-        capital_centre_types: Union[
-            List[str], str, List[CapitalCentreTypes], CapitalCentreTypes
+        capital_centre_types: Optional[
+            Union[List[str], str, List[CapitalCentreTypes], CapitalCentreTypes]
         ] = None,
         as_df: bool = False,
     ) -> Any:
@@ -402,21 +402,21 @@ class NordeaAnalyticsCoreService:
             List[Union[str, CalculatedBondKeyFigureName]],
         ],
         calc_date: datetime,
-        curves: Union[List[str], str, CurveName, List[CurveName]] = None,
-        shift_tenors: Union[
-            float, List[float], int, List[int], List[Union[float, int]]
+        curves: Optional[Union[List[str], str, CurveName, List[CurveName]]] = None,
+        shift_tenors: Optional[
+            Union[float, List[float], int, List[int], List[Union[float, int]]]
         ] = None,
-        shift_values: Union[
-            float, List[float], int, List[int], List[Union[float, int]]
+        shift_values: Optional[
+            Union[float, List[float], int, List[int], List[Union[float, int]]]
         ] = None,
-        pp_speed: float = None,
-        prices: Union[float, List[float]] = None,
-        spread: float = None,
-        spread_curve: Union[str, CurveName] = None,
-        yield_input: float = None,
-        asw_fix_frequency: str = None,
-        ladder_definition: Union[float, List[float]] = None,
-        cashflow_type: Union[str, CashflowType] = None,
+        pp_speed: Optional[float] = None,
+        prices: Optional[Union[float, List[float]]] = None,
+        spread: Optional[float] = None,
+        spread_curve: Optional[Union[str, CurveName]] = None,
+        yield_input: Optional[float] = None,
+        asw_fix_frequency: Optional[str] = None,
+        ladder_definition: Optional[Union[float, List[float]]] = None,
+        cashflow_type: Optional[Union[str, CashflowType]] = None,
         as_df: bool = False,
     ) -> Any:
         """Calculate key figures for given bonds and calculation date.
@@ -482,17 +482,17 @@ class NordeaAnalyticsCoreService:
         ],
         calc_date: datetime,
         horizon_date: datetime,
-        curves: Union[List[str], str, CurveName, List[CurveName]] = None,
-        shift_tenors: Union[List[float], float] = None,
-        shift_values: Union[List[float], float] = None,
-        pp_speed: float = None,
-        prices: Union[float, List[float]] = None,
-        cashflow_type: Union[str, CashflowType] = None,
-        fixed_prepayments: float = None,
-        reinvest_in_series: bool = None,
-        reinvestment_rate: float = None,
-        spread_change_horizon: float = None,
-        align_to_forward_curve: bool = None,
+        curves: Optional[Union[List[str], str, CurveName, List[CurveName]]] = None,
+        shift_tenors: Optional[Union[List[float], float]] = None,
+        shift_values: Optional[Union[List[float], float]] = None,
+        pp_speed: Optional[float] = None,
+        prices: Optional[Union[float, List[float]]] = None,
+        cashflow_type: Optional[Union[str, CashflowType]] = None,
+        fixed_prepayments: Optional[float] = None,
+        reinvest_in_series: Optional[bool] = None,
+        reinvestment_rate: Optional[float] = None,
+        spread_change_horizon: Optional[float] = None,
+        align_to_forward_curve: Optional[bool] = None,
         as_df: bool = False,
     ) -> Any:
         """Calculate future key figures for given bonds.
@@ -565,9 +565,9 @@ class NordeaAnalyticsCoreService:
         ],
         calc_date: datetime,
         forward_date: datetime,
-        prices: Union[float, List[float]] = None,
-        forward_prices: Union[float, List[float]] = None,
-        repo_rates: Union[float, List[float]] = None,
+        prices: Optional[Union[float, List[float]]] = None,
+        forward_prices: Optional[Union[float, List[float]]] = None,
+        repo_rates: Optional[Union[float, List[float]]] = None,
         as_df: bool = False,
     ) -> Any:
         """Calculate repo rate, price or forward price for given bonds.
@@ -667,11 +667,11 @@ class NordeaAnalyticsCoreService:
     def get_shift_date(
         self,
         date: datetime,
-        days: int = None,
-        months: int = None,
-        years: int = None,
-        exchange: Union[str, Exchange] = None,
-        date_roll_convention: Union[str, DateRollConvention] = None,
+        days: Optional[int] = None,
+        months: Optional[int] = None,
+        years: Optional[int] = None,
+        exchange: Optional[Union[str, Exchange]] = None,
+        date_roll_convention: Optional[Union[str, DateRollConvention]] = None,
     ) -> datetime:
         """Shifts a date using internal holiday calendars.
 
@@ -704,8 +704,8 @@ class NordeaAnalyticsCoreService:
         self,
         from_date: datetime,
         to_date: datetime,
-        exchange: Union[str, Exchange] = None,
-        day_count_convention: Union[str, DayCountConvention] = None,
+        exchange: Optional[Union[str, Exchange]] = None,
+        day_count_convention: Optional[Union[str, DayCountConvention]] = None,
     ) -> List:
         """Shifts a date using internal holiday calendars.
 
@@ -731,9 +731,9 @@ class NordeaAnalyticsCoreService:
         self,
         date: datetime,
         days: int,
-        exchange: Union[str, Exchange] = None,
-        day_count_convention: Union[str, DayCountConvention] = None,
-        date_roll_convention: Union[str, DateRollConvention] = None,
+        exchange: Optional[Union[str, Exchange]] = None,
+        day_count_convention: Optional[Union[str, DayCountConvention]] = None,
+        date_roll_convention: Optional[Union[str, DateRollConvention]] = None,
     ) -> datetime:
         """Shifts a date using internal holiday calendars.
 

@@ -1,29 +1,65 @@
 from typing import Any, Dict, Union
-from urllib.parse import urljoin
-
-import requests
 
 from nordea_analytics.nalib.exceptions import HttpClientImproperlyConfigured
 from nordea_analytics.nalib.http.core import HttpClientConfiguration, RestApiHttpClient
+from nordea_analytics.nalib.http.errors import ClientHttpError, ForbiddenRequestError
+from nordea_analytics.nalib.http.models import AnalyticsApiResponse
+
+
+class OpenBankingForbiddenRequestError(ForbiddenRequestError):
+    """Analytics API server is refusing action due to insufficient privileges."""
+
+    def __init__(self, error_id: str) -> None:
+        """Create a new instance of OpenBankingUnauthorizedRequestError."""
+        self._error_description = ("Your client_id and client_secret are correct, "
+                                   "but you don't have access to requested resource. "
+                                   "Please contact Nordea to get access.")
+        super().__init__(error_id, self._error_description)
+
+    def __str__(self) -> str:
+        """Return str(self)."""
+        return f"Error code: {self.error_id}. {self._error_description}"
+
+
+class OpenBankingUnauthorizedRequestError(ClientHttpError):
+    """Authentication has failed.
+
+    Check that you pass correct client_id and client_secret values and that you have proper access to Analytics API.
+    """
+
+    def __init__(self, error_id: str) -> None:
+        """Create a new instance of OpenBankingUnauthorizedRequestError."""
+        self._error_description = ("Authentication has failed. "
+                                   "Check that you pass correct client_id and client_secret values "
+                                   "and that you have proper access to Analytics API.")
+        super().__init__(error_id, self._error_description)
+
+    def __str__(self) -> str:
+        """Return str(self)."""
+        return self._error_description
 
 
 class OpenBankingClientConfiguration(HttpClientConfiguration):
     """Contain parameters for HTTP requests to open banking API."""
 
     def __init__(
-        self,
-        base_url: str,
-        client_id: str,
-        client_secret: str,
-        headers: Union[Dict[str, str], None] = None,
-        proxies: Union[Dict[str, str], None] = None,
+            self,
+            base_url: str,
+            client_id: str,
+            client_secret: str,
+            headers: Union[Dict[str, str], None] = None,
+            proxies: Union[Dict[str, str], None] = None,
     ) -> None:
         """Constructs a :class:`OpenBankingClientConfiguration <OpenBankingClientConfiguration>`."""
+        if not base_url:
+            raise HttpClientImproperlyConfigured("base_url is not set.")
         if not client_id:
             raise HttpClientImproperlyConfigured("client_id is not set.")
         if not client_secret:
             raise HttpClientImproperlyConfigured("client_secret is not set.")
 
+        self.__client_id = client_id
+        self.__client_secret = client_secret
         headers = headers or {}
         headers.update(
             {
@@ -32,7 +68,19 @@ class OpenBankingClientConfiguration(HttpClientConfiguration):
             }
         )
 
-        super().__init__(base_url=base_url, headers=headers, proxies=proxies)
+        super(OpenBankingClientConfiguration, self).__init__(
+            base_url=base_url, headers=headers, proxies=proxies
+        )
+
+    @property
+    def client_id(self) -> str:
+        """Return client_id."""
+        return self.__client_id
+
+    @property
+    def client_secret(self) -> str:
+        """Return client_secret."""
+        return self.__client_secret
 
 
 class OpenBankingHttpClient(RestApiHttpClient):
@@ -48,7 +96,7 @@ class OpenBankingHttpClient(RestApiHttpClient):
         """Return current configuration of Http Client."""
         return self.conf
 
-    def get(self, url_suffix: str, **kwargs: Any) -> requests.Response:
+    def get(self, url_suffix: str, **kwargs: Any) -> AnalyticsApiResponse:
         """Sends a GET request.
 
         Args:
@@ -58,12 +106,9 @@ class OpenBankingHttpClient(RestApiHttpClient):
         Returns:
             requests.Response instance.
         """
-        max_retries = self.conf.max_retries
-        return self._proceed_response(
-            max_retries, lambda: self._request("get", url_suffix, **kwargs)
-        )
+        return self.request("GET", url_suffix, **kwargs)
 
-    def post(self, url_suffix: str, json: Any, **kwargs: Any) -> requests.Response:
+    def post(self, url_suffix: str, json: Any, **kwargs: Any) -> AnalyticsApiResponse:
         """Sends a POST request.
 
         Args:
@@ -74,15 +119,17 @@ class OpenBankingHttpClient(RestApiHttpClient):
         Returns:
             requests.Response instance.
         """
-        max_retries = self.conf.max_retries
-        kwargs["json"] = json
-        return self._proceed_response(
-            max_retries, lambda: self._request("post", url_suffix, **kwargs)
-        )
+        return self.request(method="POST", path=url_suffix, body=json, **kwargs)
 
-    def _request(
-        self, method: str, url_suffix: str, **kwargs: Any
-    ) -> requests.Response:
-        url = urljoin(self.conf.base_url, url_suffix)
-        self.prepare_request_params(kwargs)
-        return requests.request(method, url, **kwargs)
+    def _handle_error(self, api_response: AnalyticsApiResponse) -> None:
+        if api_response.status_code == 401:
+            raise OpenBankingUnauthorizedRequestError(
+                api_response.request_id,
+            )
+
+        if api_response.status_code == 403:
+            raise OpenBankingForbiddenRequestError(
+                api_response.request_id
+            )
+
+        super()._handle_error(api_response)

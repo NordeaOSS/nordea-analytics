@@ -1,5 +1,5 @@
 from datetime import datetime
-from typing import Any, Dict, Iterator, List, Union
+from typing import Optional, Any, Dict, Iterator, List, Union
 
 from nordea_analytics.convention_variable_names import (
     CashflowType,
@@ -33,7 +33,6 @@ from nordea_analytics.nalib.value_retrievers.BondKeyFigureHorizonCalculator impo
     BondKeyFigureHorizonCalculator,
 )
 from nordea_analytics.nalib.value_retrievers.BondKeyFigures import BondKeyFigures
-from nordea_analytics.nalib.value_retrievers.BondStaticData import BondStaticData
 from nordea_analytics.nalib.value_retrievers.Curve import Curve
 from nordea_analytics.nalib.value_retrievers.CurveDefinition import CurveDefinition
 from nordea_analytics.nalib.value_retrievers.CurveTimeSeries import CurveTimeSeries
@@ -167,10 +166,10 @@ class NordeaAnalyticsService:
         from_date: datetime,
         to_date: datetime,
         tenors: Union[float, List[float]],
-        curve_type: Union[str, CurveType] = None,
-        time_convention: Union[str, TimeConvention] = None,
-        spot_forward: Union[str, SpotForward] = None,
-        forward_tenor: float = None,
+        curve_type: Optional[Union[str, CurveType]] = None,
+        time_convention: Optional[Union[str, TimeConvention]] = None,
+        spot_forward: Optional[Union[str, SpotForward]] = None,
+        forward_tenor: Optional[float] = None,
         as_df: bool = False,
     ) -> Any:
         """Retrieves historical time series of curve points for a given tenor.
@@ -220,11 +219,11 @@ class NordeaAnalyticsService:
             List[Union[str, CurveName]],
         ],
         calc_date: datetime,
-        curve_type: Union[str, CurveType] = None,
-        tenor_frequency: float = None,
-        time_convention: Union[str, TimeConvention] = None,
-        spot_forward: Union[str, SpotForward] = None,
-        forward_tenor: float = None,
+        curve_type: Optional[Union[str, CurveType]] = None,
+        tenor_frequency: Optional[float] = None,
+        time_convention: Optional[Union[str, TimeConvention]] = None,
+        spot_forward: Optional[Union[str, SpotForward]] = None,
+        forward_tenor: Optional[float] = None,
         as_df: bool = False,
     ) -> Any:
         """Retrieves a curve for a given calculation date.
@@ -286,65 +285,55 @@ class NordeaAnalyticsService:
             CurveDefinition(self._client, curve, calc_date), as_df
         )
 
-    def get_bond_static_data(
-        self,
-        symbols: Union[List[str], str],
-        as_df: bool = False,
-    ) -> Any:
-        """Retrieves latest static data for given ISINs.
-
-        Args:
-            symbols: List of bonds for which key figures want to be retrieved.
-            as_df: Default False. If True, the results are represented as
-                pandas DataFrame, else as dictionary.
-
-        Returns:
-            Dictionary containing requested data. If as_df is True,
-                the data is in form of a DataFrame.
-        """
-        return self._retrieve_value(BondStaticData(self._client, symbols), as_df)
-
     def search_bonds(
         self,
         dmb: bool = False,
-        country: str = None,
-        currency: str = None,
-        issuers: Union[
-            Issuers,
-            str,
-            List[Issuers],
-            List[str],
-            List[Union[Issuers, str]],
+        country: Optional[str] = None,
+        currency: Optional[str] = None,
+        issuers: Optional[
+            Union[
+                Issuers,
+                str,
+                List[Issuers],
+                List[str],
+                List[Union[Issuers, str]],
+            ]
         ] = None,
-        asset_types: Union[
-            AssetType,
-            str,
-            List[AssetType],
-            List[str],
-            List[Union[str, AssetType]],
+        asset_types: Optional[
+            Union[
+                AssetType,
+                str,
+                List[AssetType],
+                List[str],
+                List[Union[str, AssetType]],
+            ]
         ] = None,
-        lower_maturity: datetime = None,
-        upper_maturity: datetime = None,
-        lower_closing_date: datetime = None,
-        upper_closing_date: datetime = None,
-        lower_coupon: float = None,
-        upper_coupon: float = None,
-        lower_outstanding_amount: float = None,
-        upper_outstanding_amount: float = None,
-        amortisation_type: Union[AmortisationType, str] = None,
-        capital_centres: Union[
-            CapitalCentres,
-            str,
-            List[CapitalCentres],
-            List[str],
-            List[Union[CapitalCentres, str]],
+        lower_maturity: Optional[datetime] = None,
+        upper_maturity: Optional[datetime] = None,
+        lower_closing_date: Optional[datetime] = None,
+        upper_closing_date: Optional[datetime] = None,
+        lower_coupon: Optional[float] = None,
+        upper_coupon: Optional[float] = None,
+        lower_outstanding_amount: Optional[float] = None,
+        upper_outstanding_amount: Optional[float] = None,
+        amortisation_type: Optional[Union[AmortisationType, str]] = None,
+        capital_centres: Optional[
+            Union[
+                CapitalCentres,
+                str,
+                List[CapitalCentres],
+                List[str],
+                List[Union[CapitalCentres, str]],
+            ]
         ] = None,
-        capital_centre_types: Union[
-            CapitalCentreTypes,
-            str,
-            List[CapitalCentreTypes],
-            List[str],
-            List[Union[CapitalCentreTypes, str]],
+        capital_centre_types: Optional[
+            Union[
+                CapitalCentreTypes,
+                str,
+                List[CapitalCentreTypes],
+                List[str],
+                List[Union[CapitalCentreTypes, str]],
+            ]
         ] = None,
         as_df: bool = False,
     ) -> Any:
@@ -411,22 +400,24 @@ class NordeaAnalyticsService:
             List[Union[str, CalculatedBondKeyFigureName]],
         ],
         calc_date: datetime,
-        curves: Union[
-            str,
-            CurveName,
-            List[str],
-            List[CurveName],
-            List[Union[str, CurveName]],
+        curves: Optional[
+            Union[
+                str,
+                CurveName,
+                List[str],
+                List[CurveName],
+                List[Union[str, CurveName]],
+            ]
         ] = None,
-        rates_shifts: Union[str, List[str]] = None,
-        pp_speed: float = None,
-        price: float = None,
-        spread: float = None,
-        spread_curve: Union[str, CurveName] = None,
-        yield_input: float = None,
-        asw_fix_frequency: str = None,
-        ladder_definition: List[str] = None,
-        cashflow_type: Union[str, CashflowType] = None,
+        rates_shifts: Optional[Union[str, List[str]]] = None,
+        pp_speed: Optional[float] = None,
+        price: Optional[float] = None,
+        spread: Optional[float] = None,
+        spread_curve: Optional[Union[str, CurveName]] = None,
+        yield_input: Optional[float] = None,
+        asw_fix_frequency: Optional[str] = None,
+        ladder_definition: Optional[List[str]] = None,
+        cashflow_type: Optional[Union[str, CashflowType]] = None,
         as_df: bool = False,
     ) -> Any:
         """Calculate key figures for given bonds and calculation date.
@@ -491,16 +482,16 @@ class NordeaAnalyticsService:
         ],
         calc_date: datetime,
         horizon_date: datetime,
-        curves: Union[List[str], str, CurveName, List[CurveName]] = None,
-        rates_shifts: Union[List[str], str] = None,
-        pp_speed: float = None,
-        price: float = None,
-        cashflow_type: Union[str, CashflowType] = None,
-        fixed_prepayments: float = None,
-        reinvest_in_series: bool = None,
-        reinvestment_rate: float = None,
-        spread_change_horizon: float = None,
-        align_to_forward_curve: bool = None,
+        curves: Optional[Union[List[str], str, CurveName, List[CurveName]]] = None,
+        rates_shifts: Optional[Union[List[str], str]] = None,
+        pp_speed: Optional[float] = None,
+        price: Optional[float] = None,
+        cashflow_type: Optional[Union[str, CashflowType]] = None,
+        fixed_prepayments: Optional[float] = None,
+        reinvest_in_series: Optional[bool] = None,
+        reinvestment_rate: Optional[float] = None,
+        spread_change_horizon: Optional[float] = None,
+        align_to_forward_curve: Optional[bool] = None,
         as_df: bool = False,
     ) -> Any:
         """Calculate future key figures for given bonds.
@@ -606,9 +597,9 @@ class NordeaAnalyticsService:
         self,
         date: datetime,
         days: int,
-        exchange: Union[str, Exchange] = None,
-        day_count_convention: Union[str, DayCountConvention] = None,
-        date_roll_convention: Union[str, DateRollConvention] = None,
+        exchange: Optional[Union[str, Exchange]] = None,
+        day_count_convention: Optional[Union[str, DayCountConvention]] = None,
+        date_roll_convention: Optional[Union[str, DateRollConvention]] = None,
     ) -> datetime:
         """Shifts a date using internal holiday calendars.
 

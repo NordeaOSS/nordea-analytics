@@ -44,8 +44,8 @@ class CurveTimeSeries(ValueRetriever):
         from_date: datetime,
         to_date: datetime,
         tenors: Union[float, List[float]],
-        curve_type: Union[str, CurveType] = None,
-        time_convention: Union[str, TimeConvention] = None,
+        curve_type: Optional[Union[str, CurveType]] = None,
+        time_convention: Optional[Union[str, TimeConvention]] = None,
         spot_forward: Optional[Union[str, SpotForward]] = None,
         forward_tenor: Optional[float] = None,
     ) -> None:

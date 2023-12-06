@@ -15,6 +15,7 @@ from nordea_analytics.nalib.data_retrieval_client import (
     DataRetrievalServiceClient,
 )
 from nordea_analytics.nalib.exceptions import CustomWarningCheck
+from nordea_analytics.nalib.http.errors import BadRequestError
 from nordea_analytics.nalib.util import (
     convert_to_float_if_float,
     convert_to_original_format,
@@ -72,11 +73,11 @@ class BondKeyFigureCalculator(ValueRetriever):
                 List[Union[str, CurveName]],
             ]
         ] = None,
-        shift_tenors: Union[
-            float, List[float], int, List[int], List[Union[float, int]]
+        shift_tenors: Optional[
+            Union[float, List[float], int, List[int], List[Union[float, int]]]
         ] = None,
-        shift_values: Union[
-            float, List[float], int, List[int], List[Union[float, int]]
+        shift_values: Optional[
+            Union[float, List[float], int, List[int], List[Union[float, int]]]
         ] = None,
         pp_speed: Optional[float] = None,
         prices: Optional[Union[float, List[float]]] = None,
@@ -183,8 +184,7 @@ class BondKeyFigureCalculator(ValueRetriever):
             if cashflow_type is not None
             else None
         )
-        if not isinstance(self, BondKeyFigureAdvancedCalculator):
-            self._data = self.calculate_bond_key_figure()
+        self._data = self.calculate_bond_key_figure()
 
     def calculate_bond_key_figure(self) -> Mapping:
         """Retrieves response with calculated key figures.
@@ -192,12 +192,10 @@ class BondKeyFigureCalculator(ValueRetriever):
         Returns:
             The calculated key figures as a dictionary with bond symbols as keys.
         """
-        json_response = (
-            self.get_post_get_response()
-        )  # Call internal method to get response
+        json_response = self.retrieve_response()
         return json_response
 
-    def get_post_get_response(self) -> Dict:
+    def retrieve_response(self) -> Dict:
         """Retrieves response after posting the request.
 
         Returns:
@@ -210,9 +208,9 @@ class BondKeyFigureCalculator(ValueRetriever):
                     request_dict, self.url_suffix
                 )
                 json_response[request_dict["symbol"]] = _json_response
-            except Exception as ex:
-                CustomWarningCheck.post_response_not_retrieved_warning(
-                    ex, request_dict["symbol"]
+            except BadRequestError as bad_request:
+                CustomWarningCheck.bad_request_warning(
+                    bad_request, request_dict["symbol"]
                 )
         return json_response
 
@@ -375,150 +373,3 @@ class BondKeyFigureCalculator(ValueRetriever):
             df = pd.concat([df, symbol_df], axis=0)
 
         return df
-
-
-class BondKeyFigureAdvancedCalculator(BondKeyFigureCalculator):
-    """Retrieves and reformat calculated bond key figure."""
-
-    def __init__(
-        self,
-        client: DataRetrievalServiceClient,
-        symbols: Union[str, List[str]],
-        keyfigures: Union[
-            str,
-            CalculatedBondKeyFigureName,
-            List[str],
-            List[CalculatedBondKeyFigureName],
-            List[Union[str, CalculatedBondKeyFigureName]],
-        ],
-        calc_date: datetime,
-        curves: Optional[Union[List[str], str, CurveName, List[CurveName]]] = None,
-        shift_tenors: Optional[Union[List[float], float]] = None,
-        shift_values: Optional[Union[List[float], float]] = None,
-        pp_speed: Optional[float] = None,
-        prices: Optional[Union[float, List[float]]] = None,
-        spread: Optional[float] = None,
-        spread_curve: Optional[Union[str, CurveName]] = None,
-        yield_input: Optional[float] = None,
-        asw_fix_frequency: Optional[str] = None,
-        ladder_definition: Optional[Union[float, List[float]]] = None,
-        cashflow_type: Optional[Union[str, CashflowType]] = None,
-        fixed_principal_payment: Optional[Union[str, List[str]]] = None,
-        volatility_date: Optional[datetime] = None,
-        refinancing_curve_date: Optional[datetime] = None,
-    ) -> None:
-        """Initialization of the class.
-
-        Args:
-            client: The client used to retrieve data.
-            symbols: ISIN or name of bonds that should be valued.
-            keyfigures: Bond key figure that should be valued.
-            calc_date: Date of calculation.
-            curves: Discount curves for calculation.
-            shift_tenors: Tenors to shift curves expressed as float. For example [0.25, 0.5, 1, 3, 5].
-            shift_values: Shift values in basis points. For example [100, 100, 75, 100, 100].
-            pp_speed: Prepayment speed. Default = 1.
-            prices: Fixed price per bond.
-            spread: Fixed spread for bond. Mandatory to give spread_curve also as an input.
-            spread_curve: Spread curve to calculate the key figures when a fixed spread is given.
-            yield_input: Fixed yield for bond.
-            asw_fix_frequency: Fixing frequency of swap in ASW calculation.
-                Mandatory input in all ASW calculations.
-            ladder_definition: Tenors should be included in BPV ladder calculation. For example [0.25, 0.5, 1, 3, 5].
-            cashflow_type: Type of cashflow to calculate with.
-            fixed_principal_payment: Principal payment each cash flow date.
-            volatility_date: Date of the volatility surface.
-            refinancing_curve_date: Date of the refinancing curve.
-        """
-        super(BondKeyFigureAdvancedCalculator, self).__init__(
-            client,
-            symbols,
-            keyfigures,
-            calc_date,
-            curves,
-            shift_tenors,
-            shift_values,
-            pp_speed,
-            prices,
-            spread,
-            spread_curve,
-            yield_input,
-            asw_fix_frequency,
-            ladder_definition,
-            cashflow_type,
-        )
-
-        self.fixed_principal_payment = fixed_principal_payment
-        self.volatility_date = volatility_date
-        self.refinancing_curve_date = refinancing_curve_date
-
-        self._data = self.calculate_bond_key_figure_advanced()
-
-    def calculate_bond_key_figure_advanced(self) -> Mapping:
-        """Retrieves response with calculated key figures.
-
-        Returns:
-            The JSON response with calculated key figures.
-        """
-        json_response = self.get_post_get_response()
-
-        return json_response
-
-    @property
-    def url_suffix(self) -> str:
-        """Get the URL suffix for the given method.
-
-        Returns:
-            The URL suffix.
-        """
-        return config["url_suffix"]["calculate_advanced"]
-
-    @property
-    def request(self) -> List[Dict]:
-        """Get the post request dictionary for calculating bond key figure.
-
-        Returns:
-            The list of dictionaries representing the post request data.
-        """
-        request_dict = []
-        keyfigures = copy.deepcopy(self.keyfigures)
-        keyfigures.remove("price") if "price" in self.keyfigures else keyfigures
-        if keyfigures == []:  # There has to be some key figure in request,
-            # but it will not be returned in final results
-            keyfigures = "bpv"  # type:ignore
-        for x in range(len(self.symbols)):
-            initial_request = {
-                "symbol": self.symbols[x],
-                "date": self.calc_date.strftime("%Y-%m-%d"),
-                "keyfigures": keyfigures,
-                "curves": self.curves,
-                "shift_tenors": self.shift_tenors,
-                "shift_values": self.shift_values,
-                "pp_speed": self.pp_speed,
-                "price": self.prices[x]
-                if self.prices is not None and x < len(self.prices)
-                else None,
-                "spread": self.spread,
-                "spread_curve": self.spread_curve,
-                "yield": self.yield_input,
-                "asw_fix_frequency": self.asw_fix_frequency,
-                "ladder_definition": self.ladder_definition,
-                "cashflow_type": self.cashflow_type,
-                "fixed_principal_payment": self.fixed_principal_payment,
-                "volatility_date": self.volatility_date.strftime("%Y-%m-%d")
-                if self.volatility_date is not None
-                else None,
-                "refinancing_curve_date": self.refinancing_curve_date.strftime(
-                    "%Y-%m-%d"
-                )
-                if self.refinancing_curve_date is not None
-                else None,
-            }
-            request = {
-                key: initial_request[key]
-                for key in initial_request.keys()
-                if initial_request[key] is not None
-            }
-            request_dict.append(request)
-
-        return request_dict

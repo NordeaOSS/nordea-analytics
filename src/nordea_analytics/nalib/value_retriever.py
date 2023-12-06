@@ -3,13 +3,8 @@ from typing import Dict, List, Union
 
 import pandas as pd
 
-from nordea_analytics.nalib.data_retrieval_client import (
-    DataRetrievalServiceClient,
-)
-from nordea_analytics.nalib.util import (
-    get_config,
-    RequestMethod,
-)
+from nordea_analytics.nalib.data_retrieval_client import DataRetrievalServiceClient
+from nordea_analytics.nalib.util import get_config
 
 config = get_config()
 
@@ -61,9 +56,7 @@ class ValueRetriever(ABC):
         Returns:
             Dict: The response from the service for a given method and request.
         """
-        json_response = self._client.get_response(
-            request, self.url_suffix, RequestMethod.Get
-        )
+        json_response = self._client.get(request, self.url_suffix)
         return json_response
 
     @property

@@ -18,7 +18,6 @@ from nordea_analytics.nalib.live_keyfigures.parsing import (
 from nordea_analytics.nalib.util import (
     convert_to_variable_string,
     get_config,
-    RequestMethod,
 )
 from nordea_analytics.nalib.value_retriever import ValueRetriever
 
@@ -74,9 +73,7 @@ class LiveBondKeyFigures(ValueRetriever):
         """
         json_response: List[Any] = []
         for request_dict in self.request:
-            response = self._client.get_response(
-                request_dict, self.url_suffix, RequestMethod.Get
-            )
+            response = self._client.get(request_dict, self.url_suffix)
             json_response += response["keyfigure_values"]
             CustomWarningCheck.live_key_figure_calculation_not_supported_warning(
                 response

@@ -65,9 +65,9 @@ class Curve(ValueRetriever):
             List[Union[str, CurveName]],
         ],
         calc_date: datetime,
-        curve_type: Union[str, CurveType] = None,
+        curve_type: Optional[Union[str, CurveType]] = None,
         tenor_frequency: Optional[float] = None,
-        time_convention: Union[str, TimeConvention] = None,
+        time_convention: Optional[Union[str, TimeConvention]] = None,
         spot_forward: Optional[Union[str, SpotForward]] = None,
         forward_tenor: Optional[float] = None,
     ) -> None:

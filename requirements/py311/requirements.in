@@ -1,0 +1,6 @@
+# requirements.in
+
+pandas==1.5.3
+pip-system-certs==4.0
+pyaml==23.9.7
+requests==2.31.0

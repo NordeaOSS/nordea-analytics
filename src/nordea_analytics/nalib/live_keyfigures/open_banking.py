@@ -68,8 +68,8 @@ class OpenBankingHttpStreamIterator(HttpStreamIterator):
 
             response = self.http_client.get(stream_url)
             try:
-                response.raise_for_status()
+                response.raw_response.raise_for_status()
             except requests.models.HTTPError as e:
                 raise StopIteration("Failed to read from remote server") from e
 
-            yield response.text
+            yield response.raw_response.text

@@ -1,6 +1,6 @@
 from datetime import datetime
 import typing
-from typing import Dict, Union
+from typing import Optional, Dict, Union
 
 import pandas as pd
 
@@ -27,11 +27,11 @@ class ShiftDate(ValueRetriever):
         self,
         client: DataRetrievalServiceClient,
         date: datetime,
-        days: int = None,
-        months: int = None,
-        years: int = None,
-        exchange: Union[str, Exchange] = None,
-        date_roll_convention: Union[str, DateRollConvention] = None,
+        days: Optional[int] = None,
+        months: Optional[int] = None,
+        years: Optional[int] = None,
+        exchange: Optional[Union[str, Exchange]] = None,
+        date_roll_convention: Optional[Union[str, DateRollConvention]] = None,
     ) -> None:
         """Initialization of class.
 

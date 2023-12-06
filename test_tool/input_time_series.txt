@@ -1,7 +1,0 @@
-client_id=
-client_secret=
-
-symbols=DE0001102424,DE0001102440
-key_figures=spread,yielD
-from_date=20221021
-to_date=20221025
