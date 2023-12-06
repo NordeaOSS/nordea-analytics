@@ -1,5 +1,5 @@
 import os
-from typing import Dict
+from typing import Optional, Dict
 
 from nordea_analytics import NordeaAnalyticsService
 from nordea_analytics.nalib.data_retrieval_client import DataRetrievalServiceClient
@@ -16,7 +16,10 @@ DEFAULT_URL = "https://open.nordea.com/instrument-analytics/v1/"
 
 
 def get_nordea_analytics_client(
-    client_id: str, client_secret: str, base_url: str = None, use_proxy: bool = False
+    client_id: str,
+    client_secret: str,
+    base_url: Optional[str] = None,
+    use_proxy: bool = False,
 ) -> NordeaAnalyticsService:
     """Shortcut function to create :class:`NordeaAnalyticsService`.
 
@@ -60,7 +63,7 @@ def get_nordea_analytics_client(
 
 
 def get_nordea_analytics_test_client(
-    base_url: str = None, use_proxy: bool = False
+    base_url: Optional[str] = None, use_proxy: bool = False
 ) -> NordeaAnalyticsService:
     """Create and return test instance of NordeaAnalyticsService."""
     client_id = os.getenv("clientId")

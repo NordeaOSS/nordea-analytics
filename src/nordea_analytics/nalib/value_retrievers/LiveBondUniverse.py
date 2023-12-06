@@ -3,10 +3,7 @@ from typing import Dict
 import pandas as pd
 
 from nordea_analytics.nalib.data_retrieval_client import DataRetrievalServiceClient
-from nordea_analytics.nalib.util import (
-    get_config,
-    RequestMethod,
-)
+from nordea_analytics.nalib.util import get_config
 from nordea_analytics.nalib.value_retriever import ValueRetriever
 
 config = get_config()
@@ -35,9 +32,7 @@ class LiveBondUniverse(ValueRetriever):
         Returns:
             A dictionary containing the latest available live key figures.
         """
-        json_response = self._client.get_response(
-            self.request, self.url_suffix, RequestMethod.Get
-        )
+        json_response = self._client.get(self.request, self.url_suffix)
 
         # Remove unnecessary keys from the response
         json_response.pop("count")

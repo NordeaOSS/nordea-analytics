@@ -15,6 +15,7 @@ from nordea_analytics.nalib.data_retrieval_client import (
     DataRetrievalServiceClient,
 )
 from nordea_analytics.nalib.exceptions import CustomWarningCheck
+from nordea_analytics.nalib.http.errors import BadRequestError
 from nordea_analytics.nalib.util import (
     convert_to_float_if_float,
     convert_to_original_format,
@@ -171,12 +172,10 @@ class BondKeyFigureHorizonCalculator(ValueRetriever):
         Returns:
             A dictionary containing the calculated key figures, with symbols as keys and responses as values.
         """
-        json_response = (
-            self.get_post_get_response()
-        )  # Call helper method to get response
+        json_response = self.retrieve_response()
         return json_response
 
-    def get_post_get_response(self) -> Dict:
+    def retrieve_response(self) -> Dict:
         """Retrieves response after posting the request to the API.
 
         Returns:
@@ -190,10 +189,9 @@ class BondKeyFigureHorizonCalculator(ValueRetriever):
                     request_dict, self.url_suffix
                 )
                 json_response[request_dict["symbol"]] = _json_response
-            except Exception as ex:
-                # Catch and handle exceptions for unsuccessful responses
-                CustomWarningCheck.post_response_not_retrieved_warning(
-                    ex, request_dict["symbol"]
+            except BadRequestError as bad_request:
+                CustomWarningCheck.bad_request_warning(
+                    bad_request, request_dict["symbol"]
                 )
         return json_response
 

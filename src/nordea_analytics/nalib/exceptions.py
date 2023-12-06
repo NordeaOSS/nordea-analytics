@@ -1,6 +1,8 @@
 from typing import Any
 import warnings
 
+from nordea_analytics.nalib.http.errors import BadRequestError
+
 STACKLEVEL = 2
 
 
@@ -124,3 +126,9 @@ class CustomWarningCheck:
         if len(error.args) > 0 and "Failed to retrieve bond.":
             message = f"{symbol} could not be retrieved, {error.args[0]} Error code: {error_code}"
             CustomWarning(message, AnalyticsWarning)
+
+    @staticmethod
+    def bad_request_warning(error: BadRequestError, symbol: str) -> None:
+        """Throw warning when post response throws exception to ensure result from remaining bonds is returned."""
+        message = f"{symbol} could not be retrieved: {str(error)}"
+        CustomWarning(message, AnalyticsWarning)

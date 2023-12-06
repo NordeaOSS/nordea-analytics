@@ -1,11 +1,19 @@
-from abc import ABC, abstractmethod
 import time
-from typing import Any, Callable, Dict, List
+from abc import ABC, abstractmethod
+from typing import Optional, Any, Dict, List, Union
+from urllib.parse import urljoin
 
 import requests
 
 from nordea_analytics.nalib.exceptions import ApiServerError
 from nordea_analytics.nalib.exceptions import HttpClientImproperlyConfigured
+from nordea_analytics.nalib.http.errors import (
+    BadRequestError,
+    ForbiddenRequestError,
+    UnauthorizedRequestError,
+)
+from nordea_analytics.nalib.http.errors import NotFoundRequestError, UnknownClientError
+from nordea_analytics.nalib.http.models import AnalyticsApiResponse
 
 
 class HttpClientConfiguration:
@@ -14,8 +22,8 @@ class HttpClientConfiguration:
     def __init__(
         self,
         base_url: str,
-        headers: Dict[str, str] = None,
-        proxies: Dict[str, str] = None,
+        headers: Optional[Dict[str, str]] = None,
+        proxies: Optional[Dict[str, str]] = None,
         max_retries: int = 10,
     ) -> None:
         """Constructs a :class:`HttpClientConfiguration <HttpClientConfiguration>`.
@@ -33,10 +41,30 @@ class HttpClientConfiguration:
             raise HttpClientImproperlyConfigured("base_url is not set.")
 
         self.service_name = "Nordea Analytics API"
-        self.base_url = base_url
-        self.headers = headers or {}
-        self.proxies = proxies or {}
-        self.max_retries = max_retries
+        self.__base_url = base_url
+        self.__headers = headers or {}
+        self.__proxies = proxies or {}
+        self.__max_retries = max_retries
+
+    @property
+    def base_url(self) -> str:
+        """Base url for Analytics API service."""
+        return self.__base_url
+
+    @property
+    def max_retries(self) -> int:
+        """Maximum number of retries before exception will be thrown."""
+        return self.__max_retries
+
+    @property
+    def headers(self) -> Dict[str, str]:
+        """Common headers which will be sent with every request."""
+        return self.__headers
+
+    @property
+    def proxies(self) -> Dict[str, str]:
+        """If defined, proxies will be used with every request."""
+        return self.__proxies
 
 
 class RestApiHttpClient(ABC):
@@ -44,10 +72,11 @@ class RestApiHttpClient(ABC):
 
     def __init__(self) -> None:
         """Create new instance of RestApiHttpClient."""
-        self._history: List[requests.Response] = []
+        self.__history: List[AnalyticsApiResponse] = []
+        self.__session = None
 
     @property
-    def history(self) -> List[requests.Response]:
+    def history(self) -> List[AnalyticsApiResponse]:
         """A list of :class:`Response <Response>` objects with the history of the Responses.
 
         Any responses will end up here. The list is sorted from the oldest to the most recent response.
@@ -55,7 +84,7 @@ class RestApiHttpClient(ABC):
         Returns:
             A list of :class:`Response <Response>` objects.
         """
-        return self._history
+        return self.__history
 
     @property
     @abstractmethod
@@ -64,7 +93,7 @@ class RestApiHttpClient(ABC):
         pass
 
     @abstractmethod
-    def get(self, url_suffix: str, **kwargs: Any) -> requests.Response:
+    def get(self, url_suffix: str, **kwargs: Any) -> AnalyticsApiResponse:
         """Sends a GET request.
 
         Args:
@@ -77,7 +106,7 @@ class RestApiHttpClient(ABC):
         pass
 
     @abstractmethod
-    def post(self, url_suffix: str, json: Any, **kwargs: Any) -> requests.Response:
+    def post(self, url_suffix: str, json: Any, **kwargs: Any) -> AnalyticsApiResponse:
         """Sends a POST request.
 
         Args:
@@ -90,43 +119,103 @@ class RestApiHttpClient(ABC):
         """
         pass
 
-    def prepare_request_params(self, params: Dict) -> None:
-        """Create parameters for HTTP Request.
-
-        Args:
-            params: parameters for HTTP Request.
-        """
-        headers = params.setdefault("headers", {})
-        headers.update(self.config.headers)
-
-        proxies = params.setdefault("proxies", {})
-        proxies.update(self.config.proxies)
-
-    def _proceed_response(
-        self, max_retries: int, send_callable: Callable[[], requests.Response]
-    ) -> requests.Response:
-        """Proceed the response in accordance with server logic."""
-        self.history.clear()
-
-        while max_retries != 0:
+    def request(
+        self,
+        method: str,
+        path: str,
+        params: Optional[Any] = None,
+        body: Union[Any, None] = None,
+        headers: Optional[Dict[str, str]] = None,
+        proxies: Optional[Dict[str, str]] = None,
+        **kwargs: Optional[Any]
+    ) -> AnalyticsApiResponse:
+        """Send a request to Analytics API server."""
+        max_retries = self.config.max_retries
+        headers = self.__prepare_headers(headers)
+        proxies = proxies or self.config.proxies
+        while max_retries > 0:
             max_retries = max_retries - 1
-            response = send_callable()
+            raw_response = self.__execute(
+                method=method,
+                path=path,
+                params=params,
+                headers=headers,
+                proxies=proxies,
+                body=body,
+                **kwargs
+            )
+            api_response = AnalyticsApiResponse(raw_response)
+            self.__history.append(api_response)
 
-            self.history.append(response)
-
-            if response.ok:
-                return response
+            if api_response.status_code == 200:
+                return api_response
 
             # 503 Service Temporarily Unavailable == Too Many Requests
-            if max_retries > 0 and response.status_code == 503:
+            if max_retries > 0 and api_response.status_code == 503:
                 time.sleep(0.2)
-            elif "error_description" in response.text:
-                error_json = response.json()
-                raise ApiServerError(
-                    error_id=response.headers.get("x-request-id"),
-                    error_description=f'{error_json["error_description"]}',
-                )
-            else:
-                break
+                continue
 
-        return response
+            # Handler typical errors
+            self._handle_error(api_response)
+
+            # Raise in case typical error can't be handled
+            raise ApiServerError("", api_response.raw_response.text)
+
+        raise ApiServerError("Empty", "Can't get response")
+
+    def _get_session(self) -> requests.Session:
+        """Create new session."""
+        if self.__session is None:
+            self.__session = requests.Session()
+
+        return self.__session
+
+    def _handle_error(self, api_response: AnalyticsApiResponse) -> None:
+        """Handle response error codes."""
+        http_code = api_response.status_code
+        request_id = api_response.request_id
+        error_description = api_response.error_description or "Unknown error"
+        if http_code == 400:
+            raise BadRequestError(request_id, error_description)
+
+        if http_code == 401:
+            raise UnauthorizedRequestError(request_id, error_description)
+
+        if http_code == 403:
+            raise ForbiddenRequestError(request_id, error_description)
+
+        if http_code == 404:
+            raise NotFoundRequestError(
+                request_id,
+                f"[{api_response.method}] {api_response.url}",
+            )
+
+        if 404 < http_code < 500:
+            raise UnknownClientError(request_id, error_description)
+
+        raise ApiServerError(api_response.request_id, error_description)
+
+    def __prepare_headers(self, headers: Union[Dict[str, str], None]) -> Dict[str, str]:
+        request_headers = {}
+        if self.config.headers is not None:
+            request_headers.update(self.config.headers)
+        if headers is not None:
+            request_headers.update(headers)
+        return request_headers
+
+    def __execute(
+        self,
+        method: str,
+        path: str,
+        params: Any,
+        headers: Dict[str, str],
+        proxies: Dict[str, str],
+        body: Union[Any, None],
+        **kwargs: Any
+    ) -> requests.Response:
+        full_url = urljoin(self.config.base_url, path)
+        session = self._get_session()
+        raw_response = session.request(
+            method, full_url, params=params, headers=headers, json=body, proxies=proxies, **kwargs
+        )
+        return raw_response

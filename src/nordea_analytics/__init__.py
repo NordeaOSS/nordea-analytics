@@ -27,15 +27,10 @@ from .search_bond_names import (
 )
 from .shortcuts.utils import disable_analytics_warnings
 
-# To distinguish between external and internal packages
-try:
-    from .shortcuts.nordea import get_nordea_analytics_client  # type: ignore
-    from .shortcuts.nordea import get_nordea_analytics_test_client  # type: ignore # noqa: E401
-except (NameError, ModuleNotFoundError):
-    from .shortcuts.open_banking import get_nordea_analytics_client  # type: ignore
-    from .shortcuts.open_banking import get_nordea_analytics_test_client  # type: ignore # noqa: F401
+from .shortcuts.open_banking import get_nordea_analytics_client
+from .shortcuts.open_banking import get_nordea_analytics_test_client
 
-__version__ = "1.9.2"
+__version__ = "1.10.0"
 __all__ = [
     "get_nordea_analytics_client",
     "get_nordea_analytics_test_client",

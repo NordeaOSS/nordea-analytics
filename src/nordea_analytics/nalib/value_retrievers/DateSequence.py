@@ -1,6 +1,6 @@
 from datetime import datetime
 import typing
-from typing import Dict, List, Union
+from typing import Optional, Dict, List, Union
 
 import pandas as pd
 
@@ -28,8 +28,8 @@ class DateSequence(ValueRetriever):
         client: DataRetrievalServiceClient,
         from_date: datetime,
         to_date: datetime,
-        exchange: Union[str, Exchange] = None,
-        day_count_convention: Union[str, DayCountConvention] = None,
+        exchange: Optional[Union[str, Exchange]] = None,
+        day_count_convention: Optional[Union[str, DayCountConvention]] = None,
     ) -> None:
         """Initialize the DateSequence class.
 

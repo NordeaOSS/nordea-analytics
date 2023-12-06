@@ -5,19 +5,15 @@ max_keyfigures_timeseries: 1
 max_years_timeseries: 10
 
 url_suffix:
-  benchmark_definition: "benchmark-definition"
   bond_key_figures: "bonds/keyfigure"
   calculate: "bonds-calculation"
-  calculate_advanced: "bonds-advanced-calculation"
   calculate_horizon: "bonds-horizoncalculation"
   calculate_repo: "bonds-repo-calculation"
-  bond_static_data: "bonds/static-data"
   curve: "curves"
   curve_definition: "curves/definition"
   curve_time_series: "curves/timeseries"
   date_sequence: "date-sequence"
   fx_forecast: "fx-forecasts"
-  fx_quotes: "fx-quotes"
   index_composition: "index-composition"
   search_bonds: "search/bonds"
   search_dmb_bonds: "search/danishmortgagebonds"
@@ -33,15 +29,12 @@ url_suffix:
 
 #Squashes json response layers
 results:
-  benchmark_definition: "benchmark_definition"
   bond_key_figures: "keyfigures"
-  bond_static_data: "static_data"
   curve: "curve"
   curve_definition: "definition"
   curve_time_series: "timeseries"
   date_sequence: "date_sequence"
   fx_forecast: "fx_forecast"
-  fx_quotes: "quotes"
   index_composition: "indices"
   quotes: "quotes"
   search: "search"

@@ -4,7 +4,7 @@ from enum import Enum
 import json
 from pathlib import Path
 from re import sub
-from typing import Callable, Dict, List, Mapping, Union
+from typing import Optional, Callable, Dict, List, Mapping, Union
 
 import yaml
 
@@ -188,7 +188,7 @@ class ConfigContainer(ABC):
     config: Dict = {}
 
 
-def get_config(config_path: str = None) -> Dict:
+def get_config(config_path: Optional[str] = None) -> Dict:
     """Find and return the config file."""
     if ConfigContainer.config and config_path is None:
         return ConfigContainer.config
@@ -211,7 +211,8 @@ def float_to_tenor_string(float_tenor: Union[str, float]) -> str:
 def check_json_response(json_response: Union[List, Mapping]) -> bool:
     """Check if json_response is empty and returns False, else True."""
     if not json_response or (
-        isinstance(json_response, dict) and all(not json_response[d] for d in json_response)
+        isinstance(json_response, dict)
+        and all(not json_response[d] for d in json_response)
     ):
         return False
     else:
@@ -227,7 +228,9 @@ def check_json_response_error(output_found: bool) -> None:
         )
 
 
-def pretty_dict_string(d: Dict, indent: int = 4, sort_keys: bool = True) -> str:
+def pretty_dict_string(
+    d: Union[List, Dict], indent: int = 4, sort_keys: bool = True
+) -> str:
     """Print dict content as nice-formatted JSON string."""
     return json.dumps(d, indent=indent, sort_keys=sort_keys) if d else "{}"
 
