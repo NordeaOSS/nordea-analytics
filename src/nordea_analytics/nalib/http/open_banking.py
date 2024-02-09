@@ -11,9 +11,11 @@ class OpenBankingForbiddenRequestError(ForbiddenRequestError):
 
     def __init__(self, error_id: str) -> None:
         """Create a new instance of OpenBankingUnauthorizedRequestError."""
-        self._error_description = ("Your client_id and client_secret are correct, "
-                                   "but you don't have access to requested resource. "
-                                   "Please contact Nordea to get access.")
+        self._error_description = (
+            "Your client_id and client_secret are correct, "
+            "but you don't have access to requested resource. "
+            "Please contact Nordea to get access."
+        )
         super().__init__(error_id, self._error_description)
 
     def __str__(self) -> str:
@@ -29,9 +31,11 @@ class OpenBankingUnauthorizedRequestError(ClientHttpError):
 
     def __init__(self, error_id: str) -> None:
         """Create a new instance of OpenBankingUnauthorizedRequestError."""
-        self._error_description = ("Authentication has failed. "
-                                   "Check that you pass correct client_id and client_secret values "
-                                   "and that you have proper access to Analytics API.")
+        self._error_description = (
+            "Authentication has failed. "
+            "Check that you pass correct client_id and client_secret values "
+            "and that you have proper access to Analytics API."
+        )
         super().__init__(error_id, self._error_description)
 
     def __str__(self) -> str:
@@ -43,12 +47,12 @@ class OpenBankingClientConfiguration(HttpClientConfiguration):
     """Contain parameters for HTTP requests to open banking API."""
 
     def __init__(
-            self,
-            base_url: str,
-            client_id: str,
-            client_secret: str,
-            headers: Union[Dict[str, str], None] = None,
-            proxies: Union[Dict[str, str], None] = None,
+        self,
+        base_url: str,
+        client_id: str,
+        client_secret: str,
+        headers: Union[Dict[str, str], None] = None,
+        proxies: Union[Dict[str, str], None] = None,
     ) -> None:
         """Constructs a :class:`OpenBankingClientConfiguration <OpenBankingClientConfiguration>`."""
         if not base_url:
@@ -128,8 +132,6 @@ class OpenBankingHttpClient(RestApiHttpClient):
             )
 
         if api_response.status_code == 403:
-            raise OpenBankingForbiddenRequestError(
-                api_response.request_id
-            )
+            raise OpenBankingForbiddenRequestError(api_response.request_id)
 
         super()._handle_error(api_response)

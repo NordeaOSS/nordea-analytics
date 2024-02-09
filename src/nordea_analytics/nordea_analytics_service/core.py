@@ -28,6 +28,9 @@ from nordea_analytics.key_figure_names import (
 from nordea_analytics.nalib.data_retrieval_client import DataRetrievalServiceClient
 from nordea_analytics.nalib.util import pretty_dict_string
 from nordea_analytics.nalib.value_retriever import ValueRetriever
+from nordea_analytics.nalib.value_retrievers.AvailableInstruments import (
+    AvailableInstruments,
+)
 from nordea_analytics.nalib.value_retrievers.BondFinder import BondFinder
 from nordea_analytics.nalib.value_retrievers.BondKeyFigureCalculator import (
     BondKeyFigureCalculator,
@@ -80,6 +83,22 @@ class NordeaAnalyticsCoreService:
         self._client = client
         self._diagnostic = Dict
 
+    def get_available_instruments(
+        self,
+        as_df: bool = False,
+    ) -> Any:
+        """Retrieves all available instruments (excluding FX).
+
+        Args:
+            as_df: Default False. If True, the results are represented as
+                pandas DataFrame, else as dictionary.
+
+        Returns:
+            Dictionary containing requested data. If as_df is True,
+                the data is in form of a DataFrame.
+        """
+        return self._retrieve_value(AvailableInstruments(self._client), as_df)
+
     def get_bond_key_figures(
         self,
         symbols: Union[List, str],
@@ -112,7 +131,16 @@ class NordeaAnalyticsCoreService:
         )
 
     def get_index_composition(
-        self, indices: Union[List[str], str], calc_date: datetime, as_df: bool = False
+        self,
+        indices: Union[
+            str,
+            BondIndexName,
+            List[str],
+            List[BondIndexName],
+            List[Union[str, BondIndexName]],
+        ],
+        calc_date: datetime,
+        as_df: bool = False,
     ) -> Any:
         """Retrieves index composition for a given set of indices and calc date.
 

@@ -30,7 +30,7 @@ from .shortcuts.utils import disable_analytics_warnings
 from .shortcuts.open_banking import get_nordea_analytics_client
 from .shortcuts.open_banking import get_nordea_analytics_test_client
 
-__version__ = "1.10.0"
+__version__ = "1.11.0"
 __all__ = [
     "get_nordea_analytics_client",
     "get_nordea_analytics_test_client",
