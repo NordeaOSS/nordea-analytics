@@ -127,7 +127,7 @@ class RestApiHttpClient(ABC):
         body: Union[Any, None] = None,
         headers: Optional[Dict[str, str]] = None,
         proxies: Optional[Dict[str, str]] = None,
-        **kwargs: Optional[Any]
+        **kwargs: Optional[Any],
     ) -> AnalyticsApiResponse:
         """Send a request to Analytics API server."""
         max_retries = self.config.max_retries
@@ -142,7 +142,7 @@ class RestApiHttpClient(ABC):
                 headers=headers,
                 proxies=proxies,
                 body=body,
-                **kwargs
+                **kwargs,
             )
             api_response = AnalyticsApiResponse(raw_response)
             self.__history.append(api_response)
@@ -211,11 +211,17 @@ class RestApiHttpClient(ABC):
         headers: Dict[str, str],
         proxies: Dict[str, str],
         body: Union[Any, None],
-        **kwargs: Any
+        **kwargs: Any,
     ) -> requests.Response:
         full_url = urljoin(self.config.base_url, path)
         session = self._get_session()
         raw_response = session.request(
-            method, full_url, params=params, headers=headers, json=body, proxies=proxies, **kwargs
+            method,
+            full_url,
+            params=params,
+            headers=headers,
+            json=body,
+            proxies=proxies,
+            **kwargs,
         )
         return raw_response

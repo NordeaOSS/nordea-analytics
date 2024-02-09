@@ -5,6 +5,7 @@ max_keyfigures_timeseries: 1
 max_years_timeseries: 10
 
 url_suffix:
+  available_instruments: "instruments-available"
   bond_key_figures: "bonds/keyfigure"
   calculate: "bonds-calculation"
   calculate_horizon: "bonds-horizoncalculation"
@@ -29,6 +30,7 @@ url_suffix:
 
 #Squashes json response layers
 results:
+  available_instruments: "instruments"
   bond_key_figures: "keyfigures"
   curve: "curve"
   curve_definition: "definition"

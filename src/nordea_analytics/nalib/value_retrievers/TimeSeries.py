@@ -1,9 +1,12 @@
+from collections.abc import Iterator
 from datetime import datetime, timedelta
 import math
 from typing import Any, Dict, List, Union
 
 import numpy as np
 import pandas as pd
+
+import warnings
 
 from nordea_analytics.instrument_variable_names import BenchmarkName, BondIndexName
 from nordea_analytics.key_figure_names import (
@@ -19,6 +22,7 @@ from nordea_analytics.nalib.util import (
     get_config,
 )
 from nordea_analytics.nalib.value_retriever import ValueRetriever
+from nordea_analytics.nalib.exceptions import AnalyticsWarning
 
 config = get_config()
 
@@ -92,19 +96,87 @@ class TimeSeries(ValueRetriever):
 
         self._data = self.get_time_series()
 
+    def find_all(self, a_str: str, sub: str) -> Iterator[int]:
+        """Finds all instances of a sub string in a string.
+
+        Args:
+            a_str: String to find substring in.
+            sub: Substring to find locations of.
+
+        Yields:
+            The locations of a sub string in a string.
+        """
+        start = 0
+        while True:
+            start = a_str.find(sub, start)
+            if start == -1:
+                return
+            yield start
+            start += len(sub)
+
+    def filter_out_misleading_analytics_warnings(
+        self, warns: List[warnings.WarningMessage], json_response: List[Any]
+    ) -> None:
+        """Filters out AnalyticsWarnings from the API that are misleading.
+
+        Args:
+            warns: List of WarningMessage.
+            json_response: json_response from Analytics API.
+
+        Python client can merge requests that exceed API constraints like maximum of 10 years for time series.
+        This can causes individual requests to be empty while others returned as expected.
+        """
+        for (
+            warn
+        ) in (
+            warns
+        ):  # Add the caught warnings, that are correct, after taking into account
+            # that another request could contain data for the ISIN-keyfigure combination
+            if not isinstance(warn.message, AnalyticsWarning):
+                continue
+
+            keyfigure_and_isin_positions = list(
+                self.find_all(warn.message.args[0], "'")
+            )
+            keyfigure = warn.message.args[0][
+                keyfigure_and_isin_positions[0] + 1 : keyfigure_and_isin_positions[1]
+            ]
+            isin = warn.message.args[0][
+                keyfigure_and_isin_positions[2] + 1 : keyfigure_and_isin_positions[3]
+            ]
+
+            result_found = False
+            for response in json_response:
+                if (
+                    response["symbol"] == isin
+                    and response["timeseries"][0]["keyfigure"] == keyfigure
+                ):
+                    result_found = True
+                    break
+
+            if not result_found:
+                warnings.warn(message=warn.message, category=warn.category, stacklevel=1)
+
     def get_time_series(self) -> List:
         """Retrieves response with key figures time series.
 
         Returns:
             List of JSON response with key figures time series.
         """
-        json_response: List[Any] = []
 
-        # Loop through each request dictionary and get the response
-        for request_dict in self.request:
-            _json_response = self.get_response(request_dict)
-            json_map = _json_response[config["results"]["time_series"]]
-            json_response = list(json_map) + json_response
+        w: List[warnings.WarningMessage]
+        with warnings.catch_warnings(
+            record=True, category=AnalyticsWarning
+        ) as w:  # Catches all warnings thrown by Analytics API
+            json_response: List[Any] = []
+
+            # Loop through each request dictionary and get the response
+            for request_dict in self.request:
+                _json_response = self.get_response(request_dict)
+                json_map = _json_response[config["results"]["time_series"]]
+                json_response = list(json_map) + json_response
+
+        self.filter_out_misleading_analytics_warnings(w, json_response)
 
         return json_response
 

@@ -24,7 +24,13 @@ class IndexComposition(ValueRetriever):
     def __init__(
         self,
         client: DataRetrievalServiceClient,
-        indices: Union[List[str], str],
+        indices: Union[
+            str,
+            BondIndexName,
+            List[str],
+            List[BondIndexName],
+            List[Union[str, BondIndexName]],
+        ],
         calc_date: datetime,
     ) -> None:
         """Initialize the class.
