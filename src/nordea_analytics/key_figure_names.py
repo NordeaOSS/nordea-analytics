@@ -279,6 +279,7 @@ class CalculatedBondKeyFigureName(Enum):
     ExpectedCashflow = "expectedcashflow"
     MacaulayDuration = "macdur"
     ModifiedDuration = "moddur"
+    OAYield = "oayield"
     PriceClean = "price"
     PVonTS = "pvonts"
     Spread = "spread"

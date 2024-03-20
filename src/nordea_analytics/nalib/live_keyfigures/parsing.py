@@ -23,19 +23,23 @@ def filter_keyfigures(
         Filtered live keyfigures dict.
     """
     result = {}
+    result["name"] = chunk["isin"]
     for key_figure_data in chunk["values"]:
         key_figure_name = key_figure_data["keyfigure"].lower()
         key_figure_key = get_keyfigure_key(
             key_figure_name, key_figures_original, LiveBondKeyFigureName.__name__
         )
+
+        timestamp = (
+            key_figure_data["timestamp"]
+            if "timestamp" in key_figure_data
+            else key_figure_data["updated_at"]
+        )
+        result["timestamp"] = str(datetime.fromtimestamp(timestamp))
+
         if key_figure_name in key_figures:
             result[key_figure_key] = convert_to_float_if_float(key_figure_data["value"])
-            timestamp = (
-                key_figure_data["timestamp"]
-                if "timestamp" in key_figure_data
-                else key_figure_data["updated_at"]
-            )
-            result["timestamp"] = str(datetime.fromtimestamp(timestamp))
+
     # return empty if kf is not available live for bond
     for _kf in key_figures:
         key_figure_key = get_keyfigure_key(

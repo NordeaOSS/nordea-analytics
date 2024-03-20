@@ -8,6 +8,7 @@ from nordea_analytics.nalib.data_retrieval_client import (
     DataRetrievalServiceClient,
 )
 from nordea_analytics.nalib.util import (
+    convert_to_list,
     convert_to_float_if_float,
     convert_to_original_format,
     convert_to_variable_string,
@@ -30,6 +31,8 @@ class IndexComposition(ValueRetriever):
             List[str],
             List[BondIndexName],
             List[Union[str, BondIndexName]],
+            pd.Series,
+            pd.Index,
         ],
         calc_date: datetime,
     ) -> None:
@@ -44,9 +47,7 @@ class IndexComposition(ValueRetriever):
         super(IndexComposition, self).__init__(client)
         self._client = client
 
-        self.indices_original: List = (
-            indices if isinstance(indices, list) else [indices]
-        )
+        self.indices_original = convert_to_list(indices)
 
         # Convert index names to variable strings
         _indices: List = []

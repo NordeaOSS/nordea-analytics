@@ -140,9 +140,11 @@ class BondFinder(ValueRetriever):
         )
         self.asset_types = (
             [
-                convert_to_variable_string(asset_type, AssetType)
-                if isinstance(asset_type, AssetType)
-                else asset_type
+                (
+                    convert_to_variable_string(asset_type, AssetType)
+                    if isinstance(asset_type, AssetType)
+                    else asset_type
+                )
                 for asset_type in _asset_types
             ]
             if asset_types is not None
@@ -155,9 +157,11 @@ class BondFinder(ValueRetriever):
         )
         self.instrument_groups = (
             [
-                convert_to_variable_string(instrument_group, InstrumentGroup)
-                if isinstance(instrument_group, InstrumentGroup)
-                else instrument_group
+                (
+                    convert_to_variable_string(instrument_group, InstrumentGroup)
+                    if isinstance(instrument_group, InstrumentGroup)
+                    else instrument_group
+                )
                 for instrument_group in _instrument_groups
             ]
             if instrument_groups is not None
@@ -207,9 +211,11 @@ class BondFinder(ValueRetriever):
             )
 
             self.capital_centres = [
-                convert_to_variable_string(capital_centre, CapitalCentres)
-                if isinstance(capital_centre, CapitalCentres)
-                else capital_centre
+                (
+                    convert_to_variable_string(capital_centre, CapitalCentres)
+                    if isinstance(capital_centre, CapitalCentres)
+                    else capital_centre
+                )
                 for capital_centre in _capital_centres
             ]
         else:
@@ -224,9 +230,11 @@ class BondFinder(ValueRetriever):
             )
 
             self.capital_centre_types = [
-                convert_to_variable_string(capital_centre_type, CapitalCentreTypes)
-                if isinstance(capital_centre_type, CapitalCentreTypes)
-                else capital_centre_type
+                (
+                    convert_to_variable_string(capital_centre_type, CapitalCentreTypes)
+                    if isinstance(capital_centre_type, CapitalCentreTypes)
+                    else capital_centre_type
+                )
                 for capital_centre_type in _capital_centre_types
             ]
         else:

@@ -107,6 +107,13 @@ class CustomWarningCheck:
             CustomWarning(message, AnalyticsWarning)
 
     @staticmethod
+    def live_key_figure_universe_warning(response: dict) -> None:
+        """Throw warning when bond live key figures universe response includes bonds that are not supported."""
+        if "errors" in response:
+            message = response["errors"]
+            CustomWarning(message, AnalyticsWarning)
+
+    @staticmethod
     def live_key_figure_data_not_available_warning(response: dict) -> None:
         """Throw warning when bond live key figures response includes bonds with no data available."""
         if "data_not_available" in response and len(response["data_not_available"]) > 0:

@@ -1,6 +1,10 @@
 """Core functionality to acces API."""
+
 from datetime import datetime
 from typing import Optional, Any, Dict, Iterator, List, Union
+
+import pandas
+import pandas as pd
 
 from nordea_analytics.convention_variable_names import (
     CashflowType,
@@ -63,8 +67,10 @@ from nordea_analytics.search_bond_names import (
     AssetType,
     CapitalCentres,
     CapitalCentreTypes,
-    InstrumentGroup,
     Issuers,
+)
+from nordea_analytics.search_bond_names import (
+    InstrumentGroup as SearchBondInstrumentGroup,
 )
 
 
@@ -101,7 +107,7 @@ class NordeaAnalyticsCoreService:
 
     def get_bond_key_figures(
         self,
-        symbols: Union[List, str],
+        symbols: Union[List, str, pd.Series, pandas.Index],
         keyfigures: Union[
             str,
             BondKeyFigureName,
@@ -138,6 +144,7 @@ class NordeaAnalyticsCoreService:
             List[str],
             List[BondIndexName],
             List[Union[str, BondIndexName]],
+            pandas.Index,
         ],
         calc_date: datetime,
         as_df: bool = False,
@@ -169,6 +176,7 @@ class NordeaAnalyticsCoreService:
             List[BenchmarkName],
             List[BondIndexName],
             List[Union[str, BenchmarkName, BondIndexName]],
+            pd.Series,
         ],
         keyfigures: Union[
             str,
@@ -340,7 +348,12 @@ class NordeaAnalyticsCoreService:
         issuers: Optional[Union[List[Issuers], List[str], Issuers, str]] = None,
         asset_types: Optional[Union[List[AssetType], List[str], AssetType, str]] = None,
         instrument_groups: Optional[
-            Union[List[InstrumentGroup], List[str], InstrumentGroup, str]
+            Union[
+                List[SearchBondInstrumentGroup],
+                List[str],
+                SearchBondInstrumentGroup,
+                str,
+            ]
         ] = None,
         lower_issue_date: Optional[datetime] = None,
         upper_issue_date: Optional[datetime] = None,
@@ -428,6 +441,7 @@ class NordeaAnalyticsCoreService:
             List[str],
             List[CalculatedBondKeyFigureName],
             List[Union[str, CalculatedBondKeyFigureName]],
+            pd.Series,
         ],
         calc_date: datetime,
         curves: Optional[Union[List[str], str, CurveName, List[CurveName]]] = None,
@@ -507,6 +521,7 @@ class NordeaAnalyticsCoreService:
             List[str],
             List[HorizonCalculatedBondKeyFigureName],
             List[Union[str, HorizonCalculatedBondKeyFigureName]],
+            pd.Series,
         ],
         calc_date: datetime,
         horizon_date: datetime,
@@ -583,13 +598,15 @@ class NordeaAnalyticsCoreService:
 
     def calculate_repo_bond_key_figure(
         self,
-        symbols: Union[str, List[str]],
+        symbols: Union[str, List[str], pd.Series],
         keyfigures: Union[
             str,
             CalculatedRepoBondKeyFigureName,
             List[str],
             List[CalculatedRepoBondKeyFigureName],
             List[Union[str, CalculatedRepoBondKeyFigureName]],
+            pd.Series,
+            pd.Index,
         ],
         calc_date: datetime,
         forward_date: datetime,
@@ -650,7 +667,17 @@ class NordeaAnalyticsCoreService:
 
     def get_quotes(
         self,
-        symbols: Union[str, List[str]],
+        symbols: Union[
+            str,
+            BondIndexName,
+            BenchmarkName,
+            List[str],
+            List[BondIndexName],
+            List[BenchmarkName],
+            List[Union[str, BondIndexName, BenchmarkName]],
+            pd.Series,
+            pd.Index,
+        ],
         calc_date: datetime,
         as_df: bool = False,
     ) -> Any:
@@ -827,7 +854,7 @@ class NordeaAnalyticsCoreService:
 
     def get_bond_live_key_figures(
         self,
-        symbols: Union[str, List[str]],
+        symbols: Union[str, List[str], pd.Series],
         keyfigures: Union[
             List[LiveBondKeyFigureName], List[str], LiveBondKeyFigureName, str
         ],
@@ -852,7 +879,7 @@ class NordeaAnalyticsCoreService:
 
     def iter_live_bond_key_figures(
         self,
-        symbols: Union[str, List[str]],
+        symbols: Union[str, List[str], pd.Series],
         keyfigures: Union[
             List[LiveBondKeyFigureName], List[str], LiveBondKeyFigureName, str
         ],

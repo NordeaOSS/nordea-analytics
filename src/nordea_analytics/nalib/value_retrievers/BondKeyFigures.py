@@ -5,6 +5,7 @@ from typing import Any, Dict, List, Union
 import numpy as np
 import pandas as pd
 
+from nordea_analytics.instrument_variable_names import BenchmarkName, BondIndexName
 from nordea_analytics.key_figure_names import (
     BondKeyFigureName,
 )
@@ -12,6 +13,7 @@ from nordea_analytics.nalib.data_retrieval_client import (
     DataRetrievalServiceClient,
 )
 from nordea_analytics.nalib.util import (
+    convert_to_list,
     convert_to_float_if_float,
     convert_to_original_format,
     convert_to_variable_string,
@@ -31,7 +33,17 @@ class BondKeyFigures(ValueRetriever):
     def __init__(
         self,
         client: DataRetrievalServiceClient,
-        symbols: Union[List[str], str],
+        symbols: Union[
+            str,
+            BondIndexName,
+            BenchmarkName,
+            List[str],
+            List[BondIndexName],
+            List[BenchmarkName],
+            List[Union[str, BondIndexName, BenchmarkName]],
+            pd.Series,
+            pd.Index,
+        ],
         keyfigures: Union[
             str,
             BondKeyFigureName,
@@ -55,8 +67,7 @@ class BondKeyFigures(ValueRetriever):
         """
         super(BondKeyFigures, self).__init__(client)
 
-        # Convert symbols to a list if it's not already a list
-        self.symbols: List = [symbols] if not isinstance(symbols, list) else symbols
+        self.symbols = convert_to_list(symbols)
 
         # Convert keyfigures to a list of strings
         self.keyfigures_original: List = (
@@ -65,9 +76,11 @@ class BondKeyFigures(ValueRetriever):
 
         # Convert keyfigures to variable string format if it's a BondKeyFigureName enum
         self.keyfigures = [
-            convert_to_variable_string(keyfigure, BondKeyFigureName)
-            if isinstance(keyfigure, BondKeyFigureName)
-            else keyfigure
+            (
+                convert_to_variable_string(keyfigure, BondKeyFigureName)
+                if isinstance(keyfigure, BondKeyFigureName)
+                else keyfigure
+            )
             for keyfigure in self.keyfigures_original
         ]
 

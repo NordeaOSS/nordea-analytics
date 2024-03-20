@@ -68,9 +68,11 @@ class CurveTimeSeries(ValueRetriever):
         self._client = client
         self.curves_original: List = curves if isinstance(curves, list) else [curves]
         self.curves = [
-            convert_to_variable_string(curve, CurveName)
-            if isinstance(curve, CurveName)
-            else curve
+            (
+                convert_to_variable_string(curve, CurveName)
+                if isinstance(curve, CurveName)
+                else curve
+            )
             for curve in self.curves_original
         ]
         self.from_date = from_date

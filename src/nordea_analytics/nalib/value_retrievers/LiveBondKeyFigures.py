@@ -16,6 +16,7 @@ from nordea_analytics.nalib.live_keyfigures.parsing import (
     to_data_frame,
 )
 from nordea_analytics.nalib.util import (
+    convert_to_list,
     convert_to_variable_string,
     get_config,
 )
@@ -37,7 +38,7 @@ class LiveBondKeyFigures(ValueRetriever):
 
     def __init__(
         self,
-        symbols: Union[str, List[str]],
+        symbols: Union[str, List[str], pd.Series, pd.Index],
         client: DataRetrievalServiceClient,
         keyfigures: Union[
             LiveBondKeyFigureName,
@@ -50,12 +51,16 @@ class LiveBondKeyFigures(ValueRetriever):
     ) -> None:
         """Initialize the LiveBondKeyFigures class."""
         super(LiveBondKeyFigures, self).__init__(client)
-        self.symbols: List = [symbols] if isinstance(symbols, str) else symbols
+
+        self.symbols = convert_to_list(symbols)
+
         _keyfigures: List = keyfigures if isinstance(keyfigures, list) else [keyfigures]
         self.keyfigures: List = [
-            convert_to_variable_string(keyfigure, LiveBondKeyFigureName)
-            if isinstance(keyfigure, LiveBondKeyFigureName)
-            else keyfigure.lower()
+            (
+                convert_to_variable_string(keyfigure, LiveBondKeyFigureName)
+                if isinstance(keyfigure, LiveBondKeyFigureName)
+                else keyfigure.lower()
+            )
             for keyfigure in _keyfigures
         ]
 

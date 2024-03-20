@@ -1,4 +1,5 @@
 """Script for various methods for auth nordea analytics library."""
+
 from urllib.parse import urljoin, urlparse
 
 import requests
