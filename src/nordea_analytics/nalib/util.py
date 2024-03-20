@@ -1,11 +1,13 @@
 """Script for various methods for nordea analytics library."""
+
 from abc import ABC
 from enum import Enum
 import json
 from pathlib import Path
 from re import sub
-from typing import Optional, Callable, Dict, List, Mapping, Union
+from typing import Any, Callable, Dict, List, Mapping, Optional, Union
 
+import pandas as pd
 import yaml
 
 from nordea_analytics import (
@@ -30,7 +32,10 @@ from nordea_analytics import (
     YieldType,
 )
 from nordea_analytics.key_figure_names import CalculatedRepoBondKeyFigureName
-from nordea_analytics.nalib.exceptions import AnalyticsResponseError
+from nordea_analytics.nalib.exceptions import (
+    AnalyticsInputError,
+    AnalyticsResponseError,
+)
 from nordea_analytics.search_bond_names import (
     AmortisationType,
     AssetType,
@@ -294,6 +299,27 @@ def convert_to_original_format(
                 "Conversion function not working properly, report this to package provider."
             )
             return new
+
+
+def convert_to_list(
+    originals: Union[str, List[str], pd.Series, pd.Index],
+) -> list[str]:
+    """Convert the symbols input to be a list of strings."""
+
+    symbols_list: list[Any]
+    try:
+        if isinstance(originals, pd.Series) or isinstance(originals, pd.Index):
+            symbols_list = originals.to_list()
+        elif not isinstance(originals, list):
+            symbols_list = [originals]
+        else:
+            symbols_list = originals
+
+    except Exception:
+        AnalyticsInputError(
+            "Conversion function not working properly, report this to package provider."
+        )
+    return symbols_list
 
 
 def pascal_case(s: str) -> str:

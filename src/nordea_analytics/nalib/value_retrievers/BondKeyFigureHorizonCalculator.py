@@ -17,6 +17,7 @@ from nordea_analytics.nalib.data_retrieval_client import (
 from nordea_analytics.nalib.exceptions import CustomWarningCheck
 from nordea_analytics.nalib.http.errors import BadRequestError
 from nordea_analytics.nalib.util import (
+    convert_to_list,
     convert_to_float_if_float,
     convert_to_original_format,
     convert_to_variable_string,
@@ -33,7 +34,7 @@ class BondKeyFigureHorizonCalculator(ValueRetriever):
     def __init__(
         self,
         client: DataRetrievalServiceClient,
-        symbols: Union[str, List[str]],
+        symbols: Union[str, List[str], pd.Series, pd.Index],
         keyfigures: Union[
             str,
             HorizonCalculatedBondKeyFigureName,
@@ -95,33 +96,41 @@ class BondKeyFigureHorizonCalculator(ValueRetriever):
         """
         super(BondKeyFigureHorizonCalculator, self).__init__(client)
         self._client = client
+
+        self.symbols = convert_to_list(symbols)
+
         self.key_figures_original: List = (
             keyfigures if isinstance(keyfigures, list) else [keyfigures]
         )
         self.keyfigures = [
-            convert_to_variable_string(kf, HorizonCalculatedBondKeyFigureName)
-            if isinstance(kf, HorizonCalculatedBondKeyFigureName)
-            else kf.lower()
+            (
+                convert_to_variable_string(kf, HorizonCalculatedBondKeyFigureName)
+                if isinstance(kf, HorizonCalculatedBondKeyFigureName)
+                else kf.lower()
+            )
             for kf in self.key_figures_original
         ]
 
-        self.symbols = symbols if isinstance(symbols, list) else [symbols]
         self.calc_date = calc_date
         self.horizon_date = horizon_date
         self.curves_original: Union[List, None] = (
             curves
             if isinstance(curves, list)
-            else [curves]
-            if isinstance(curves, str) or isinstance(curves, CurveName)
-            else None
+            else (
+                [curves]
+                if isinstance(curves, str) or isinstance(curves, CurveName)
+                else None
+            )
         )
 
         _curves: Union[List[str], None]
         if isinstance(curves, list):
             _curves = [
-                convert_to_variable_string(curve, CurveName)
-                if isinstance(curve, CurveName)
-                else str(curve)
+                (
+                    convert_to_variable_string(curve, CurveName)
+                    if isinstance(curve, CurveName)
+                    else str(curve)
+                )
                 for curve in curves
             ]
         elif curves is not None:
@@ -232,9 +241,9 @@ class BondKeyFigureHorizonCalculator(ValueRetriever):
                 "shift_tenors": self.shift_tenors,
                 "shift_values": self.shift_values,
                 "pp_speed": self.pp_speed,
-                "price": self.prices[x]
-                if self.prices and x < len(self.prices)
-                else None,
+                "price": (
+                    self.prices[x] if self.prices and x < len(self.prices) else None
+                ),
                 "cashflow_type": self.cashflow_type,
                 "fixed_prepayments": self.fixed_prepayments,
                 "reinvest_in_series": self.reinvest_in_series,

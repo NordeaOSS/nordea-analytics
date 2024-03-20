@@ -18,6 +18,7 @@ from nordea_analytics.nalib.exceptions import CustomWarningCheck
 from nordea_analytics.nalib.http.errors import BadRequestError
 from nordea_analytics.nalib.util import (
     convert_to_float_if_float,
+    convert_to_list,
     convert_to_original_format,
     convert_to_variable_string,
     get_config,
@@ -55,7 +56,7 @@ class BondKeyFigureCalculator(ValueRetriever):
     def __init__(
         self,
         client: DataRetrievalServiceClient,
-        symbols: Union[str, List[str]],
+        symbols: Union[str, List[str], pd.Series, pd.Index],
         keyfigures: Union[
             str,
             CalculatedBondKeyFigureName,
@@ -114,32 +115,39 @@ class BondKeyFigureCalculator(ValueRetriever):
         super(BondKeyFigureCalculator, self).__init__(client)
         self._client = client
 
+        self.symbols = convert_to_list(symbols)
+
         self.key_figures_original: List = (
             keyfigures if isinstance(keyfigures, list) else [keyfigures]
         )
         self.keyfigures = [
-            convert_to_variable_string(keyfigure, CalculatedBondKeyFigureName)
-            if isinstance(keyfigure, CalculatedBondKeyFigureName)
-            else keyfigure.lower()
+            (
+                convert_to_variable_string(keyfigure, CalculatedBondKeyFigureName)
+                if isinstance(keyfigure, CalculatedBondKeyFigureName)
+                else keyfigure.lower()
+            )
             for keyfigure in self.key_figures_original
         ]
 
-        self.symbols = symbols if isinstance(symbols, list) else [symbols]
         self.calc_date = calc_date
         self.curves_original: Union[List, None] = (
             curves
             if isinstance(curves, list)
-            else [curves]
-            if isinstance(curves, str) or isinstance(curves, CurveName)
-            else None
+            else (
+                [curves]
+                if isinstance(curves, str) or isinstance(curves, CurveName)
+                else None
+            )
         )
 
         _curves: Union[List[str], None]
         if isinstance(curves, list):
             _curves = [
-                convert_to_variable_string(curve, CurveName)
-                if isinstance(curve, CurveName)
-                else curve
+                (
+                    convert_to_variable_string(curve, CurveName)
+                    if isinstance(curve, CurveName)
+                    else curve
+                )
                 for curve in curves
             ]
         elif curves is not None:
@@ -174,10 +182,12 @@ class BondKeyFigureCalculator(ValueRetriever):
         self.ladder_definition = (
             ladder_definition
             if isinstance(ladder_definition, list)
-            else [ladder_definition]
-            if isinstance(ladder_definition, float)
-            or isinstance(ladder_definition, int)
-            else None
+            else (
+                [ladder_definition]
+                if isinstance(ladder_definition, float)
+                or isinstance(ladder_definition, int)
+                else None
+            )
         )
         self.cashflow_type = (
             convert_to_variable_string(cashflow_type, CashflowType)
@@ -212,6 +222,10 @@ class BondKeyFigureCalculator(ValueRetriever):
                 CustomWarningCheck.bad_request_warning(
                     bad_request, request_dict["symbol"]
                 )
+            except Exception as e:
+                CustomWarningCheck.post_response_not_retrieved_warning(
+                    e, request_dict["symbol"]
+                )
         return json_response
 
     @property
@@ -244,9 +258,11 @@ class BondKeyFigureCalculator(ValueRetriever):
                 "shift_tenors": self.shift_tenors,
                 "shift_values": self.shift_values,
                 "pp_speed": self.pp_speed,
-                "price": self.prices[x]
-                if self.prices is not None and x < len(self.prices)
-                else None,
+                "price": (
+                    self.prices[x]
+                    if self.prices is not None and x < len(self.prices)
+                    else None
+                ),
                 "spread": self.spread,
                 "spread_curve": self.spread_curve,
                 "yield": self.yield_input,

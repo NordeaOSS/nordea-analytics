@@ -3,6 +3,7 @@ from typing import Dict
 import pandas as pd
 
 from nordea_analytics.nalib.data_retrieval_client import DataRetrievalServiceClient
+from nordea_analytics.nalib.exceptions import CustomWarningCheck
 from nordea_analytics.nalib.util import get_config
 from nordea_analytics.nalib.value_retriever import ValueRetriever
 
@@ -37,6 +38,10 @@ class LiveBondUniverse(ValueRetriever):
         # Remove unnecessary keys from the response
         json_response.pop("count")
         json_response.pop("restricted")
+
+        if "errors" in json_response:
+            CustomWarningCheck.live_key_figure_universe_warning(response=json_response)
+            json_response.pop("errors")
 
         return json_response
 

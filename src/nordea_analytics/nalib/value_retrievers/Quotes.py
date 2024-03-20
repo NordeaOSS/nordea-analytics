@@ -3,12 +3,13 @@ from typing import Any, Dict, List, Union
 
 import pandas as pd
 
+from nordea_analytics.instrument_variable_names import BenchmarkName, BondIndexName
 from nordea_analytics.nalib.data_retrieval_client import (
     DataRetrievalServiceClient,
 )
 from nordea_analytics.nalib.exceptions import CustomWarningCheck
 from nordea_analytics.nalib.http.errors import BadRequestError
-from nordea_analytics.nalib.util import get_config
+from nordea_analytics.nalib.util import convert_to_list, get_config
 from nordea_analytics.nalib.value_retriever import ValueRetriever
 
 config = get_config()
@@ -24,7 +25,17 @@ class Quotes(ValueRetriever):
     def __init__(
         self,
         client: DataRetrievalServiceClient,
-        symbols: Union[List[str], str],
+        symbols: Union[
+            str,
+            BondIndexName,
+            BenchmarkName,
+            List[str],
+            List[BondIndexName],
+            List[BenchmarkName],
+            List[Union[str, BondIndexName, BenchmarkName]],
+            pd.Series,
+            pd.Index,
+        ],
         calc_date: datetime,
     ) -> None:
         """Initializes the Quotes instance.
@@ -36,8 +47,8 @@ class Quotes(ValueRetriever):
         """
         super(Quotes, self).__init__(client)
 
-        # Convert symbols to list if it's not already a list
-        self.symbols: List = symbols if isinstance(symbols, list) else [symbols]
+        self.symbols = convert_to_list(symbols)
+
         self.calc_date = calc_date
         self._data = self.get_fx_quotes()
 

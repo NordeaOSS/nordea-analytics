@@ -1,4 +1,5 @@
 """The Nordea Analytics Python Project API."""
+
 # To distinguish between external and internal packages
 try:
     from .nordea import NordeaAnalyticsService  # type: ignore

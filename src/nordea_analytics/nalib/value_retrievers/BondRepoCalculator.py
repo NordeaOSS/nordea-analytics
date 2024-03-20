@@ -12,6 +12,7 @@ from nordea_analytics.nalib.data_retrieval_client import (
 from nordea_analytics.nalib.exceptions import AnalyticsResponseError, CustomWarningCheck
 from nordea_analytics.nalib.http.errors import BadRequestError
 from nordea_analytics.nalib.util import (
+    convert_to_list,
     convert_to_original_format,
     convert_to_variable_string,
     get_config,
@@ -27,7 +28,7 @@ class BondRepoCalculator(ValueRetriever):
     def __init__(
         self,
         client: DataRetrievalServiceClient,
-        symbols: Union[str, List[str]],
+        symbols: Union[str, List[str], pd.Series, pd.Index],
         keyfigures: Union[
             str,
             CalculatedRepoBondKeyFigureName,
@@ -56,17 +57,21 @@ class BondRepoCalculator(ValueRetriever):
         """
         super(BondRepoCalculator, self).__init__(client)
         self._client = client
+
+        self.symbols = convert_to_list(symbols)
+
         self.key_figures_original: List = (
             keyfigures if isinstance(keyfigures, list) else [keyfigures]
         )
         self.keyfigures = [
-            convert_to_variable_string(kf, CalculatedRepoBondKeyFigureName)
-            if isinstance(kf, CalculatedRepoBondKeyFigureName)
-            else kf.lower()
+            (
+                convert_to_variable_string(kf, CalculatedRepoBondKeyFigureName)
+                if isinstance(kf, CalculatedRepoBondKeyFigureName)
+                else kf.lower()
+            )
             for kf in self.key_figures_original
         ]
 
-        self.symbols = symbols if isinstance(symbols, list) else [symbols]
         self.calc_date = calc_date
         self.forward_date = forward_date
 
@@ -149,15 +154,21 @@ class BondRepoCalculator(ValueRetriever):
                 "date": self.calc_date.strftime("%Y-%m-%d"),
                 "forward_date": self.forward_date.strftime("%Y-%m-%d"),
                 "parameter_to_calculate": parameter_to_calculate,
-                "price": self.prices[x]
-                if self.prices is not None and x < len(self.prices)
-                else None,
-                "forward_price": self.forward_prices[x]
-                if self.forward_prices is not None and x < len(self.forward_prices)
-                else None,
-                "repo_rate": self.repo_rates[x]
-                if self.repo_rates is not None and x < len(self.repo_rates)
-                else None,
+                "price": (
+                    self.prices[x]
+                    if self.prices is not None and x < len(self.prices)
+                    else None
+                ),
+                "forward_price": (
+                    self.forward_prices[x]
+                    if self.forward_prices is not None and x < len(self.forward_prices)
+                    else None
+                ),
+                "repo_rate": (
+                    self.repo_rates[x]
+                    if self.repo_rates is not None and x < len(self.repo_rates)
+                    else None
+                ),
             }
             request = {
                 key: initial_request[key]

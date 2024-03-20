@@ -41,6 +41,7 @@ class TimeSeries(ValueRetriever):
             List[BenchmarkName],
             List[BondIndexName],
             List[Union[str, BenchmarkName, BondIndexName]],
+            pd.Series,
         ],
         keyfigures: Union[
             TimeSeriesKeyFigureName,
@@ -64,9 +65,15 @@ class TimeSeries(ValueRetriever):
         """
         super(TimeSeries, self).__init__(client)
         self._client = client
-        self.symbols_original: List = (
-            symbols if isinstance(symbols, list) else [symbols]
-        )
+
+        symbols_list: list[Any]
+        if isinstance(symbols, pd.Series):
+            symbols_list = symbols.to_list()
+        elif not isinstance(symbols, list):
+            symbols_list = [symbols]
+        else:
+            symbols_list = symbols
+        self.symbols_original: List = symbols_list
 
         # Convert symbol names to variable strings
         _symbols: List = []
@@ -85,9 +92,11 @@ class TimeSeries(ValueRetriever):
 
         # Convert key figure names to variable strings
         self.keyfigures = [
-            convert_to_variable_string(keyfigure, TimeSeriesKeyFigureName)
-            if isinstance(keyfigure, TimeSeriesKeyFigureName)
-            else keyfigure
+            (
+                convert_to_variable_string(keyfigure, TimeSeriesKeyFigureName)
+                if isinstance(keyfigure, TimeSeriesKeyFigureName)
+                else keyfigure
+            )
             for keyfigure in self.keyfigures_original
         ]
 
@@ -155,7 +164,9 @@ class TimeSeries(ValueRetriever):
                     break
 
             if not result_found:
-                warnings.warn(message=warn.message, category=warn.category, stacklevel=1)
+                warnings.warn(
+                    message=warn.message, category=warn.category, stacklevel=1
+                )
 
     def get_time_series(self) -> List:
         """Retrieves response with key figures time series.
@@ -164,10 +175,11 @@ class TimeSeries(ValueRetriever):
             List of JSON response with key figures time series.
         """
 
-        w: List[warnings.WarningMessage]
+        w: List[warnings.WarningMessage] = []
         with warnings.catch_warnings(
-            record=True, category=AnalyticsWarning
+            record=True
         ) as w:  # Catches all warnings thrown by Analytics API
+            # category=AnalyticsWarning not supported by python 3.9, so workaround by looping over warnings
             json_response: List[Any] = []
 
             # Loop through each request dictionary and get the response
@@ -175,6 +187,11 @@ class TimeSeries(ValueRetriever):
                 _json_response = self.get_response(request_dict)
                 json_map = _json_response[config["results"]["time_series"]]
                 json_response = list(json_map) + json_response
+
+        # Workaround for python 3.9 compatibility
+        for index, x in enumerate(w):
+            if not isinstance(x.message, AnalyticsWarning):
+                w.pop(index)
 
         self.filter_out_misleading_analytics_warnings(w, json_response)
 
