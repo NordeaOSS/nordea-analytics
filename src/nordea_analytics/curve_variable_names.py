@@ -74,6 +74,7 @@ class CurveName(Enum):
     RUBSWAP_Libor = "RUBSWAP LIBOR"
     SEKGOV = "SEKGOV"
     SEKMTGBLEND = "SEKMTGBLEND"
+    SEKMTGSKOMINV = "SEKMTGSKOMINV"
     SEKMTGNBH = "SEKMTGNBH"
     SEKMTGSEB = "SEKMTGSEB"
     SEKMTGSHYP = "SEKMTGSHYP"
@@ -151,3 +152,10 @@ class SpotForward(Enum):
     Spot = "Spot"
     Forward = "Forward"
     ImpliedForward = "ImpliedForward"
+
+
+class SpotForwardTimeSeries(Enum):
+    """Spot/forward available for curves time series in the service."""
+
+    Spot = "Spot"
+    Forward = "Forward"

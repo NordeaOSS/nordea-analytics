@@ -30,10 +30,13 @@ lazy-object-proxy==1.6.0
     # via astroid
 markupsafe==2.0.1
     # via jinja2
+matplotlib==3.7.2
+numpy==1.25.2
 packaging==21.0
     # via
     #   rst2pdf
     #   sphinx
+pandas==2.0.3
 pillow==9.0.1
     # via reportlab
 pygments==2.12.0
@@ -52,6 +55,7 @@ requests==2.26.0
     # via sphinx
 rst2pdf==0.100
     # via -r requirements\requirements-docs.in
+scipy==1.11.1
 smartypants==2.0.1
     # via rst2pdf
 snowballstemmer==2.1.0

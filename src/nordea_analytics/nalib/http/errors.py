@@ -52,3 +52,11 @@ class UnknownClientError(ClientHttpError):
     def __init__(self, error_id: str, error_description: str) -> None:
         """Create new instance of UnknownClientError."""
         super().__init__(error_id, error_description)
+
+
+class ServiceUnavailableError(Exception):
+    """The request could not be processed due to server being unavailable."""
+
+    def __init__(self, error_description: str) -> None:
+        """Create new instance of ServiceUnavailableError."""
+        super().__init__(error_description)

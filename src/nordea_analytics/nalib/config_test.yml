@@ -1,56 +1,47 @@
-service_name: 'Nordea Analytics API'
-max_bonds: 50
+service_name: 'Nordea Analytics Internal'
+login: False
+get_proxy_information: False
+user_suffix: ""
+use_headers: False
+
+max_isins: 50
 max_symbol_timeseries: 50
 max_keyfigures_timeseries: 1
 max_years_timeseries: 10
 
 url_suffix:
   available_instruments: "instruments-available"
-  benchmark_definition: "benchmark-definition"
   bond_key_figures: "bonds/keyfigure"
   calculate: "bonds-calculation"
-  calculate_advanced: "bonds-advanced-calculation"
   calculate_horizon: "bonds-horizoncalculation"
-  calculate_repo: "bonds-repo-calculation"
   bond_static_data: "bonds/static-data"
   curve: "curves"
   curve_definition: "curves/definition"
   curve_time_series: "curves/timeseries"
-  date_sequence: "date-sequence"
   fx_forecast: "fx-forecasts"
-  fx_quotes: "fx-quotes"
   index_composition: "index-composition"
   search_bonds: "search/bonds"
   search_dmb_bonds: "search/danishmortgagebonds"
-  search_instruments: "search/instruments"
+  live_bond_key_figures_stream: "bonds/live-keyfigures-stream"
   live_bond_key_figures: "bonds/live-keyfigures"
-  live_bond_key_figures_history: "bonds/live-keyfigures-history"
-  live_bond_universe: "bonds/live-keyfigures-bonds"
-  quotes: "quotes"
-  shift_date: "shift-date"
   shift_days: "shift-days"
   time_series: "timeseries"
   year_fraction: "year-fraction"
   yield_forecast: "yield-forecasts"
+  auth: "ninaa/auth"
 
 
 #Squashes json response layers
 results:
   available_instruments: "instruments"
-  benchmark_definition: "benchmark_definition"
   bond_key_figures: "keyfigures"
   bond_static_data: "static_data"
   curve: "curve"
   curve_definition: "definition"
   curve_time_series: "timeseries"
-  date_sequence: "date_sequence"
   fx_forecast: "fx_forecast"
-  fx_quotes: "quotes"
   index_composition: "indices"
-  instrument_search: "instruments"
-  quotes: "quotes"
   search: "search"
-  shift_date: "date"
   shift_days: "date"
   time_series: "timeseries"
   year_fraction: "year_fraction"
