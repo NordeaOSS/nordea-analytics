@@ -18,8 +18,10 @@ from nordea_analytics.curve_variable_names import (
     CurveName,
     CurveType,
     SpotForward,
+    SpotForwardTimeSeries,
 )
 from nordea_analytics.forecast_names import YieldCountry, YieldHorizon, YieldType
+from nordea_analytics.instrument_groups import InstrumentGroup
 from nordea_analytics.instrument_variable_names import BenchmarkName, BondIndexName
 from nordea_analytics.key_figure_names import (
     BondKeyFigureName,
@@ -34,6 +36,9 @@ from nordea_analytics.nalib.util import pretty_dict_string
 from nordea_analytics.nalib.value_retriever import ValueRetriever
 from nordea_analytics.nalib.value_retrievers.AvailableInstruments import (
     AvailableInstruments,
+)
+from nordea_analytics.nalib.value_retrievers.BenchmarkDefinition import (
+    BenchmarkDefinition,
 )
 from nordea_analytics.nalib.value_retrievers.BondFinder import BondFinder
 from nordea_analytics.nalib.value_retrievers.BondKeyFigureCalculator import (
@@ -52,6 +57,7 @@ from nordea_analytics.nalib.value_retrievers.CurveTimeSeries import CurveTimeSer
 from nordea_analytics.nalib.value_retrievers.DateSequence import DateSequence
 from nordea_analytics.nalib.value_retrievers.FXForecast import FXForecast
 from nordea_analytics.nalib.value_retrievers.IndexComposition import IndexComposition
+from nordea_analytics.nalib.value_retrievers.InstrumentSearch import InstrumentSearch
 from nordea_analytics.nalib.value_retrievers.LiveBondKeyFigures import (
     LiveBondKeyFigures,
 )
@@ -105,6 +111,32 @@ class NordeaAnalyticsCoreService:
         """
         return self._retrieve_value(AvailableInstruments(self._client), as_df)
 
+    def get_benchmark_definition(
+        self,
+        benchmarks: Union[
+            str,
+            BenchmarkName,
+            list[str],
+            list[BenchmarkName],
+            List[Union[str, BenchmarkName]],
+        ],
+        as_df: bool = False,
+    ) -> Any:
+        """Retrieves Nordea's latest FX forecasts.
+
+        Args:
+            benchmarks: ISIN or name of benchmarks to retrieve definition for.
+            as_df: Default False. If True, the results are represented
+                as pandas DataFrame, else as dictionary.
+
+        Returns:
+            Dictionary containing requested data. If as_df is True,
+                the data is in form of a DataFrame.
+        """
+        return self._retrieve_value(
+            BenchmarkDefinition(self._client, benchmarks), as_df
+        )
+
     def get_bond_key_figures(
         self,
         symbols: Union[List, str, pd.Series, pandas.Index],
@@ -118,7 +150,7 @@ class NordeaAnalyticsCoreService:
         calc_date: datetime,
         as_df: bool = False,
     ) -> Any:
-        """Retrieves given set of key figures for given bonds and calc date.
+        """Retrieves given set of historical key figures for given bonds and calc date.
 
         Args:
             symbols: List of bonds for which key figures want to be retrieved.
@@ -223,7 +255,7 @@ class NordeaAnalyticsCoreService:
         tenors: Union[float, List[float]],
         curve_type: Optional[Union[str, CurveType]] = None,
         time_convention: Optional[Union[str, TimeConvention]] = None,
-        spot_forward: Optional[Union[str, SpotForward]] = None,
+        spot_forward: Optional[Union[str, SpotForwardTimeSeries]] = None,
         forward_tenor: Optional[float] = None,
         as_df: bool = False,
     ) -> Any:
@@ -904,6 +936,58 @@ class NordeaAnalyticsCoreService:
     def dump_diagnostic(self) -> str:
         """Return the diagnostic information in a pretty way."""
         return pretty_dict_string(self._client.diagnostic)
+
+    def search_instruments(
+        self,
+        text: str,
+        exact_match: bool = False,
+        instrument_group_ids: Union[
+            InstrumentGroup,
+            int,
+            List[InstrumentGroup],
+            List[int],
+            List[Union[InstrumentGroup, int]],
+            None,
+        ] = None,
+        search_descendant_groups: bool = False,
+        as_df: bool = False,
+    ) -> Any:
+        """Finds instruments by name or symbol.
+
+        Args:
+            text: Text to be searched for.
+            exact_match: If true, then either symbol or name of instrument must be exactly like provided text.
+            instrument_group_ids: Search only inside selected instrument groups.
+            search_descendant_groups: If any instrument group is selected, then descendant groups are also used for search.
+            as_df: Default False. If True, the results are represented as pandas DataFrame, else as dictionary.
+
+        Returns:
+            Found instruments with their symbols, names and instrument groups.
+        """
+
+        normalized_instrument_group_ids = (
+            [] if instrument_group_ids is None else instrument_group_ids
+        )
+
+        normalized_instrument_group_ids = (
+            normalized_instrument_group_ids
+            if isinstance(normalized_instrument_group_ids, list)
+            else [normalized_instrument_group_ids]
+        )
+        normalized_instrument_group_ids = [
+            id.value if isinstance(id, InstrumentGroup) else id
+            for id in normalized_instrument_group_ids
+        ]
+
+        value_retriever = InstrumentSearch(
+            self._client,
+            text,
+            exact_match,
+            normalized_instrument_group_ids,
+            search_descendant_groups,
+        )
+
+        return self._retrieve_value(value_retriever, as_df)
 
     @staticmethod
     def _retrieve_value(value_retriever: ValueRetriever, as_df: bool = False) -> Any:

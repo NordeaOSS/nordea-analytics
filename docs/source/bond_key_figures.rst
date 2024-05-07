@@ -136,10 +136,6 @@ in the PV function.
 
 **BondKeyFigureName.OAS_GOV**
 
-**BondKeyFigureName.OAS_3M**
-
-**BondKeyFigureName.OAS_6M**
-
 Yield Curve Spread (YCS)
 -------------------------
 **BondKeyFigureName.YCS_OIS**
