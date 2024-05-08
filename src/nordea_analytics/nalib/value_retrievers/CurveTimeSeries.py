@@ -7,7 +7,7 @@ from nordea_analytics.convention_variable_names import TimeConvention
 from nordea_analytics.curve_variable_names import (
     CurveName,
     CurveType,
-    SpotForward,
+    SpotForwardTimeSeries,
 )
 from nordea_analytics.nalib.data_retrieval_client import (
     DataRetrievalServiceClient,
@@ -46,7 +46,7 @@ class CurveTimeSeries(ValueRetriever):
         tenors: Union[float, List[float]],
         curve_type: Optional[Union[str, CurveType]] = None,
         time_convention: Optional[Union[str, TimeConvention]] = None,
-        spot_forward: Optional[Union[str, SpotForward]] = None,
+        spot_forward: Optional[Union[str, SpotForwardTimeSeries]] = None,
         forward_tenor: Optional[float] = None,
     ) -> None:
         """Initialize the CurveTimeSeries class.
@@ -90,7 +90,7 @@ class CurveTimeSeries(ValueRetriever):
             else None
         )
         self.spot_forward = (
-            convert_to_variable_string(spot_forward, SpotForward)
+            convert_to_variable_string(spot_forward, SpotForwardTimeSeries)
             if spot_forward is not None
             else None
         )

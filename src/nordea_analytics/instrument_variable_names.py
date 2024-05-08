@@ -13,7 +13,6 @@ class BenchmarkName(Enum):
     DK_5Y = "DK 5Y"
     DK_10Y = "DK 10Y"
     DK_20Y = "DK 20Y"
-    DK_30Y = "DK 30Y"
     DK_ARM_1Y = "DK ARM 1Y"
     DK_ARM_3Y = "DK ARM 3Y"
     DK_ARM_5Y = "DK ARM 5Y"

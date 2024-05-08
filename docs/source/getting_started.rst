@@ -23,6 +23,7 @@ The second package everything from the first and real-time bond endpoints
 
 The first package:
 
+* :meth:`get_available_instruments() <nordea_analytics.nordea_analytics_service.core.NordeaAnalyticsCoreService.get_available_instruments>`.
 * :meth:`get_bond_key_figures() <nordea_analytics.nordea_analytics_service.core.NordeaAnalyticsCoreService.get_bond_key_figures>`.
 * :meth:`get_curve() <nordea_analytics.nordea_analytics_service.core.NordeaAnalyticsCoreService.get_curve>`.
 * :meth:`get_curve_definition() <nordea_analytics.nordea_analytics_service.core.NordeaAnalyticsCoreService.get_curve_definition>`.
@@ -36,6 +37,7 @@ The first package:
 * :meth:`get_year_fraction() <nordea_analytics.nordea_analytics_service.core.NordeaAnalyticsCoreService.get_year_fractionget_year_fraction>`.
 * :meth:`get_yield_forecasts() <nordea_analytics.nordea_analytics_service.core.NordeaAnalyticsCoreService.get_yield_forecasts>`.
 * :meth:`search_bonds() <nordea_analytics.nordea_analytics_service.core.NordeaAnalyticsCoreService.search_bonds>`
+* :meth:`search_instruments() <nordea_analytics.nordea_analytics_service.core.NordeaAnalyticsCoreService.search_instruments>`
 
 The second package:
 
@@ -88,6 +90,21 @@ For instruments
 
 Basic examples
 ---------------
+Get All Available Instruments
+^^^^^^^^^^^^^^^^^^^^^^^^^^^
+The following example retrieves all available instruments.
+
+.. code-block:: python
+
+    from nordea_analytics import get_nordea_analytics_client
+
+    na_service = get_nordea_analytics_client(client_id="Your client id", client_secret="Your client secret")
+
+    instruments = na_service.get_available_instruments()
+
+Other optional input variables can be found in :meth:`get_available_instruments()
+<nordea_analytics.nordea_analytics_service.core.NordeaAnalyticsCoreService.get_available_instruments>`
+
 Calculate Bond Key Figure
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^
 The following example calculates the spread and bpv for the ISIN `DK0002000421` at 15th of January 2021.
@@ -617,6 +634,56 @@ Other serach criterias are listed in :meth:`search_bonds()
 <nordea_analytics.nordea_analytics_service.core.NordeaAnalyticsCoreService.search_bonds>`
 
 
+Search Instruments
+^^^^^^^^^^^^^^^^^^^^^^^^^^^
+The following example retrieves all instruments which symbol or name contains USDDKK (case insensitive).
+
+.. code-block:: python
+
+    from nordea_analytics import get_nordea_analytics_client
+
+    na_service = get_nordea_analytics_client(client_id="Your client id", client_secret="Your client secret")
+
+    instruments = na_service.search_instruments("USDDKK")
+
+
+This example retrieves all instruments which symbol or name is equal to USDDKK.
+
+.. code-block:: python
+
+    from nordea_analytics import get_nordea_analytics_client
+
+    na_service = get_nordea_analytics_client(client_id="Your client id", client_secret="Your client secret")
+
+    instruments = na_service.search_instruments("USDDKK", exact_match=True)
+
+Search query can be limited to specified instrument groups.
+
+.. code-block:: python
+
+    from nordea_analytics import get_nordea_analytics_client
+
+    na_service = get_nordea_analytics_client(client_id="Your client id", client_secret="Your client secret")
+
+    instruments = na_service.search_instruments("USDDKK", instrument_group_ids=[InstrumentGroup.FXSpot])
+
+Instrument groups can be nested, so searching through descendant groups can be disabled. By default it's enabled.
+Consider below example: USDDKK is part of FX Spot instrument group, which in turn is part of FX instrument group.
+In two calls we look for USDDKK inside FX instrument group, but first one skips descendant groups, while the second one doesn't.
+
+.. code-block:: python
+
+    from nordea_analytics import get_nordea_analytics_client
+
+    na_service = get_nordea_analytics_client(client_id="Your client id", client_secret="Your client secret")
+
+    # This returns empty dictionary
+    instruments = na_service.search_instruments("USDDKK", instrument_group_ids=[InstrumentGroup.FX], search_descendant_groups=False)
+    # This returns non-empty dictionary
+    instruments = na_service.search_instruments("USDDKK", instrument_group_ids=[InstrumentGroup.FX], search_descendant_groups=True)
+
+Other optional input variables can be found in :meth:`search_instruments()
+<nordea_analytics.nordea_analytics_service.core.NordeaAnalyticsCoreService.search_instruments>`
 
 Advanced examples
 -------------------

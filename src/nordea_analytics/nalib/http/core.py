@@ -10,6 +10,7 @@ from nordea_analytics.nalib.exceptions import HttpClientImproperlyConfigured
 from nordea_analytics.nalib.http.errors import (
     BadRequestError,
     ForbiddenRequestError,
+    ServiceUnavailableError,
     UnauthorizedRequestError,
 )
 from nordea_analytics.nalib.http.errors import NotFoundRequestError, UnknownClientError
@@ -192,6 +193,11 @@ class RestApiHttpClient(ABC):
 
         if 404 < http_code < 500:
             raise UnknownClientError(request_id, error_description)
+
+        if http_code == 503:
+            raise ServiceUnavailableError(
+                "Request was not processed because server is unavailable. Please try again later."
+            )
 
         raise ApiServerError(api_response.request_id, error_description)
 
