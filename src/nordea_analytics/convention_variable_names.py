@@ -144,3 +144,10 @@ class CashflowType(Enum):
 
     CSE = "CSE"
     MCI = "MCI"
+
+
+class DmbModel(Enum):
+    """DMB models available in the service."""
+
+    Current = "current"
+    Before2024 = "before2024"

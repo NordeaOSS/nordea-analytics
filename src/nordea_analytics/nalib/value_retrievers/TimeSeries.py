@@ -1,7 +1,7 @@
 from collections.abc import Iterator
 from datetime import datetime, timedelta
 import math
-from typing import Any, Dict, List, Union
+from typing import Any, Dict, List, Union, Optional
 
 import numpy as np
 import pandas as pd
@@ -9,6 +9,7 @@ import pandas as pd
 import warnings
 
 from nordea_analytics.instrument_variable_names import BenchmarkName, BondIndexName
+from nordea_analytics.convention_variable_names import DmbModel
 from nordea_analytics.key_figure_names import (
     TimeSeriesKeyFigureName,
 )
@@ -52,6 +53,7 @@ class TimeSeries(ValueRetriever):
         ],
         from_date: datetime,
         to_date: datetime,
+        dmb_model: Optional[Union[str, DmbModel]] = None,
     ) -> None:
         """Initialization of the TimeSeries class.
 
@@ -62,6 +64,9 @@ class TimeSeries(ValueRetriever):
                  If symbol is something else than a bond, quote should be chosen.
             from_date: From date for calculating date interval.
             to_date: To date for calculating date interval.
+            dmb_model: If 'default', returns key figures with the new DMB model.
+                          If 'default_old', returns key figures with the old DMB model.
+                          If empty, returns the key figures that were the standard for the given date.
         """
         super(TimeSeries, self).__init__(client)
         self._client = client
@@ -102,6 +107,11 @@ class TimeSeries(ValueRetriever):
 
         self.from_date = from_date
         self.to_date = to_date
+        self.dmb_model = (
+            None
+            if dmb_model is None or dmb_model == ""
+            else convert_to_variable_string(dmb_model, DmbModel)
+        )
 
         self._data = self.get_time_series()
 
@@ -239,6 +249,7 @@ class TimeSeries(ValueRetriever):
                 "keyfigure": keyfigure,
                 "from": dates["from"].strftime("%Y-%m-%d"),
                 "to": dates["to"].strftime("%Y-%m-%d"),
+                "dmb_model": self.dmb_model,
             }
             for dates in date_interv
             for symbol in split_symbol

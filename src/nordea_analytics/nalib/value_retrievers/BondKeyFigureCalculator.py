@@ -5,6 +5,7 @@ from typing import Any, Dict, List, Mapping, Optional, Union
 import pandas as pd
 
 from nordea_analytics.convention_variable_names import CashflowType
+from nordea_analytics.convention_variable_names import DmbModel
 from nordea_analytics.curve_variable_names import (
     CurveName,
 )
@@ -88,6 +89,7 @@ class BondKeyFigureCalculator(ValueRetriever):
         asw_fix_frequency: Optional[str] = None,
         ladder_definition: Optional[Union[float, List[float]]] = None,
         cashflow_type: Optional[Union[str, CashflowType]] = None,
+        dmb_model: Optional[Union[str, DmbModel]] = None,
     ) -> None:
         """Initialization of class.
 
@@ -111,6 +113,9 @@ class BondKeyFigureCalculator(ValueRetriever):
             ladder_definition: Tenors should be included in
                 BPV ladder calculation. For example [0.25, 0.5, 1, 3, 5].
             cashflow_type: Type of cashflow to calculate with.
+            dmb_model: If 'default', returns key figures with the new DMB model.
+                If 'default_old', returns key figures with the old DMB model.
+                If empty, returns the key figures that were the standard for the given date.
         """
         super(BondKeyFigureCalculator, self).__init__(client)
         self._client = client
@@ -194,6 +199,11 @@ class BondKeyFigureCalculator(ValueRetriever):
             if cashflow_type is not None
             else None
         )
+        self.dmb_model = (
+            convert_to_variable_string(dmb_model, DmbModel)
+            if dmb_model is not None
+            else None
+        )
         self._data = self.calculate_bond_key_figure()
 
     def calculate_bond_key_figure(self) -> Mapping:
@@ -269,6 +279,7 @@ class BondKeyFigureCalculator(ValueRetriever):
                 "asw_fix_frequency": self.asw_fix_frequency,
                 "ladder_definition": self.ladder_definition,
                 "cashflow_type": self.cashflow_type,
+                "dmb_model": self.dmb_model,
             }
             request = {
                 key: initial_request[key]
