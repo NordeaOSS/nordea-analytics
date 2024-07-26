@@ -15,8 +15,6 @@ from nordea_analytics.key_figure_names import (
 from nordea_analytics.nalib.data_retrieval_client import (
     DataRetrievalServiceClient,
 )
-from nordea_analytics.nalib.exceptions import CustomWarningCheck
-from nordea_analytics.nalib.http.errors import BadRequestError
 from nordea_analytics.nalib.util import (
     convert_to_float_if_float,
     convert_to_list,
@@ -221,21 +219,8 @@ class BondKeyFigureCalculator(ValueRetriever):
         Returns:
             The response received after posting the request as a dictionary.
         """
-        json_response: Dict = {}
-        for request_dict in self.request:  # Iterate over request dictionary
-            try:
-                _json_response = self._client.get_response_asynchronous(
-                    request_dict, self.url_suffix
-                )
-                json_response[request_dict["symbol"]] = _json_response
-            except BadRequestError as bad_request:
-                CustomWarningCheck.bad_request_warning(
-                    bad_request, request_dict["symbol"]
-                )
-            except Exception as e:
-                CustomWarningCheck.post_response_not_retrieved_warning(
-                    e, request_dict["symbol"]
-                )
+        # MG: send bulk request
+        json_response = self._client.request_calculation({"standard": self.request}, self.url_suffix)
         return json_response
 
     @property

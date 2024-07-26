@@ -2,6 +2,7 @@ import os
 from typing import Optional, Dict
 
 from nordea_analytics import NordeaAnalyticsService
+from nordea_analytics.nalib.background_requests.open_banking import PollingBackgroundRequestsClient
 from nordea_analytics.nalib.data_retrieval_client import DataRetrievalServiceClient
 from nordea_analytics.nalib.http.open_banking import (
     OpenBankingClientConfiguration,
@@ -54,9 +55,9 @@ def get_nordea_analytics_client(
         headers=headers,
     )
     http_client = OpenBankingHttpClient(configuration)
-
+    background_client = PollingBackgroundRequestsClient(http_client)
     data_retrieval_service_client = DataRetrievalServiceClient(
-        http_client, OpenBankingHttpStreamIterator(http_client)
+        http_client, OpenBankingHttpStreamIterator(http_client), background_client
     )
 
     return NordeaAnalyticsService(data_retrieval_service_client)

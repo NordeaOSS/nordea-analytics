@@ -8,11 +8,12 @@ def validate_response(api_response: AnalyticsApiResponse) -> None:
     """Validate for failed queries or calculations and sends warning to user."""
     potential_keys_warnings = ["failed_calculation", "failed_queries"]
     for warning_key in potential_keys_warnings:
-        __raise_warnings_for(api_response.data, warning_key)
-        __raise_warnings_for(api_response.data_response, warning_key)
+        raise_warnings_for(api_response.data, warning_key)
+        raise_warnings_for(api_response.data_response, warning_key)
 
 
-def __raise_warnings_for(data: Optional[Dict], key: str) -> None:
+def raise_warnings_for(data: Optional[Dict], key: str) -> None:
+    """Validate for failed queries or calculations and sends warning to user."""
     if data is None:
         return
 
