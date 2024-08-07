@@ -220,7 +220,9 @@ class BondKeyFigureCalculator(ValueRetriever):
             The response received after posting the request as a dictionary.
         """
         # MG: send bulk request
-        json_response = self._client.request_calculation({"standard": self.request}, self.url_suffix)
+        json_response = self._client.request_calculation(
+            {"standard": self.request}, self.url_suffix
+        )
         return json_response
 
     @property

@@ -49,15 +49,15 @@ class BackgroundRequestsClient(metaclass=abc.ABCMeta):
         """
         pass
 
-    def _get_jobs_results(self, valid_jobs: Dict[str, str], request_id: str | None) -> Dict[str, Any]:
+    def _get_jobs_results(
+        self, valid_jobs: Dict[str, str], request_id: str | None
+    ) -> Dict[str, Any]:
         headers = {}
         if request_id:
             headers = {"X-Request-ID-Override": request_id}
         api_response = self.http_client.post(
             url_suffix="jobs",
-            json={
-                "jobs": list(valid_jobs.keys())
-            },
+            json={"jobs": list(valid_jobs.keys())},
             headers=headers,
         )
 

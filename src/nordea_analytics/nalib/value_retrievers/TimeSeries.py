@@ -157,6 +157,12 @@ class TimeSeries(ValueRetriever):
             keyfigure_and_isin_positions = list(
                 self.find_all(warn.message.args[0], "'")
             )
+
+            if (
+                len(keyfigure_and_isin_positions) == 0
+            ):  # For warnings not containing single apostrophes
+                continue
+
             keyfigure = warn.message.args[0][
                 keyfigure_and_isin_positions[0] + 1 : keyfigure_and_isin_positions[1]
             ]

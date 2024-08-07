@@ -15,7 +15,7 @@ class DataRetrievalServiceClient(BaseDataRetrievalClient):
         self,
         http_client: RestApiHttpClient,
         stream_listener: HttpStreamIterator,
-        background_client: BackgroundRequestsClient
+        background_client: BackgroundRequestsClient,
     ) -> None:
         """Constructs a :class:`DataRetrievalServiceClient <DataRetrievalServiceClient>`.
 
@@ -49,7 +49,9 @@ class DataRetrievalServiceClient(BaseDataRetrievalClient):
 
     def request_calculation(self, request: Dict, url_suffix: str) -> Dict:
         """Sends a calculation request and retrieves the response."""
-        return self.__background_client.get_calculation_asynchronous(request, url_suffix)
+        return self.__background_client.get_calculation_asynchronous(
+            request, url_suffix
+        )
 
     def get_response_asynchronous(self, request: Dict, url_suffix: str) -> Dict:
         """Sends the asynchronous request and retrieves the response."""

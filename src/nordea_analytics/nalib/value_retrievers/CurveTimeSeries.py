@@ -32,22 +32,22 @@ class CurveTimeSeries(ValueRetriever):
     """Retrieves and reformats curve time series."""
 
     def __init__(
-            self,
-            client: DataRetrievalServiceClient,
-            curves: Union[
-                str,
-                CurveName,
-                List[str],
-                List[CurveName],
-                List[Union[str, CurveName]],
-            ],
-            from_date: datetime,
-            to_date: datetime,
-            tenors: Union[float, List[float]],
-            curve_type: Optional[Union[str, CurveType]] = None,
-            time_convention: Optional[Union[str, TimeConvention]] = None,
-            spot_forward: Optional[Union[str, SpotForwardTimeSeries]] = None,
-            forward_tenor: Optional[float] = None,
+        self,
+        client: DataRetrievalServiceClient,
+        curves: Union[
+            str,
+            CurveName,
+            List[str],
+            List[CurveName],
+            List[Union[str, CurveName]],
+        ],
+        from_date: datetime,
+        to_date: datetime,
+        tenors: Union[float, List[float]],
+        curve_type: Optional[Union[str, CurveType]] = None,
+        time_convention: Optional[Union[str, TimeConvention]] = None,
+        spot_forward: Optional[Union[str, SpotForwardTimeSeries]] = None,
+        forward_tenor: Optional[float] = None,
     ) -> None:
         """Initialize the CurveTimeSeries class.
 

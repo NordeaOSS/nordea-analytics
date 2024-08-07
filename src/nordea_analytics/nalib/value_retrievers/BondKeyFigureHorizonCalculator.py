@@ -188,7 +188,9 @@ class BondKeyFigureHorizonCalculator(ValueRetriever):
         Returns:
             A dictionary containing the response for each symbol in the request, with symbols as keys and responses as values.
         """
-        json_response = self._client.request_calculation({"horizon": self.request}, self.url_suffix)
+        json_response = self._client.request_calculation(
+            {"horizon": self.request}, self.url_suffix
+        )
         return json_response
 
     @property

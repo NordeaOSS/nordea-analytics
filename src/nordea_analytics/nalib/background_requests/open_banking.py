@@ -8,11 +8,16 @@ from nordea_analytics.nalib.data_retrieval_client.dto.background import (
 from nordea_analytics.nalib.data_retrieval_client.dto.background import (
     BackgroundJobStatusResponse,
 )
-from nordea_analytics.nalib.data_retrieval_client.dto.bulk_calculation import PostBondsBulkCalculationData, \
-    BondsBulkCalculationStatusData, BondsCalculationStatusDto
+from nordea_analytics.nalib.data_retrieval_client.dto.bulk_calculation import (
+    PostBondsBulkCalculationData,
+    BondsBulkCalculationStatusData,
+    BondsCalculationStatusDto,
+)
 from nordea_analytics.nalib.exceptions import (
     BackgroundCalculationFailed,
-    BackgroundCalculationTimeout, CustomWarning, AnalyticsWarning,
+    BackgroundCalculationTimeout,
+    CustomWarning,
+    AnalyticsWarning,
 )
 from nordea_analytics.nalib.http.core import RestApiHttpClient
 from nordea_analytics.nalib.http.models import AnalyticsApiResponse
@@ -115,7 +120,7 @@ class PollingBackgroundRequestsClient(BackgroundRequestsClient):
             self._any_valid_calculation(bulk_data.standard),
             self._any_valid_calculation(bulk_data.advanced),
             self._any_valid_calculation(bulk_data.repo),
-            self._any_valid_calculation(bulk_data.horizon)
+            self._any_valid_calculation(bulk_data.horizon),
         ]
 
         if all(not valid for valid in calculation_statuses):
@@ -140,7 +145,11 @@ class PollingBackgroundRequestsClient(BackgroundRequestsClient):
         raise BackgroundCalculationTimeout()
 
     def _any_valid_calculation(self, status: BondsCalculationStatusDto) -> bool:
-        if status is None or status.calculations is None or len(status.calculations) == 0:
+        if (
+            status is None
+            or status.calculations is None
+            or len(status.calculations) == 0
+        ):
             return False
 
         any_valid_calculation = False
@@ -153,9 +162,9 @@ class PollingBackgroundRequestsClient(BackgroundRequestsClient):
 
         return any_valid_calculation
 
-    def _retrieve_background_job_results(self,
-                                         api_response: AnalyticsApiResponse,
-                                         data: PostBondsBulkCalculationData) -> Dict:
+    def _retrieve_background_job_results(
+        self, api_response: AnalyticsApiResponse, data: PostBondsBulkCalculationData
+    ) -> Dict:
         # MG: check status
         valid_jobs = {}
         valid_jobs.update(self._validate_and_get_symbol_map(data.standard))
@@ -167,12 +176,20 @@ class PollingBackgroundRequestsClient(BackgroundRequestsClient):
 
         return results
 
-    def _validate_and_get_symbol_map(self, data: BondsCalculationStatusDto) -> Dict[str, str]:
+    def _validate_and_get_symbol_map(
+        self, data: BondsCalculationStatusDto
+    ) -> Dict[str, str]:
         symbol_map = {}
-        if data is not None and data.calculations is not None and len(data.calculations) > 0:
+        if (
+            data is not None
+            and data.calculations is not None
+            and len(data.calculations) > 0
+        ):
             for calculation in data.calculations:
                 if calculation.status_code != 200:
-                    error_message = calculation.error or f"Failed to calculate {calculation.symbol}"
+                    error_message = (
+                        calculation.error or f"Failed to calculate {calculation.symbol}"
+                    )
                     CustomWarning(error_message, AnalyticsWarning)
                     continue
 

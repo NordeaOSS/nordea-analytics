@@ -1,0 +1,52 @@
+service_name: 'Nordea Analytics Internal'
+login: False
+get_proxy_information: False
+user_suffix: ""
+use_headers: False
+
+max_isins: 50
+max_symbol_timeseries: 50
+max_keyfigures_timeseries: 1
+max_years_timeseries: 10
+
+url_suffix:
+  available_instruments: "instruments-available"
+  bond_key_figures: "bonds/keyfigure"
+  bulk-calculate: "bonds-bulk-calculation"
+  calculate: "bonds-bulk-calculation"
+  calculate_advanced: "bonds-bulk-calculation"
+  calculate_horizon: "bonds-bulk-calculation"
+  calculate_repo: "bonds-bulk-calculation"
+  bond_static_data: "bonds/static-data"
+  curve: "curves"
+  curve_definition: "curves/definition"
+  curve_time_series: "curves/timeseries"
+  fx_forecast: "fx-forecasts"
+  index_composition: "index-composition"
+  search_bonds: "search/bonds"
+  search_dmb_bonds: "search/danishmortgagebonds"
+  live_bond_key_figures_stream: "bonds/live-keyfigures-stream"
+  live_bond_key_figures: "bonds/live-keyfigures"
+  shift_days: "shift-days"
+  time_series: "timeseries"
+  year_fraction: "year-fraction"
+  yield_forecast: "yield-forecasts"
+  auth: "ninaa/auth"
+
+
+#Squashes json response layers
+results:
+  available_instruments: "instruments"
+  bond_key_figures: "keyfigures"
+  bond_static_data: "static_data"
+  curve: "curve"
+  curve_definition: "definition"
+  curve_time_series: "timeseries"
+  fx_forecast: "fx_forecast"
+  index_composition: "indices"
+  search: "search"
+  shift_days: "date"
+  time_series: "timeseries"
+  year_fraction: "year_fraction"
+  yield_forecast: "yield_forecast"
+
