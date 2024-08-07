@@ -12,8 +12,11 @@ max_years_timeseries: 10
 url_suffix:
   available_instruments: "instruments-available"
   bond_key_figures: "bonds/keyfigure"
-  calculate: "bonds-calculation"
-  calculate_horizon: "bonds-horizoncalculation"
+  bulk-calculate: "bonds-bulk-calculation"
+  calculate: "bonds-bulk-calculation"
+  calculate_advanced: "bonds-bulk-calculation"
+  calculate_horizon: "bonds-bulk-calculation"
+  calculate_repo: "bonds-bulk-calculation"
   bond_static_data: "bonds/static-data"
   curve: "curves"
   curve_definition: "curves/definition"

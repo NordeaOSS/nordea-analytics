@@ -9,8 +9,7 @@ from nordea_analytics.key_figure_names import (
 from nordea_analytics.nalib.data_retrieval_client import (
     DataRetrievalServiceClient,
 )
-from nordea_analytics.nalib.exceptions import AnalyticsResponseError, CustomWarningCheck
-from nordea_analytics.nalib.http.errors import BadRequestError
+from nordea_analytics.nalib.exceptions import AnalyticsResponseError
 from nordea_analytics.nalib.util import (
     convert_to_list,
     convert_to_original_format,
@@ -116,18 +115,9 @@ class BondRepoCalculator(ValueRetriever):
 
     def retrieve_response(self) -> Dict:
         """Retrieves response after posting the request."""
-        json_response: Dict = {}
-        for request_dict in self.request:
-            try:
-                _json_response = self._client.get_response_asynchronous(
-                    request_dict, self.url_suffix
-                )
-                json_response[request_dict["symbol"]] = _json_response
-            except BadRequestError as bad_request:
-                CustomWarningCheck.bad_request_warning(
-                    bad_request, request_dict["symbol"]
-                )
-
+        json_response = self._client.request_calculation(
+            {"repo": self.request}, self.url_suffix
+        )
         return json_response
 
     @property

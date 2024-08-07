@@ -10,6 +10,7 @@ from nordea_analytics.convention_variable_names import (
     CashflowType,
     DateRollConvention,
     DayCountConvention,
+    DmbModel,
     Exchange,
     TimeConvention,
 )
@@ -219,6 +220,7 @@ class NordeaAnalyticsCoreService:
         ],
         from_date: datetime,
         to_date: datetime,
+        dmb_model: Optional[Union[str, DmbModel]] = None,
         as_df: bool = False,
     ) -> Any:
         """Retrieves historical time series.
@@ -230,7 +232,10 @@ class NordeaAnalyticsCoreService:
                  list of TimeSeriesKeyFigureName or string.
             from_date: The first date showing historical figures.
             to_date: The last date showing historical figures.
-            as_df: if True, the results are represented
+            dmb_model: If 'current' or DmbModel.Current, returns key figures with the new DMB model.
+                          If 'before2024' or DmbModel.Before2024, returns key figures with the old DMB model.
+                          If empty, returns the key figures that were the standard for the given date.
+            as_df: If True, the results are represented
                 as pandas DataFrame, else as dictionary.
 
         Returns:
@@ -238,7 +243,10 @@ class NordeaAnalyticsCoreService:
                 the data is in form of a DataFrame
         """
         return self._retrieve_value(
-            TimeSeries(self._client, symbols, keyfigures, from_date, to_date), as_df
+            TimeSeries(
+                self._client, symbols, keyfigures, from_date, to_date, dmb_model
+            ),
+            as_df,
         )
 
     def get_curve_time_series(
@@ -491,6 +499,7 @@ class NordeaAnalyticsCoreService:
         asw_fix_frequency: Optional[str] = None,
         ladder_definition: Optional[Union[float, List[float]]] = None,
         cashflow_type: Optional[Union[str, CashflowType]] = None,
+        dmb_model: Optional[Union[str, DmbModel]] = None,
         as_df: bool = False,
     ) -> Any:
         """Calculate key figures for given bonds and calculation date.
@@ -515,6 +524,9 @@ class NordeaAnalyticsCoreService:
             ladder_definition: Optional. Tenors should be included in
                 BPV ladder calculation. For example [0.25, 0.5, 1, 3, 5].
             cashflow_type: Optional. Type of cashflow to calculate with.
+            dmb_model: If 'current' or DmbModel.Current, calculates key figures using the new DMB model.
+                          If 'before2024' or DmbModel.Before2024, calculates key figures using the old DMB model.
+                          If empty, uses the new model.
             as_df: Default False. If True, the results are represented
                 as pandas DataFrame, else as dictionary
 
@@ -540,6 +552,7 @@ class NordeaAnalyticsCoreService:
                 asw_fix_frequency,
                 ladder_definition,
                 cashflow_type,
+                dmb_model,
             ),
             as_df,
         )

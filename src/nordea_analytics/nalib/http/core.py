@@ -5,6 +5,7 @@ from urllib.parse import urljoin
 
 import requests
 
+import nordea_analytics
 from nordea_analytics.nalib.exceptions import ApiServerError
 from nordea_analytics.nalib.exceptions import HttpClientImproperlyConfigured
 from nordea_analytics.nalib.http.errors import (
@@ -15,6 +16,8 @@ from nordea_analytics.nalib.http.errors import (
 )
 from nordea_analytics.nalib.http.errors import NotFoundRequestError, UnknownClientError
 from nordea_analytics.nalib.http.models import AnalyticsApiResponse
+
+ANALYTICS_CLIENT_HEADER = "X-Analytics-Client"
 
 
 class HttpClientConfiguration:
@@ -207,7 +210,15 @@ class RestApiHttpClient(ABC):
             request_headers.update(self.config.headers)
         if headers is not None:
             request_headers.update(headers)
+        if ANALYTICS_CLIENT_HEADER not in request_headers:
+            request_headers[ANALYTICS_CLIENT_HEADER] = self.__create_client_header()
+
         return request_headers
+
+    def __create_client_header(self) -> str:
+        if nordea_analytics.__internal_package__:
+            return f"nordea-analytics-internal {nordea_analytics.__version__}"
+        return f"nordea-analytics {nordea_analytics.__version__}"
 
     def __execute(
         self,

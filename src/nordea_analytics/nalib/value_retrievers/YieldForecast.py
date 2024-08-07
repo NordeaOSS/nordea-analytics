@@ -52,6 +52,18 @@ class YieldForecast(ValueRetriever):
 
         return json_response
 
+    def get_response(self, request: Dict) -> Dict:
+        """Call the DataRetrievalServiceClient to get a response from the service.
+
+        Args:
+            request (Dict): The request dictionary.
+
+        Returns:
+            Dict: The response from the service for a given method and request.
+        """
+        json_response = self._client.get_response_asynchronous(request, self.url_suffix)
+        return json_response
+
     @property
     def url_suffix(self) -> str:
         """Returns the URL suffix for the yield forecast API endpoint.

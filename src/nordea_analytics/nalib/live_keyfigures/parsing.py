@@ -23,7 +23,7 @@ def filter_keyfigures(
         Filtered live keyfigures dict.
     """
     result = {}
-    result["name"] = chunk["isin"]
+    result["Name"] = chunk["name"]
     for key_figure_data in chunk["values"]:
         key_figure_name = key_figure_data["keyfigure"].lower()
         key_figure_key = get_keyfigure_key(
@@ -33,9 +33,9 @@ def filter_keyfigures(
         timestamp = (
             key_figure_data["timestamp"]
             if "timestamp" in key_figure_data
-            else key_figure_data["updated_at"]
+            else key_figure_data.get("updated_at")
         )
-        result["timestamp"] = str(datetime.fromtimestamp(timestamp))
+        result["Timestamp"] = str(datetime.fromtimestamp(timestamp))
 
         if key_figure_name in key_figures:
             result[key_figure_key] = convert_to_float_if_float(key_figure_data["value"])
@@ -65,7 +65,7 @@ def to_data_frame(live_keyfigures_dict: Dict) -> pd.DataFrame:
     if df.empty or df.isnull().values.all():
         return pd.DataFrame()
 
-    timestamp_col = df.pop("timestamp")
+    timestamp_col = df.pop("Timestamp")
     df.insert(len(df.columns), timestamp_col.name, timestamp_col)
     df.index.name = "ISIN"
     return df.reset_index()

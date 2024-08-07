@@ -1,28 +1,32 @@
 from typing import Dict, List
 
+from nordea_analytics.nalib.background_requests.core import BackgroundRequestsClient
 from nordea_analytics.nalib.data_retrieval_client import validation
-from nordea_analytics.nalib.data_retrieval_client.background import (
-    BackgroundRequestsClient,
-)
+from nordea_analytics.nalib.data_retrieval_client.core import BaseDataRetrievalClient
 from nordea_analytics.nalib.http.core import RestApiHttpClient
 from nordea_analytics.nalib.live_keyfigures.core import HttpStreamIterator
 from nordea_analytics.nalib.util import RequestMethod
 
 
-class DataRetrievalServiceClient(BackgroundRequestsClient):
+class DataRetrievalServiceClient(BaseDataRetrievalClient):
     """A client for making API requests to the Nordea Analytics REST API and handling responses."""
 
     def __init__(
-        self, http_client: RestApiHttpClient, stream_listener: HttpStreamIterator
+        self,
+        http_client: RestApiHttpClient,
+        stream_listener: HttpStreamIterator,
+        background_client: BackgroundRequestsClient,
     ) -> None:
         """Constructs a :class:`DataRetrievalServiceClient <DataRetrievalServiceClient>`.
 
         Args:
             http_client: The HTTP client used to make requests.
             stream_listener: Iterator for consuming Server Events streams.
+            background_client: Background client for send/get background requests.
         """
-        super(BackgroundRequestsClient, self).__init__(http_client)
+        super().__init__(http_client)
         self.__stream_listener = stream_listener
+        self.__background_client = background_client
 
     @property
     def diagnostic(self) -> List:
@@ -42,6 +46,16 @@ class DataRetrievalServiceClient(BackgroundRequestsClient):
     def get_live_streamer(self) -> HttpStreamIterator:
         """Method return HttpStreamIterator which allow iteration over stream."""
         return self.__stream_listener
+
+    def request_calculation(self, request: Dict, url_suffix: str) -> Dict:
+        """Sends a calculation request and retrieves the response."""
+        return self.__background_client.get_calculation_asynchronous(
+            request, url_suffix
+        )
+
+    def get_response_asynchronous(self, request: Dict, url_suffix: str) -> Dict:
+        """Sends the asynchronous request and retrieves the response."""
+        return self.__background_client.get_response_asynchronous(request, url_suffix)
 
     def get(self, request: Dict, url_suffix: str) -> Dict:
         """Sends a GET request to the API and returns the response.
@@ -74,11 +88,5 @@ class DataRetrievalServiceClient(BackgroundRequestsClient):
         request_method: RequestMethod = RequestMethod.Get,
     ) -> Dict:
         api_response = self.send(request, url_suffix, request_method)
-        if not self._is_background_response(api_response):
-            validation.validate_response(api_response)
-            return api_response.data  # type: ignore
-
-        # Process background job
-        api_response = self._poll_server(api_response)
         validation.validate_response(api_response)
-        return api_response.data_response  # type: ignore
+        return api_response.data  # type: ignore
