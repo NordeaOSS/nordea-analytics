@@ -2,7 +2,9 @@ import os
 from typing import Optional, Dict
 
 from nordea_analytics import NordeaAnalyticsService
-from nordea_analytics.nalib.background_requests.open_banking import PollingBackgroundRequestsClient
+from nordea_analytics.nalib.background_requests.open_banking import (
+    PollingBackgroundRequestsClient,
+)
 from nordea_analytics.nalib.data_retrieval_client import DataRetrievalServiceClient
 from nordea_analytics.nalib.http.open_banking import (
     OpenBankingClientConfiguration,

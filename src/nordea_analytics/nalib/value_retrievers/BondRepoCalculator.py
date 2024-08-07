@@ -115,7 +115,9 @@ class BondRepoCalculator(ValueRetriever):
 
     def retrieve_response(self) -> Dict:
         """Retrieves response after posting the request."""
-        json_response = self._client.request_calculation({"repo": self.request}, self.url_suffix)
+        json_response = self._client.request_calculation(
+            {"repo": self.request}, self.url_suffix
+        )
         return json_response
 
     @property
