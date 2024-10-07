@@ -1,5 +1,5 @@
 import time
-from typing import Dict
+from typing import Dict, List
 
 from nordea_analytics.nalib.background_requests.core import BackgroundRequestsClient
 from nordea_analytics.nalib.data_retrieval_client.dto.background import (
@@ -59,7 +59,7 @@ class PollingBackgroundRequestsClient(BackgroundRequestsClient):
 
         return results.data_response or {}
 
-    def get_calculation_asynchronous(self, request: Dict, url_suffix: str) -> Dict:
+    def get_calculation_asynchronous(self, request: Dict, url_suffix: str) -> List:
         """Sends a request for a bulk background calculation and retrieves the response.
 
         Args:
@@ -112,7 +112,7 @@ class PollingBackgroundRequestsClient(BackgroundRequestsClient):
 
         raise BackgroundCalculationTimeout()
 
-    def _poll_server_bulk_job(self, api_response: AnalyticsApiResponse) -> Dict:
+    def _poll_server_bulk_job(self, api_response: AnalyticsApiResponse) -> List:
         bulk_data = PostBondsBulkCalculationData(api_response.data)
 
         # MG: validate errors:
@@ -124,7 +124,7 @@ class PollingBackgroundRequestsClient(BackgroundRequestsClient):
         ]
 
         if all(not valid for valid in calculation_statuses):
-            return {}
+            return []
 
         timeout_seconds = 60 * 8
         end_time = time.monotonic() + timeout_seconds
@@ -164,7 +164,7 @@ class PollingBackgroundRequestsClient(BackgroundRequestsClient):
 
     def _retrieve_background_job_results(
         self, api_response: AnalyticsApiResponse, data: PostBondsBulkCalculationData
-    ) -> Dict:
+    ) -> List:
         # MG: check status
         valid_jobs = {}
         valid_jobs.update(self._validate_and_get_symbol_map(data.standard))

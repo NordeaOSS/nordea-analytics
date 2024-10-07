@@ -1,6 +1,6 @@
 import copy
 from datetime import datetime
-from typing import Any, Dict, List, Mapping, Optional, Union
+from typing import Any, Dict, List, Optional, Union
 
 import pandas as pd
 
@@ -74,10 +74,24 @@ class BondKeyFigureCalculator(ValueRetriever):
             ]
         ] = None,
         shift_tenors: Optional[
-            Union[float, List[float], int, List[int], List[Union[float, int]]]
+            Union[
+                float,
+                List[float],
+                int,
+                List[int],
+                List[Union[float, int]],
+                List[List[Union[float, int]]],
+            ]
         ] = None,
         shift_values: Optional[
-            Union[float, List[float], int, List[int], List[Union[float, int]]]
+            Union[
+                float,
+                List[float],
+                int,
+                List[int],
+                List[Union[float, int]],
+                List[List[Union[float, int]]],
+            ]
         ] = None,
         pp_speed: Optional[float] = None,
         prices: Optional[Union[float, List[float]]] = None,
@@ -204,7 +218,7 @@ class BondKeyFigureCalculator(ValueRetriever):
         )
         self._data = self.calculate_bond_key_figure()
 
-    def calculate_bond_key_figure(self) -> Mapping:
+    def calculate_bond_key_figure(self) -> List:
         """Retrieves response with calculated key figures.
 
         Returns:
@@ -213,7 +227,7 @@ class BondKeyFigureCalculator(ValueRetriever):
         json_response = self.retrieve_response()
         return json_response
 
-    def retrieve_response(self) -> Dict:
+    def retrieve_response(self) -> List:
         """Retrieves response after posting the request.
 
         Returns:
@@ -246,47 +260,81 @@ class BondKeyFigureCalculator(ValueRetriever):
         keyfigures.remove("price") if "price" in self.keyfigures else keyfigures
         if keyfigures == []:
             keyfigures = ["yield"]
+
+        multipleScenarios: bool = (
+            self.shift_tenors is not None
+            and isinstance(self.shift_tenors, list)
+            and any(isinstance(el, list) for el in self.shift_tenors)
+        )
+
+        shift_tenors: Union[
+            List[float],
+            List[int],
+            List[None],
+            List[Union[float, int]],
+            List[List[Union[float, int]]],
+        ] = self.shift_tenors if multipleScenarios else [self.shift_tenors]  # type: ignore
+        shift_values: Union[
+            List[float],
+            List[int],
+            List[None],
+            List[Union[float, int]],
+            List[List[Union[float, int]]],
+        ] = self.shift_values if multipleScenarios else [self.shift_values]  # type: ignore
+
         for x in range(len(self.symbols)):
-            initial_request = {
-                "symbol": self.symbols[x],
-                "date": self.calc_date.strftime("%Y-%m-%d"),
-                "keyfigures": keyfigures,
-                "curves": self.curves,
-                "shift_tenors": self.shift_tenors,
-                "shift_values": self.shift_values,
-                "pp_speed": self.pp_speed,
-                "price": (
-                    self.prices[x]
-                    if self.prices is not None and x < len(self.prices)
-                    else None
-                ),
-                "spread": self.spread,
-                "spread_curve": self.spread_curve,
-                "yield": self.yield_input,
-                "asw_fix_frequency": self.asw_fix_frequency,
-                "ladder_definition": self.ladder_definition,
-                "cashflow_type": self.cashflow_type,
-                "dmb_model": self.dmb_model,
-            }
-            request = {
-                key: initial_request[key]
-                for key in initial_request.keys()
-                if initial_request[key] is not None
-            }
-            request_dict.append(request)
+            for s in range(len(shift_tenors)):  # type: ignore
+                initial_request = {
+                    "symbol": self.symbols[x],
+                    "date": self.calc_date.strftime("%Y-%m-%d"),
+                    "keyfigures": keyfigures,
+                    "curves": self.curves,
+                    "shift_tenors": shift_tenors[s],
+                    "shift_values": shift_values[s],
+                    "pp_speed": self.pp_speed,
+                    "price": (
+                        self.prices[x]
+                        if self.prices is not None and x < len(self.prices)
+                        else None
+                    ),
+                    "spread": self.spread,
+                    "spread_curve": self.spread_curve,
+                    "yield": self.yield_input,
+                    "asw_fix_frequency": self.asw_fix_frequency,
+                    "ladder_definition": self.ladder_definition,
+                    "cashflow_type": self.cashflow_type,
+                    "dmb_model": self.dmb_model,
+                }
+                request = {
+                    key: initial_request[key]
+                    for key in initial_request.keys()
+                    if initial_request[key] is not None
+                }
+                request_dict.append(request)
         return request_dict
 
-    def to_dict(self) -> Dict:
+    def to_dict(self) -> Dict[str, list]:
         """Reformat the JSON response to a dictionary.
 
         Returns:
             A dictionary containing the reformatted JSON data.
         """
         _dict: Dict[Any, Any] = {}
-        for symbol in self._data:
-            bond_data = self._data[symbol]
+        for i in range(len(self._data)):
+            bond_data = self._data[i]
             _dict_bond = self.to_dict_bond(bond_data)
-            _dict[symbol] = _dict_bond
+
+            if "symbol" not in bond_data:  # in case of error from API
+                continue
+
+            # When more than one scenario is defined, there are multiple results per symbol
+            if any(el == bond_data["symbol"] for el in _dict.keys()) and isinstance(
+                _dict[bond_data["symbol"]], list
+            ):
+                _dict[bond_data["symbol"]].append(_dict_bond)
+            else:
+                _dict[bond_data["symbol"]] = [_dict_bond]
+
         return _dict
 
     def to_dict_bond(self, bond_data: Dict) -> Dict:
@@ -299,6 +347,7 @@ class BondKeyFigureCalculator(ValueRetriever):
             A dictionary containing the reformatted bond data.
         """
         _dict_bond: Dict[Any, Any] = {}
+
         for key_figure in bond_data:
             if key_figure != "price" and key_figure in self.keyfigures:
                 for curve_data in bond_data[key_figure]["values"]:
@@ -365,6 +414,12 @@ class BondKeyFigureCalculator(ValueRetriever):
                     convert_to_original_format("price", self.key_figures_original)
                 ] = bond_data["price"]
 
+        # Add scenario to result dictionary so users can distinguish between calculation results
+        if any(el.lower() == "shift_tenors" for el in bond_data.keys()):
+            for curve in _dict_bond:
+                _dict_bond[curve]["shift_tenors"] = bond_data["shift_tenors"]
+                _dict_bond[curve]["shift_values"] = bond_data["shift_values"]
+
         return _dict_bond
 
     def to_df(self) -> pd.DataFrame:
@@ -378,12 +433,13 @@ class BondKeyFigureCalculator(ValueRetriever):
 
         for symbol in bond_data_dict:
             # Convert the data for the symbol to a DataFrame and transpose it
-            symbol_df = pd.DataFrame.from_dict(bond_data_dict[symbol]).transpose()
-            # Reset the index and rename the columns to "Curve"
-            symbol_df = symbol_df.reset_index().rename(columns={"index": "Curve"})
-            symbol_df.index = [symbol] * len(symbol_df)
+            for scenarioResult in bond_data_dict[symbol]:
+                symbol_df = pd.DataFrame.from_dict(scenarioResult).transpose()
+                # Reset the index and rename the columns to "Curve"
+                symbol_df = symbol_df.reset_index().rename(columns={"index": "Curve"})
+                symbol_df.index = [symbol] * len(symbol_df)
 
-            # Concatenate the symbol DataFrame to the main DataFrame along the rows
-            df = pd.concat([df, symbol_df], axis=0)
+                # Concatenate the symbol DataFrame to the main DataFrame along the rows
+                df = pd.concat([df, symbol_df], axis=0)
 
         return df
