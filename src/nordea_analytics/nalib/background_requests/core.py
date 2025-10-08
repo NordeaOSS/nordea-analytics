@@ -1,5 +1,5 @@
 import abc
-from typing import Any, Dict, List
+from typing import Any, Dict, List, Literal
 
 from nordea_analytics.nalib.data_retrieval_client import validation
 from nordea_analytics.nalib.exceptions import (
@@ -38,12 +38,15 @@ class BackgroundRequestsClient(metaclass=abc.ABCMeta):
         pass
 
     @abc.abstractmethod
-    def get_response_asynchronous(self, request: Dict, url_suffix: str) -> Dict:
+    def retrieve_response_asynchronous(
+        self, request: Dict, url_suffix: str, method: Literal["GET", "POST"] = "GET"
+    ) -> Dict:
         """Sends a request for a background calculation and retrieves the response.
 
         Args:
             request (Dict): The request data in dictionary form.
             url_suffix (str): The URL suffix for the given method.
+            method (str): The HTTP method. Default is 'GET'.
 
         Returns:
             The response data in JSON format.

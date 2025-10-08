@@ -79,6 +79,13 @@ class CustomWarningCheck:
     """Class for containing custom warning messages."""
 
     @staticmethod
+    def curve_definition_not_retrieved_warning(response: dict, curve: str) -> None:
+        """Throw warning when curve time series does not return anything."""
+        if len(response["definition"]["values"]) == 0:
+            message = curve + " definition could not be retrieved."
+            CustomWarning(message, AnalyticsWarning)
+
+    @staticmethod
     def curve_not_retrieved_warning(response: dict, curve: str) -> None:
         """Throw warning when curve time series does not return anything."""
         if len(response["curve"]["curve"]["values"]) == 0:

@@ -65,6 +65,7 @@ class LiveBondKeyFigures(ValueRetriever):
         ]
 
         self.keyfigures_original = _keyfigures
+
         self._as_df = as_df
         self._stream_iterator = Iterator[Any]
         self._data = self.get_live_key_figure_response

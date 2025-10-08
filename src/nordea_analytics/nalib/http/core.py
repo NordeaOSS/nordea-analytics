@@ -232,6 +232,7 @@ class RestApiHttpClient(ABC):
     ) -> requests.Response:
         full_url = urljoin(self.config.base_url, path)
         session = self._get_session()
+
         raw_response = session.request(
             method,
             full_url,

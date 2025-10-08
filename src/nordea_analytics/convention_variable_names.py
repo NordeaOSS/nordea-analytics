@@ -23,6 +23,23 @@ class DayCountConvention(Enum):
     Days30EP = "Days 30EP"
 
 
+class SwapDayCountConvention(Enum):
+    """Day count conventions available in the service."""
+
+    ActAct = "act/act"
+    ExaExa = "exa/exa"
+    Act365 = "act/365"
+    Act360 = "act/360"
+    Bond = "30/360"
+    Bond30E360 = "30e360"
+    Bond30E360Isda = "30e360isda"
+    BondBund = "bund"
+    Isda360 = "30d360"
+    Act36525 = "act/365.25"
+    ActUst = "act/ust"
+    ActActIcma = "act/act.icma"
+
+
 class TimeConvention(Enum):
     """Time conventions available in the service."""
 
@@ -151,3 +168,19 @@ class DmbModel(Enum):
 
     Current = "current"
     Before2024 = "before2024"
+
+
+class SwapLegType(Enum):
+    """Swap leg types available in the service."""
+
+    Fixed = "fixed"
+    Floating = "floating"
+
+
+class SwapFixingFrequency(Enum):
+    """Swap fixing frequencies available in the service."""
+
+    OIS = "1D"
+    RFR = "RFR"
+    Quarterly = "3M"
+    SemiAnnually = "6M"

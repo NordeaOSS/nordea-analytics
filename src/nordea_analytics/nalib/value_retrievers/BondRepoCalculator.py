@@ -9,7 +9,10 @@ from nordea_analytics.key_figure_names import (
 from nordea_analytics.nalib.data_retrieval_client import (
     DataRetrievalServiceClient,
 )
-from nordea_analytics.nalib.exceptions import AnalyticsResponseError
+from nordea_analytics.nalib.exceptions import (
+    AnalyticsResponseError,
+    AnalyticsInputError,
+)
 from nordea_analytics.nalib.util import (
     convert_to_list,
     convert_to_original_format,
@@ -53,6 +56,9 @@ class BondRepoCalculator(ValueRetriever):
             prices: current price of bond.
             forward_prices: future price of bond.
             repo_rates: Repo rate of bond.
+
+        Raises:
+            AnalyticsInputError: Raises exception with incorrect key figure enum
         """
         super(BondRepoCalculator, self).__init__(client)
         self._client = client
@@ -62,14 +68,23 @@ class BondRepoCalculator(ValueRetriever):
         self.key_figures_original: List = (
             keyfigures if isinstance(keyfigures, list) else [keyfigures]
         )
-        self.keyfigures = [
-            (
-                convert_to_variable_string(kf, CalculatedRepoBondKeyFigureName)
-                if isinstance(kf, CalculatedRepoBondKeyFigureName)
-                else kf.lower()
-            )
-            for kf in self.key_figures_original
-        ]
+
+        _keyfigures: List = []
+        for keyfigure in self.key_figures_original:
+            if isinstance(keyfigure, CalculatedRepoBondKeyFigureName):
+                _keyfigures.append(
+                    convert_to_variable_string(
+                        keyfigure, CalculatedRepoBondKeyFigureName
+                    )
+                )
+            elif isinstance(keyfigure, str):
+                _keyfigures.append(keyfigure.lower())
+            else:
+                raise AnalyticsInputError(
+                    f"'{type(keyfigure).__name__}' enum is not supported, use '{CalculatedRepoBondKeyFigureName.__name__}' or '{str.__name__}' instead"
+                )
+
+        self.keyfigures = _keyfigures
 
         self.calc_date = calc_date
         self.forward_date = forward_date

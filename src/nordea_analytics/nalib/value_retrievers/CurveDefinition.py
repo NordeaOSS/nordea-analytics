@@ -11,7 +11,11 @@ from nordea_analytics.curve_variable_names import (
 from nordea_analytics.nalib.data_retrieval_client import (
     DataRetrievalServiceClient,
 )
-from nordea_analytics.nalib.exceptions import AnalyticsWarning, CustomWarning
+from nordea_analytics.nalib.exceptions import (
+    AnalyticsWarning,
+    CustomWarning,
+    CustomWarningCheck,
+)
 from nordea_analytics.nalib.util import (
     convert_to_float_if_float,
     convert_to_variable_string,
@@ -66,6 +70,10 @@ class CurveDefinition(ValueRetriever):
             The curve definition data as a dictionary.
         """
         json_response = self.get_response(self.request)
+        CustomWarningCheck.curve_definition_not_retrieved_warning(
+            json_response, self.request["curve"]
+        )
+
         json_response = json_response[config["results"]["curve_definition"]]
         return json_response
 
@@ -143,6 +151,7 @@ class CurveDefinition(ValueRetriever):
             A dictionary representing the reformatted JSON response.
         """
         _dict = {}
+        _dict_definition = {}
         _curve_def_dict: Dict[Any, Any] = {}
         for curve_def in self._data["values"]:
             _curve_def_dict = {}
@@ -157,8 +166,9 @@ class CurveDefinition(ValueRetriever):
                     curve_def["asset"]["maturity"], "%Y-%m-%dT%H:%M:%S.0000000"
                 )
             curve_key = self.get_curve_key(self.curve)
-            _dict[curve_def["name"]] = _curve_def_dict
-        return {curve_key: _dict}
+            _dict_definition[curve_def["name"]] = _curve_def_dict
+            _dict[curve_key] = _dict_definition
+        return _dict
 
     def to_df(self) -> pd.DataFrame:
         """Converts the JSON response to a pandas DataFrame.
@@ -174,6 +184,9 @@ class CurveDefinition(ValueRetriever):
             or isinstance(self.curve_original, CurveDefinitionName)
             else self.curve_original
         )
+
+        if curve_key not in _dict:
+            return pd.DataFrame()
 
         df = pd.DataFrame.from_dict(_dict[curve_key]).transpose()
         df = df.astype(object).mask(df.isna(), np.nan)

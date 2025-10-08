@@ -24,6 +24,7 @@ The second package everything from the first and real-time bond endpoints
 The first package:
 
 * :meth:`get_available_instruments() <nordea_analytics.nordea_analytics_service.core.NordeaAnalyticsCoreService.get_available_instruments>`.
+* :meth:`get_benchmark_definition() <nordea_analytics.nordea_analytics_service.core.NordeaAnalyticsCoreService.get_benchmark_definition>`.
 * :meth:`get_bond_key_figures() <nordea_analytics.nordea_analytics_service.core.NordeaAnalyticsCoreService.get_bond_key_figures>`.
 * :meth:`get_curve() <nordea_analytics.nordea_analytics_service.core.NordeaAnalyticsCoreService.get_curve>`.
 * :meth:`get_curve_definition() <nordea_analytics.nordea_analytics_service.core.NordeaAnalyticsCoreService.get_curve_definition>`.
@@ -53,6 +54,7 @@ Many input parameters are controlled by enumeration classes. From `nordea_analyt
 
 For keyfigures
 
+* :meth:`BenchmarkName <nordea_analytics.key_figure_names.BenchmarkName>`
 * :meth:`BondKeyFigureName <nordea_analytics.key_figure_names.BondKeyFigureName>`
 * :meth:`TimeSeriesKeyFigureName <nordea_analytics.key_figure_names.TimeSeriesKeyFigureName>`
 * :meth:`CalculatedBondKeyFigureName <nordea_analytics.key_figure_names.CalculatedBondKeyFigureName>`
@@ -109,7 +111,7 @@ Calculate Bond Key Figure
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^
 The following example calculates the spread and bpv for the ISIN `DK0002000421` at 15th of January 2021.
 The returned DataFrame shows results for both given discount curves, `DKKSWAP Disc OIS` and `DKKSWAP Libor`, where they
-are shifted up by 5 bps on the 6M, 1Y and 2Y tenor.
+are shifted up by 5 bps on the 6M, 5Y and 10Y tenor.
 
 .. code-block:: python
 
@@ -126,6 +128,15 @@ are shifted up by 5 bps on the 6M, 1Y and 2Y tenor.
               CurveName.DKKSWAP_Libor]  # Optional
     shift_tenors = [0.5, 5, 10]  # Optional
     shift_values = [50, 100, 150]  # Optional
+    # If calculating for multiple scenarios, define shift_tenors and shift_values as follows
+    # shift_tenors = [
+    #     [0.5, 5, 10],
+    #     [0, 3, 10, 20]
+    # ]
+    # shift_values = [
+    #     [50, 100, 150],
+    #     [25, 30, 100, 150]
+    # ]
 
     bonds_key_figures = na_service.calculate_bond_key_figure(symbols=isin,
                                                              keyfigures=bond_key_figure,
@@ -183,8 +194,8 @@ at 13th of February 2023 for the ISIN `DK0002044551` and `DK0002000421`, and ret
     isin = ['dk0002044551', 'DK0002000421']
     bond_key_figures = [CalculatedRepoBondKeyFigureName.RepoRate,
                         CalculatedRepoBondKeyFigureName.ForwardYield]
-    calc_date = datetime.datetime(2023, 2, 13)
-    forward_date = datetime.datetime(2024, 2, 13)
+    calc_date = datetime(2023, 2, 13)
+    forward_date = datetime(2024, 2, 13)
     prices = [47, 101]
     forward_price = [50, 100]
     df = na_service.calculate_repo_bond_key_figure(isin,
@@ -201,6 +212,23 @@ solve for the third one. As in the example above, we want to solve for repo rate
 price as inputs.
 Note that if one wants to calculate repo bond key figures for multiple ISINs, as many prices, forward prices or repo
 rates need to be given and the values need to be located in the list at the same place as their respective ISIN.
+
+Get Benchmark Definition
+^^^^^^^^^^^^^^^^^^^^^
+The following example retrieves the underlying bonds of benchmarks and returns the results in a pandas DataFrame.
+
+.. code-block:: python
+
+    from nordea_analytics import BenchmarkName
+    from nordea_analytics import get_nordea_analytics_client
+
+    na_service = get_nordea_analytics_client(client_id="Your client id", client_secret="Your client secret")
+
+    benchmark_bond = BenchmarkName.EU_5Y
+
+    underlying_bonds = na_service.get_benchmark_definition(benchmarks=benchmark_bond,
+                                                           as_df=True)
+
 
 
 Get Bond Key Figures

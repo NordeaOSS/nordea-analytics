@@ -15,6 +15,7 @@ from nordea_analytics.key_figure_names import (
 from nordea_analytics.nalib.data_retrieval_client import (
     DataRetrievalServiceClient,
 )
+from nordea_analytics.nalib.exceptions import AnalyticsInputError
 from nordea_analytics.nalib.util import (
     convert_to_float_if_float,
     convert_to_list,
@@ -128,6 +129,9 @@ class BondKeyFigureCalculator(ValueRetriever):
             dmb_model: If 'default', returns key figures with the new DMB model.
                 If 'default_old', returns key figures with the old DMB model.
                 If empty, returns the key figures that were the standard for the given date.
+
+        Raises:
+            AnalyticsInputError: Raises exception with incorrect key figure enum
         """
         super(BondKeyFigureCalculator, self).__init__(client)
         self._client = client
@@ -137,14 +141,21 @@ class BondKeyFigureCalculator(ValueRetriever):
         self.key_figures_original: List = (
             keyfigures if isinstance(keyfigures, list) else [keyfigures]
         )
-        self.keyfigures = [
-            (
-                convert_to_variable_string(keyfigure, CalculatedBondKeyFigureName)
-                if isinstance(keyfigure, CalculatedBondKeyFigureName)
-                else keyfigure.lower()
-            )
-            for keyfigure in self.key_figures_original
-        ]
+
+        _keyfigures: List = []
+        for keyfigure in self.key_figures_original:
+            if isinstance(keyfigure, CalculatedBondKeyFigureName):
+                _keyfigures.append(
+                    convert_to_variable_string(keyfigure, CalculatedBondKeyFigureName)
+                )
+            elif isinstance(keyfigure, str):
+                _keyfigures.append(keyfigure.lower())
+            else:
+                raise AnalyticsInputError(
+                    f"'{type(keyfigure).__name__}' enum is not supported, use '{CalculatedBondKeyFigureName.__name__}' or '{str.__name__}' instead"
+                )
+
+        self.keyfigures = _keyfigures
 
         self.calc_date = calc_date
         self.curves_original: Union[List, None] = (
@@ -273,14 +284,18 @@ class BondKeyFigureCalculator(ValueRetriever):
             List[None],
             List[Union[float, int]],
             List[List[Union[float, int]]],
-        ] = self.shift_tenors if multipleScenarios else [self.shift_tenors]  # type: ignore
+        ] = (
+            self.shift_tenors if multipleScenarios else [self.shift_tenors]  # type: ignore
+        )
         shift_values: Union[
             List[float],
             List[int],
             List[None],
             List[Union[float, int]],
             List[List[Union[float, int]]],
-        ] = self.shift_values if multipleScenarios else [self.shift_values]  # type: ignore
+        ] = (
+            self.shift_values if multipleScenarios else [self.shift_values]  # type: ignore
+        )
 
         for x in range(len(self.symbols)):
             for s in range(len(shift_tenors)):  # type: ignore
@@ -391,13 +406,19 @@ class BondKeyFigureCalculator(ValueRetriever):
                         )
                     ] = formatted_result
 
-                    curve_key = (
-                        CurveName(curve_data["key"].upper()).name
-                        if self.curves_original is None
-                        else convert_to_original_format(
+                    curve_key = str()
+                    if (
+                        self.curves_original is None
+                        and curve_data["key"] in CurveName._member_map_
+                    ):
+                        curve_key = CurveName(curve_data["key"].upper()).name
+                    elif self.curves_original is not None:
+                        curve_key = convert_to_original_format(
                             curve_data["key"], self.curves_original
                         )
-                    )
+                    else:
+                        curve_key = curve_data["key"]
+
                     if curve_key in _dict_bond.keys():
                         _dict_bond[curve_key].update(_data_dict)
                     else:

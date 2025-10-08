@@ -65,7 +65,7 @@ def get_nordea_analytics_client(
     return NordeaAnalyticsService(data_retrieval_service_client)
 
 
-def get_nordea_analytics_test_client(
+def get_nordea_analytics_preprod_client(
     base_url: Optional[str] = None, use_proxy: bool = False
 ) -> NordeaAnalyticsService:
     """Create and return test instance of NordeaAnalyticsService."""

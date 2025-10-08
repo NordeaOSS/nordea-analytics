@@ -55,7 +55,15 @@ class DataRetrievalServiceClient(BaseDataRetrievalClient):
 
     def get_response_asynchronous(self, request: Dict, url_suffix: str) -> Dict:
         """Sends the asynchronous request and retrieves the response."""
-        return self.__background_client.get_response_asynchronous(request, url_suffix)
+        return self.__background_client.retrieve_response_asynchronous(
+            request, url_suffix, "GET"
+        )
+
+    def post_response_asynchronous(self, request: Dict, url_suffix: str) -> Dict:
+        """Sends the asynchronous request and retrieves the response."""
+        return self.__background_client.retrieve_response_asynchronous(
+            request, url_suffix, "POST"
+        )
 
     def get(self, request: Dict, url_suffix: str) -> Dict:
         """Sends a GET request to the API and returns the response.

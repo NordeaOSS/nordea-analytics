@@ -30,6 +30,8 @@ url_suffix:
   quotes: "quotes"
   shift_date: "shift-date"
   shift_days: "shift-days"
+  swap_key_figures: "swaps-calculation"
+  swap_horizon_key_figures: "swaps-horizon-calculation"
   time_series: "timeseries"
   year_fraction: "year-fraction"
   yield_forecast: "yield-forecasts"

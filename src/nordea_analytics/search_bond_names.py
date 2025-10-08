@@ -24,16 +24,27 @@ class AssetType(Enum):
     NonCallableBond = "Non-callable Bond"
 
 
-class InstrumentGroup(Enum):
+class SearchBondInstrumentGroup(Enum):
     """Instrument Groups available when searching for bonds."""
 
     CreditBonds = "Credit Bonds"
+    CoCoBonds = "CoCo Bonds"
+    DanishCallableMortgageBonds = "Danish Callable Mortgage Bonds"
+    DanishCappedFloater = '"Danish CF MB, non-extendable"'
+    DanishCappedFloaterAuctionExtendable = '"Danish CF MB, auc-extendable"'  # Single apostrophe required when string contains comma
+    DanishCappedFloaterAuctionAndRateExtendable = '"Danish CF MB, auc+rate-extendable"'
+    DanishIndexBonds = "Danish Index Bonds"
+    DanishNonCallableMortgageBond = '"Danish CF MB, non-extendable"'
+    DanishNonCallableMortgageBondAuctionExtendable = (
+        '"Danish Non-call MB, auc-extendable"'
+    )
+    DanishNonCallableMortgageBondAuctionAndRateExtendable = (
+        '"Danish Non-call MB, auc+rate-extendable"'
+    )
+    FixedRateBonds = "Fixed Rate Bonds"
     FloatingRateNotes = "FRNs"
     GovernmentBonds = "Government Bonds"
-    DanishCallableMortgageBonds = "Danish Callable Mortgage Bonds"
-    DanishNonCallableMortgageBonds = "Danish Non-callable Mortgage Bonds"
-    FixedRateBonds = "Fixed Rate Bonds"
-    DanishIndexBonds = "Danish Index Bonds"
+    IndexLinkedBonds = "Index Linked Bonds"
 
 
 class CapitalCentres(Enum):

@@ -137,11 +137,10 @@ class Curve(ValueRetriever):
         json_response: List[Any] = []
         for request_dict in self.request:
             _json_response = self.get_response(request_dict)
-            # To throw warning if curve in get_curve_time_series could not be retrieved
+
             CustomWarningCheck.curve_not_retrieved_warning(
                 _json_response, request_dict["curve"]
             )
-
             json_map = _json_response[config["results"]["curve"]]
             json_response.append(json_map)
 
@@ -208,7 +207,10 @@ class Curve(ValueRetriever):
         """
         _dict = {}
         for curve in self._data:
-            if len(curve["curve"]["curve_specification"]) > 0:
+            if (
+                len(curve["curve"]["curve_specification"]) > 0
+                and len(curve["curve"]["values"]) > 0
+            ):
                 _curve = {
                     "Type": curve["curve"]["curve_specification"]["type"],
                     "Time_convention": curve["curve"]["curve_specification"][

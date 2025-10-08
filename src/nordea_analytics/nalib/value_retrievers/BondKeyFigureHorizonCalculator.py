@@ -3,6 +3,7 @@ from datetime import datetime
 from typing import Any, Dict, List, Optional, Union
 
 import pandas as pd
+import numpy as np
 
 from nordea_analytics.convention_variable_names import CashflowType
 from nordea_analytics.curve_variable_names import (
@@ -14,6 +15,7 @@ from nordea_analytics.key_figure_names import (
 from nordea_analytics.nalib.data_retrieval_client import (
     DataRetrievalServiceClient,
 )
+from nordea_analytics.nalib.exceptions import AnalyticsInputError
 from nordea_analytics.nalib.util import (
     convert_to_list,
     convert_to_float_if_float,
@@ -75,6 +77,7 @@ class BondKeyFigureHorizonCalculator(ValueRetriever):
         prices: Optional[Union[float, List[float]]] = None,
         cashflow_type: Optional[Union[str, CashflowType]] = None,
         fixed_prepayments: Optional[float] = None,
+        prepayments: Optional[Union[float, List[float]]] = None,
         reinvest_in_series: Optional[bool] = None,
         reinvestment_rate: Optional[float] = None,
         spread_change_horizon: Optional[float] = None,
@@ -94,7 +97,11 @@ class BondKeyFigureHorizonCalculator(ValueRetriever):
             pp_speed: Prepayment speed. Default = 1.
             prices: fixed price per bond.
             cashflow_type: Type of cashflow to calculate with.
-            fixed_prepayments: repayments between calc_cate and horizon date.
+            fixed_prepayments: Constant prepayments between calc_cate and horizon date.
+                Value of 0.01 would mean that prepayments are set to 1%,
+                but model prepayments are still used after horizon date.
+                If noting entered, then model prepayments used.
+            prepayments: Custom prepayments between calc_cate and horizon date.
                 Value of 0.01 would mean that prepayments are set to 1%,
                 but model prepayments are still used after horizon date.
                 If noting entered, then model prepayments used.
@@ -109,6 +116,9 @@ class BondKeyFigureHorizonCalculator(ValueRetriever):
             align_to_forward_curve: True if you want the curve used for horizon
                 calculations to be the respective forward curve.
                 Default is False.
+
+        Raises:
+            AnalyticsInputError: Raises exception with incorrect key figure enum
         """
         super(BondKeyFigureHorizonCalculator, self).__init__(client)
         self._client = client
@@ -118,14 +128,23 @@ class BondKeyFigureHorizonCalculator(ValueRetriever):
         self.key_figures_original: List = (
             keyfigures if isinstance(keyfigures, list) else [keyfigures]
         )
-        self.keyfigures = [
-            (
-                convert_to_variable_string(kf, HorizonCalculatedBondKeyFigureName)
-                if isinstance(kf, HorizonCalculatedBondKeyFigureName)
-                else kf.lower()
-            )
-            for kf in self.key_figures_original
-        ]
+
+        _keyfigures: List = []
+        for keyfigure in self.key_figures_original:
+            if isinstance(keyfigure, HorizonCalculatedBondKeyFigureName):
+                _keyfigures.append(
+                    convert_to_variable_string(
+                        keyfigure, HorizonCalculatedBondKeyFigureName
+                    )
+                )
+            elif isinstance(keyfigure, str):
+                _keyfigures.append(keyfigure.lower())
+            else:
+                raise AnalyticsInputError(
+                    f"'{type(keyfigure).__name__}' enum is not supported, use '{HorizonCalculatedBondKeyFigureName.__name__}' or '{str.__name__}' instead"
+                )
+
+        self.keyfigures = _keyfigures
 
         self.calc_date = calc_date
         self.horizon_date = horizon_date
@@ -175,10 +194,19 @@ class BondKeyFigureHorizonCalculator(ValueRetriever):
             else None
         )
         self.fixed_prepayments = fixed_prepayments
+        if isinstance(prepayments, list):
+            self.prepayments: Union[float, list[float], None] = prepayments
+        elif isinstance(prepayments, float):
+            self.prepayments = [prepayments]
+        else:
+            self.prepayments = None
+
         self.reinvest_in_series = reinvest_in_series
         self.reinvestment_rate = reinvestment_rate
         self.spread_change_horizon = spread_change_horizon
         self.align_to_forward_curve = align_to_forward_curve
+
+        # Keyfigures that are always returned
         self.fixed_keyfigures = [
             "price",
             "price_at_horizon",
@@ -250,14 +278,18 @@ class BondKeyFigureHorizonCalculator(ValueRetriever):
             List[None],
             List[Union[float, int]],
             List[List[Union[float, int]]],
-        ] = self.shift_tenors if multipleScenarios else [self.shift_tenors]  # type: ignore
+        ] = (
+            self.shift_tenors if multipleScenarios else [self.shift_tenors]  # type: ignore
+        )
         shift_v: Union[
             List[float],
             List[int],
             List[None],
             List[Union[float, int]],
             List[List[Union[float, int]]],
-        ] = self.shift_values if multipleScenarios else [self.shift_values]  # type: ignore
+        ] = (
+            self.shift_values if multipleScenarios else [self.shift_values]  # type: ignore
+        )
 
         for x in range(len(self.symbols)):
             for s in range(len(shift_t)):
@@ -275,6 +307,7 @@ class BondKeyFigureHorizonCalculator(ValueRetriever):
                     ),
                     "cashflow_type": self.cashflow_type,
                     "fixed_prepayments": self.fixed_prepayments,
+                    "prepayments": self.prepayments,
                     "reinvest_in_series": self.reinvest_in_series,
                     "reinvestment_rate": self.reinvestment_rate,
                     "spread_change_horizon": self.spread_change_horizon,
@@ -335,19 +368,31 @@ class BondKeyFigureHorizonCalculator(ValueRetriever):
                 )
                 for curve_data in data:
                     _data_dict: Dict[Any, Any] = {}
-                    formatted_result = convert_to_float_if_float(curve_data["value"])
+
+                    formatted_result: Union[str, float] = np.nan
+                    if "value" in curve_data:
+                        formatted_result = convert_to_float_if_float(
+                            curve_data["value"]
+                        )
                     _data_dict[
                         convert_to_original_format(
                             key_figure, self.key_figures_original
                         )
                     ] = formatted_result
-                    curve_key = (
-                        CurveName(curve_data["key"].upper()).name
-                        if self.curves_original is None
-                        else convert_to_original_format(
-                            curve_data["key"], self.curves_original  # type:ignore
+
+                    curve_key = str()
+                    if (
+                        self.curves_original is None
+                        and curve_data["key"] in CurveName._member_map_
+                    ):
+                        curve_key = CurveName(curve_data["key"].upper()).name
+                    elif self.curves_original is not None:
+                        curve_key = convert_to_original_format(
+                            curve_data["key"], self.curves_original
                         )
-                    )
+                    else:
+                        curve_key = curve_data["key"]
+
                     if curve_key in _dict_bond.keys():
                         _dict_bond[curve_key].update(_data_dict)
                     else:
