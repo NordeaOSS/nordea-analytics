@@ -47,7 +47,7 @@ class DataRetrievalServiceClient(BaseDataRetrievalClient):
         """Method return HttpStreamIterator which allow iteration over stream."""
         return self.__stream_listener
 
-    def request_calculation(self, request: Dict, url_suffix: str) -> Dict:
+    def request_calculation(self, request: Dict, url_suffix: str) -> List:
         """Sends a calculation request and retrieves the response."""
         return self.__background_client.get_calculation_asynchronous(
             request, url_suffix

@@ -139,3 +139,9 @@ class CustomWarningCheck:
         """Throw warning when post response throws exception to ensure result from remaining bonds is returned."""
         message = f"{symbol} could not be retrieved: {str(error)}"
         CustomWarning(message, AnalyticsWarning)
+
+
+class BackgroundCalculationFailedWarning(CustomWarning, Warning):
+    """The server can't process the background calculation request."""
+
+    pass

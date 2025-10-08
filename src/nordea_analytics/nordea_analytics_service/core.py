@@ -484,12 +484,30 @@ class NordeaAnalyticsCoreService:
             pd.Series,
         ],
         calc_date: datetime,
-        curves: Optional[Union[List[str], str, CurveName, List[CurveName]]] = None,
+        curves: Optional[
+            Union[
+                str, List[str], CurveName, List[CurveName], List[Union[str, CurveName]]
+            ]
+        ] = None,
         shift_tenors: Optional[
-            Union[float, List[float], int, List[int], List[Union[float, int]]]
+            Union[
+                float,
+                List[float],
+                int,
+                List[int],
+                List[Union[float, int]],
+                List[List[Union[float, int]]],
+            ]
         ] = None,
         shift_values: Optional[
-            Union[float, List[float], int, List[int], List[Union[float, int]]]
+            Union[
+                float,
+                List[float],
+                int,
+                List[int],
+                List[Union[float, int]],
+                List[List[Union[float, int]]],
+            ]
         ] = None,
         pp_speed: Optional[float] = None,
         prices: Optional[Union[float, List[float]]] = None,
@@ -570,9 +588,31 @@ class NordeaAnalyticsCoreService:
         ],
         calc_date: datetime,
         horizon_date: datetime,
-        curves: Optional[Union[List[str], str, CurveName, List[CurveName]]] = None,
-        shift_tenors: Optional[Union[List[float], float]] = None,
-        shift_values: Optional[Union[List[float], float]] = None,
+        curves: Optional[
+            Union[
+                str, List[str], CurveName, List[CurveName], List[Union[str, CurveName]]
+            ]
+        ] = None,
+        shift_tenors: Optional[
+            Union[
+                float,
+                List[float],
+                int,
+                List[int],
+                List[Union[float, int]],
+                List[List[Union[float, int]]],
+            ]
+        ] = None,
+        shift_values: Optional[
+            Union[
+                float,
+                List[float],
+                int,
+                List[int],
+                List[Union[float, int]],
+                List[List[Union[float, int]]],
+            ]
+        ] = None,
         pp_speed: Optional[float] = None,
         prices: Optional[Union[float, List[float]]] = None,
         cashflow_type: Optional[Union[str, CashflowType]] = None,

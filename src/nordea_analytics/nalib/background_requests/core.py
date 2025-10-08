@@ -1,8 +1,12 @@
 import abc
-from typing import Dict, Any
+from typing import Any, Dict, List
 
 from nordea_analytics.nalib.data_retrieval_client import validation
-from nordea_analytics.nalib.exceptions import AnalyticsWarning, CustomWarning
+from nordea_analytics.nalib.exceptions import (
+    AnalyticsWarning,
+    CustomWarning,
+    BackgroundCalculationFailedWarning,
+)
 from nordea_analytics.nalib.http.core import RestApiHttpClient
 
 
@@ -18,7 +22,7 @@ class BackgroundRequestsClient(metaclass=abc.ABCMeta):
         self.http_client = http_client
 
     @abc.abstractmethod
-    def get_calculation_asynchronous(self, request: Dict, url_suffix: str) -> Dict:
+    def get_calculation_asynchronous(self, request: Dict, url_suffix: str) -> List:
         """Sends a request for a bulk background calculation and retrieves the response.
 
         Args:
@@ -51,7 +55,7 @@ class BackgroundRequestsClient(metaclass=abc.ABCMeta):
 
     def _get_jobs_results(
         self, valid_jobs: Dict[str, str], request_id: str | None
-    ) -> Dict[str, Any]:
+    ) -> List[Any]:
         headers = {}
         if request_id:
             headers = {"X-Request-ID-Override": request_id}
@@ -61,7 +65,7 @@ class BackgroundRequestsClient(metaclass=abc.ABCMeta):
             headers=headers,
         )
 
-        results = {}
+        results = []
         api_responses = api_response.json().get("data", [])
         for calculation_response in api_responses:
             response = calculation_response["response"]
@@ -72,5 +76,16 @@ class BackgroundRequestsClient(metaclass=abc.ABCMeta):
                 CustomWarning("Incorrect API response", AnalyticsWarning)
                 continue
 
-            results[valid_jobs[info["job_id"]]] = response
+            state = info["state"]
+            if state == "failed":
+                error_description = "Background job failed to proceed."
+                if response["error_description"] is not None:
+                    error_description += f" {response['error_description']}"
+
+                BackgroundCalculationFailedWarning(
+                    message=f"{error_description} Error code: {response['error_code']}",
+                    category=AnalyticsWarning,
+                )
+
+            results.append(response)
         return results

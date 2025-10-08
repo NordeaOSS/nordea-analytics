@@ -1,5 +1,5 @@
 from datetime import datetime
-from typing import Any, Dict, List, Mapping, Optional, Union
+from typing import Any, Dict, List, Optional, Union
 
 import pandas as pd
 
@@ -107,13 +107,13 @@ class BondRepoCalculator(ValueRetriever):
 
         self._data = self.calculate_repo_bond_key_figure()
 
-    def calculate_repo_bond_key_figure(self) -> Mapping:
+    def calculate_repo_bond_key_figure(self) -> List:
         """Retrieves response with calculated key figures."""
         json_response = self.retrieve_response()
 
         return json_response
 
-    def retrieve_response(self) -> Dict:
+    def retrieve_response(self) -> List:
         """Retrieves response after posting the request."""
         json_response = self._client.request_calculation(
             {"repo": self.request}, self.url_suffix
@@ -171,10 +171,15 @@ class BondRepoCalculator(ValueRetriever):
     def to_dict(self) -> Dict:
         """Reformat the json response to a dictionary."""
         _dict: Dict[Any, Any] = {}
-        for symbol in self._data:
-            bond_data = self._data[symbol]
-            _dict_bond = self.to_dict_bond(bond_data)
-            _dict[symbol] = _dict_bond
+
+        for i in range(len(self._data)):
+            repo_data = self._data[i]
+
+            if "symbol" not in repo_data:  # in case of error from API
+                continue
+
+            _dict_bond = self.to_dict_bond(repo_data)
+            _dict[repo_data["symbol"]] = _dict_bond
 
         return _dict
 
