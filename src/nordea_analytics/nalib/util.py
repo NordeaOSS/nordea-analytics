@@ -24,14 +24,22 @@ from nordea_analytics import (
     DmbModel,
     Exchange,
     HorizonCalculatedBondKeyFigureName,
+    InstrumentGroup,
     LiveBondKeyFigureName,
     SpotForward,
     SpotForwardTimeSeries,
+    SwapHorizonKeyFigureName,
+    SwapKeyFigureName,
+    SwapLegType,
     TimeConvention,
     TimeSeriesKeyFigureName,
     YieldCountry,
     YieldHorizon,
     YieldType,
+)
+from nordea_analytics.convention_variable_names import (
+    SwapDayCountConvention,
+    SwapFixingFrequency,
 )
 from nordea_analytics.key_figure_names import CalculatedRepoBondKeyFigureName
 from nordea_analytics.nalib.exceptions import (
@@ -43,7 +51,7 @@ from nordea_analytics.search_bond_names import (
     AssetType,
     CapitalCentres,
     CapitalCentreTypes,
-    InstrumentGroup,
+    SearchBondInstrumentGroup,
 )
 
 
@@ -83,11 +91,18 @@ def convert_to_variable_string(
         DmbModel,
         Exchange,
         HorizonCalculatedBondKeyFigureName,
+        InstrumentGroup,
         CalculatedRepoBondKeyFigureName,
         InstrumentGroup,
         LiveBondKeyFigureName,
+        SearchBondInstrumentGroup,
         SpotForward,
         SpotForwardTimeSeries,
+        SwapDayCountConvention,
+        SwapFixingFrequency,
+        SwapHorizonKeyFigureName,
+        SwapKeyFigureName,
+        SwapLegType,
         TimeConvention,
         TimeSeriesKeyFigureName,
         YieldCountry,
@@ -119,6 +134,7 @@ def convert_to_variable_string(
         BondIndexName,
         BondKeyFigureName,
         CalculatedBondKeyFigureName,
+        CalculatedRepoBondKeyFigureName,
         CapitalCentres,
         CapitalCentreTypes,
         CashflowType,
@@ -130,13 +146,18 @@ def convert_to_variable_string(
         DmbModel,
         Exchange,
         HorizonCalculatedBondKeyFigureName,
-        CalculatedRepoBondKeyFigureName,
         InstrumentGroup,
         LiveBondKeyFigureName,
         TimeConvention,
         TimeSeriesKeyFigureName,
+        SearchBondInstrumentGroup,
         SpotForward,
         SpotForwardTimeSeries,
+        SwapDayCountConvention,
+        SwapFixingFrequency,
+        SwapHorizonKeyFigureName,
+        SwapKeyFigureName,
+        SwapLegType,
         YieldCountry,
         YieldType,
         YieldHorizon,
@@ -308,8 +329,8 @@ def convert_to_original_format(
 
 
 def convert_to_list(
-    originals: Union[str, List[str], pd.Series, pd.Index],
-) -> list[str]:
+    originals: Union[Any, List[Any], pd.Series, pd.Index],
+) -> list[Any]:
     """Convert the symbols input to be a list of strings."""
 
     symbols_list: list[Any]

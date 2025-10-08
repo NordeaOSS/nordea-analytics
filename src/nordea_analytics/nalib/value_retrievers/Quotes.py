@@ -50,17 +50,21 @@ class Quotes(ValueRetriever):
         self.symbols = convert_to_list(symbols)
 
         self.calc_date = calc_date
-        self._data = self.get_fx_quotes()
+        self._data = self.get_quotes()
 
-    def get_fx_quotes(self) -> List:
+    def get_quotes(self) -> List:
         """Calls the client and retrieves response with FX quote data from the service.
 
         Returns:
             A list of dictionaries containing FX quote data.
         """
         _json_response = self.retrieve_response()
-        json_response: List[Any] = _json_response[config["results"]["quotes"]]
 
+        # In case request is too long, return empty list. Warning contains error message
+        if config["results"]["quotes"] in _json_response:
+            json_response: List[Any] = _json_response[config["results"]["quotes"]]
+        else:
+            json_response = []
         return json_response
 
     def retrieve_response(self) -> Dict:

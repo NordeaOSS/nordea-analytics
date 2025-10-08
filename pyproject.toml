@@ -12,7 +12,3 @@ source = ["src", "*/site-packages"]
 branch = true
 source = ["nordea_analytics"]
 omit = ["*\\__main__.py"]
-
-[tool.coverage.report]
-show_missing = true
-fail_under = 0

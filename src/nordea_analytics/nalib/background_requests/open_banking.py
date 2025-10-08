@@ -1,7 +1,8 @@
 import time
-from typing import Dict, List
+from typing import Dict, List, Literal
 
 from nordea_analytics.nalib.background_requests.core import BackgroundRequestsClient
+from nordea_analytics.nalib.data_retrieval_client import validation
 from nordea_analytics.nalib.data_retrieval_client.dto.background import (
     BackgroundJobResponse,
 )
@@ -38,25 +39,37 @@ class PollingBackgroundRequestsClient(BackgroundRequestsClient):
         """
         super().__init__(http_client)
 
-    def get_response_asynchronous(self, request: Dict, url_suffix: str) -> Dict:
+    def retrieve_response_asynchronous(
+        self, request: Dict, url_suffix: str, method: Literal["GET", "POST"] = "GET"
+    ) -> Dict:
         """Sends a request for a background calculation and retrieves the response.
 
         Args:
             request (Dict): The request data in dictionary form.
             url_suffix (str): The URL suffix for the given method.
+            method (str): The HTTP method.
 
         Returns:
             The response data in JSON format.
 
-        This function sends a POST request for a background calculation, verifies that the response is valid,
+        Raises:
+            NotImplementedError: Give HTTP method is not supported.
+
+        This function sends a GET request for a background calculation, verifies that the response is valid,
         proceeds with the background job, and checks for errors in the response.
         """
         # Step 1: get data
-        api_response = self.http_client.get(url_suffix, params=request)
+        if method == "GET":
+            api_response = self.http_client.get(url_suffix, params=request)
+        elif method == "POST":
+            api_response = self.http_client.post(url_suffix=url_suffix, json=request)
+        else:
+            raise NotImplementedError(f"HTTP {method} is not supported.")
 
         # Step 2: poll server until the data will arrive
         results = self._poll_server(api_response)
 
+        validation.raise_warnings_for(results.data_response, "failed_calculation")
         return results.data_response or {}
 
     def get_calculation_asynchronous(self, request: Dict, url_suffix: str) -> List:

@@ -12,6 +12,7 @@ from nordea_analytics.key_figure_names import (
 from nordea_analytics.nalib.data_retrieval_client import (
     DataRetrievalServiceClient,
 )
+from nordea_analytics.nalib.exceptions import AnalyticsInputError
 from nordea_analytics.nalib.util import (
     convert_to_list,
     convert_to_float_if_float,
@@ -64,6 +65,9 @@ class BondKeyFigures(ValueRetriever):
                 Alternatively, can be a single BondKeyFigureName or a list of BondKeyFigureName enums,
                 or a list of strings or BondKeyFigureName enums.
             calc_date: Calculation date for request.
+
+        Raises:
+            AnalyticsInputError: Raises exception with incorrect key figure enum
         """
         super(BondKeyFigures, self).__init__(client)
 
@@ -75,14 +79,20 @@ class BondKeyFigures(ValueRetriever):
         )
 
         # Convert keyfigures to variable string format if it's a BondKeyFigureName enum
-        self.keyfigures = [
-            (
-                convert_to_variable_string(keyfigure, BondKeyFigureName)
-                if isinstance(keyfigure, BondKeyFigureName)
-                else keyfigure
-            )
-            for keyfigure in self.keyfigures_original
-        ]
+        _keyfigures: List = []
+        for keyfigure in self.keyfigures_original:
+            if isinstance(keyfigure, BondKeyFigureName):
+                _keyfigures.append(
+                    convert_to_variable_string(keyfigure, BondKeyFigureName)
+                )
+            elif isinstance(keyfigure, str):
+                _keyfigures.append(keyfigure.lower())
+            else:
+                raise AnalyticsInputError(
+                    f"'{type(keyfigure).__name__}' enum is not supported, use '{BondKeyFigureName.__name__}' or '{str.__name__}' instead"
+                )
+
+        self.keyfigures = _keyfigures
 
         self.calc_date = calc_date
         self._data = self.get_bond_key_figures()

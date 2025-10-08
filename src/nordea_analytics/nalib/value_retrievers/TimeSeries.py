@@ -16,11 +16,15 @@ from nordea_analytics.key_figure_names import (
 from nordea_analytics.nalib.data_retrieval_client import (
     DataRetrievalServiceClient,
 )
+from nordea_analytics.nalib.exceptions import (
+    AnalyticsInputError,
+)
 from nordea_analytics.nalib.util import (
     convert_to_float_if_float,
     convert_to_original_format,
     convert_to_variable_string,
     get_config,
+    convert_to_list,
 )
 from nordea_analytics.nalib.value_retriever import ValueRetriever
 from nordea_analytics.nalib.exceptions import AnalyticsWarning
@@ -43,6 +47,7 @@ class TimeSeries(ValueRetriever):
             List[BondIndexName],
             List[Union[str, BenchmarkName, BondIndexName]],
             pd.Series,
+            pd.Index,
         ],
         keyfigures: Union[
             TimeSeriesKeyFigureName,
@@ -67,18 +72,14 @@ class TimeSeries(ValueRetriever):
             dmb_model: If 'default', returns key figures with the new DMB model.
                           If 'default_old', returns key figures with the old DMB model.
                           If empty, returns the key figures that were the standard for the given date.
+
+        Raises:
+            AnalyticsInputError: Raises exception with incorrect key figure enum
         """
         super(TimeSeries, self).__init__(client)
         self._client = client
 
-        symbols_list: list[Any]
-        if isinstance(symbols, pd.Series):
-            symbols_list = symbols.to_list()
-        elif not isinstance(symbols, list):
-            symbols_list = [symbols]
-        else:
-            symbols_list = symbols
-        self.symbols_original: List = symbols_list
+        self.symbols_original = convert_to_list(symbols)
 
         # Convert symbol names to variable strings
         _symbols: List = []
@@ -94,16 +95,26 @@ class TimeSeries(ValueRetriever):
         self.keyfigures_original: List = (
             keyfigures if isinstance(keyfigures, list) else [keyfigures]
         )
+        self.keyfigures_original = list(
+            dict.fromkeys(self.keyfigures_original)
+        )  # Removes duplicates
 
         # Convert key figure names to variable strings
-        self.keyfigures = [
-            (
-                convert_to_variable_string(keyfigure, TimeSeriesKeyFigureName)
-                if isinstance(keyfigure, TimeSeriesKeyFigureName)
-                else keyfigure
-            )
-            for keyfigure in self.keyfigures_original
-        ]
+        _keyfigures: List = []
+        for keyfigure in self.keyfigures_original:
+            if isinstance(keyfigure, TimeSeriesKeyFigureName):
+                _keyfigures.append(
+                    convert_to_variable_string(keyfigure, TimeSeriesKeyFigureName)
+                )
+            elif isinstance(keyfigure, str):
+                _keyfigures.append(keyfigure)
+            else:
+                raise AnalyticsInputError(
+                    f"'{type(keyfigure).__name__}' enum is not supported, "
+                    f"use '{TimeSeriesKeyFigureName.__name__}' or '{str.__name__}' instead"
+                )
+
+        self.keyfigures = _keyfigures
 
         self.from_date = from_date
         self.to_date = to_date
@@ -289,8 +300,8 @@ class TimeSeries(ValueRetriever):
                     convert_to_float_if_float(x["value"]) for x in timeseries["values"]
                 ]
 
-                if symbol_data["symbol"] in _dict.keys():
-                    if key_figure_original in _dict[symbol_data["symbol"]].keys():
+                if symbol_original in _dict.keys():
+                    if key_figure_original in _dict[symbol_original].keys():
                         if (
                             _dict[symbol_original][key_figure_original]["Date"][-1]
                             > _timeseries_dict[key_figure_original]["Date"][0]

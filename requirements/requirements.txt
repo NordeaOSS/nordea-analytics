@@ -1,0 +1,5 @@
+pandas>=2.2.3, <3.0
+pip-system-certs>=4.0
+pyaml>=25.0.0
+requests>=2.32.3
+requests-kerberos==0.15.0

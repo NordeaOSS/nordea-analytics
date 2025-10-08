@@ -19,7 +19,7 @@ from nordea_analytics.search_bond_names import (
     AssetType,
     CapitalCentres,
     CapitalCentreTypes,
-    InstrumentGroup,
+    SearchBondInstrumentGroup,
     Issuers,
 )
 
@@ -68,11 +68,11 @@ class BondFinder(ValueRetriever):
         ] = None,
         instrument_groups: Optional[
             Union[
-                InstrumentGroup,
+                SearchBondInstrumentGroup,
                 str,
-                List[InstrumentGroup],
+                List[SearchBondInstrumentGroup],
                 List[str],
-                List[Union[str, InstrumentGroup]],
+                List[Union[str, SearchBondInstrumentGroup]],
             ]
         ] = None,
         lower_issue_date: Optional[datetime] = None,
@@ -158,8 +158,10 @@ class BondFinder(ValueRetriever):
         self.instrument_groups = (
             [
                 (
-                    convert_to_variable_string(instrument_group, InstrumentGroup)
-                    if isinstance(instrument_group, InstrumentGroup)
+                    convert_to_variable_string(
+                        instrument_group, SearchBondInstrumentGroup
+                    )
+                    if isinstance(instrument_group, SearchBondInstrumentGroup)
                     else instrument_group
                 )
                 for instrument_group in _instrument_groups

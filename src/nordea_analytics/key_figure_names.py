@@ -342,8 +342,47 @@ class LiveBondKeyFigureName(Enum):
     LiborSpread3M = "libor 3m spread"
     LiborSpread6M = "libor 6m spread"
     LiborSpread6MActual = "libor 6m actual spread"
+    DestrSpread = "destr spread"
     Quote = "quote"
     Spread = "spread"
     SpreadRisk = "spread risk"
     SwapSpread = "swap spread"
     Yield = "yield"
+
+
+class SwapKeyFigureName(Enum):
+    """Swap key figure names that can be calculated in the service."""
+
+    BPV = "bpv"
+    BPVLadder = "bpvladder"
+    CVX = "cvx"
+    FixedRatePaid = "fixed_rate_paid"
+    FixedRateReceived = "fixed_rate_received"
+    FloatingSpreadPaid = "floating_spread_paid"
+    FloatingSpreadReceived = "floating_spread_received"
+    ImpliedRate = "implied_rate"
+    ImpliedSpread = "implied_spread"
+    PVonTS = "pvonts"
+
+
+class SwapHorizonKeyFigureName(Enum):
+    """Swap horizon key figure names that can be calculated in the service."""
+
+    BPV = "bpv"
+    BPVLadder = "bpvladder"
+    CVX = "cvx"
+    FixedRatePaid = "fixed_rate_paid"
+    FixedRateReceived = "fixed_rate_received"
+    FloatingSpreadPaid = "floating_spread_paid"
+    FloatingSpreadReceived = "floating_spread_received"
+    ImpliedRate = "implied_rate"
+    ImpliedSpread = "implied_spread"
+    PVonTS = "pvonts"
+    ReturnInterest = "return_interest"
+    """Return on coupon payments in percentage value."""
+    ReturnInterestAmount = "return_interest_amount"
+    """Same as ReturnInterest, but in money value."""
+    ReturnPrincipal = "return_principal"
+    """The return of the principal change in percentage value."""
+    ReturnPrincipalAmount = "return_principal_amount"
+    "Same as ReturnPrincipal, but in money value."
