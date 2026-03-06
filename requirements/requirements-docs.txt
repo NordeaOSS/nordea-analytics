@@ -26,7 +26,7 @@ jinja2==3.0.2
     #   rst2pdf
     #   sphinx
     #   sphinx-autoapi
-lazy-object-proxy==1.6.0
+lazy-object-proxy==1.12.0
     # via astroid
 markupsafe==2.0.1
     # via jinja2
@@ -95,4 +95,5 @@ zipp==3.23.0
 
 # The following packages are considered to be unsafe in a requirements file:
 # setuptools
+
 
