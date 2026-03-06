@@ -55,7 +55,7 @@ requests==2.32.4
     # via sphinx
 rst2pdf==0.104
     # via -r requirements\requirements-docs.in
-scipy==1.11.1
+scipy==1.17.1
 setuptools==69.5.1
 smartypants==2.0.1
     # via rst2pdf
@@ -95,6 +95,7 @@ zipp==3.23.0
 
 # The following packages are considered to be unsafe in a requirements file:
 # setuptools
+
 
 
 
