@@ -2,7 +2,7 @@ alabaster==0.7.12
     # via sphinx
 astroid==3.3.11
     # via sphinx-autoapi
-babel==2.9.1
+babel==2.17.0
     # via sphinx
 certifi==2021.10.8
     # via requests
@@ -95,6 +95,7 @@ zipp==3.23.0
 
 # The following packages are considered to be unsafe in a requirements file:
 # setuptools
+
 
 
 
