@@ -80,7 +80,7 @@ sphinxcontrib-jsmath==1.0.1
     # via sphinx
 sphinxcontrib-qthelp==1.0.8
     # via sphinx
-sphinxcontrib-serializinghtml==1.1.5
+sphinxcontrib-serializinghtml==1.1.10
     # via sphinx
 typing-extensions==3.10.0.2
     # via astroid
@@ -95,6 +95,7 @@ zipp==3.23.0
 
 # The following packages are considered to be unsafe in a requirements file:
 # setuptools
+
 
 
 
