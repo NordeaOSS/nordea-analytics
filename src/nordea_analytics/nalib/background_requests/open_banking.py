@@ -10,9 +10,9 @@ from nordea_analytics.nalib.data_retrieval_client.dto.background import (
     BackgroundJobStatusResponse,
 )
 from nordea_analytics.nalib.data_retrieval_client.dto.bulk_calculation import (
-    PostBondsBulkCalculationData,
+    PostBulkCalculationData,
     BondsBulkCalculationStatusData,
-    BondsCalculationStatusDto,
+    InstrumentCalculationStatusDto,
 )
 from nordea_analytics.nalib.exceptions import (
     BackgroundCalculationFailed,
@@ -126,7 +126,7 @@ class PollingBackgroundRequestsClient(BackgroundRequestsClient):
         raise BackgroundCalculationTimeout()
 
     def _poll_server_bulk_job(self, api_response: AnalyticsApiResponse) -> List:
-        bulk_data = PostBondsBulkCalculationData(api_response.data)
+        bulk_data = PostBulkCalculationData(api_response.data)
 
         # MG: validate errors:
         calculation_statuses = [
@@ -157,7 +157,7 @@ class PollingBackgroundRequestsClient(BackgroundRequestsClient):
 
         raise BackgroundCalculationTimeout()
 
-    def _any_valid_calculation(self, status: BondsCalculationStatusDto) -> bool:
+    def _any_valid_calculation(self, status: InstrumentCalculationStatusDto) -> bool:
         if (
             status is None
             or status.calculations is None
@@ -176,7 +176,7 @@ class PollingBackgroundRequestsClient(BackgroundRequestsClient):
         return any_valid_calculation
 
     def _retrieve_background_job_results(
-        self, api_response: AnalyticsApiResponse, data: PostBondsBulkCalculationData
+        self, api_response: AnalyticsApiResponse, data: PostBulkCalculationData
     ) -> List:
         # MG: check status
         valid_jobs = {}
@@ -190,7 +190,7 @@ class PollingBackgroundRequestsClient(BackgroundRequestsClient):
         return results
 
     def _validate_and_get_symbol_map(
-        self, data: BondsCalculationStatusDto
+        self, data: InstrumentCalculationStatusDto
     ) -> Dict[str, str]:
         symbol_map = {}
         if (

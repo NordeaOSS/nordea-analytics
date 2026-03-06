@@ -12,10 +12,7 @@ from nordea_analytics.convention_variable_names import (
     DayCountConvention,
     DmbModel,
     Exchange,
-    SwapDayCountConvention,
-    SwapLegType,
     TimeConvention,
-    SwapFixingFrequency,
 )
 from nordea_analytics.curve_variable_names import (
     CurveDefinitionName,
@@ -71,6 +68,9 @@ from nordea_analytics.nalib.value_retrievers.LiveBondUniverse import LiveBondUni
 from nordea_analytics.nalib.value_retrievers.Quotes import Quotes
 from nordea_analytics.nalib.value_retrievers.ShiftDate import ShiftDate
 from nordea_analytics.nalib.value_retrievers.ShiftDays import ShiftDays
+from nordea_analytics.nalib.value_retrievers.SwapBuilder import (
+    SwapBuilder,
+)
 from nordea_analytics.nalib.value_retrievers.SwapHorizonKeyFigureCalculator import (
     SwapHorizonKeyFigureCalculator,
 )
@@ -90,6 +90,7 @@ from nordea_analytics.search_bond_names import (
 from nordea_analytics.search_bond_names import (
     SearchBondInstrumentGroup,
 )
+from nordea_analytics.swap_definition import SwapDefinition  # type: ignore[attr-defined]
 
 
 class NordeaAnalyticsCoreService:
@@ -151,7 +152,7 @@ class NordeaAnalyticsCoreService:
 
     def get_bond_key_figures(
         self,
-        symbols: Union[List, str, pd.Series, pd.Index],
+        symbols: Union[List, str, pd.Series, pd.Index, BondIndexName, BenchmarkName],
         keyfigures: Union[
             str,
             BondKeyFigureName,
@@ -531,6 +532,8 @@ class NordeaAnalyticsCoreService:
         ladder_definition: Optional[Union[float, List[float]]] = None,
         cashflow_type: Optional[Union[str, CashflowType]] = None,
         dmb_model: Optional[Union[str, DmbModel]] = None,
+        prepayments: Optional[Union[float, List[float]]] = None,
+        remaining_prepayments: Optional[float] = None,
         as_df: bool = False,
     ) -> Any:
         """Calculate key figures for given bonds and calculation date.
@@ -556,11 +559,14 @@ class NordeaAnalyticsCoreService:
                 BPV ladder calculation. For example [0.25, 0.5, 1, 3, 5].
             cashflow_type: Optional. Type of cashflow to calculate with.
             dmb_model: If 'current' or DmbModel.Current, calculates key figures using the new DMB model.
-                          If 'before2024' or DmbModel.Before2024, calculates key figures using the old DMB model.
-                          If empty, uses the new model.
+                If 'before2024' or DmbModel.Before2024, calculates key figures using the old DMB model.
+                If empty, uses the new model.
+            prepayments: Optional. From calculation date onwards,
+                each entry overrides the next prepayment with a user defined one.
+            remaining_prepayments: Optional. Sets all prepayments after prepayments parameter to a fixed value.
+                If remaining_prepayments is empty, model prepayments are used.
             as_df: Default False. If True, the results are represented
                 as pandas DataFrame, else as dictionary
-
 
         Returns:
             Dictionary containing requested data. if as_df is True,
@@ -584,6 +590,8 @@ class NordeaAnalyticsCoreService:
                 ladder_definition,
                 cashflow_type,
                 dmb_model,
+                prepayments,
+                remaining_prepayments,
             ),
             as_df,
         )
@@ -752,10 +760,22 @@ class NordeaAnalyticsCoreService:
             as_df,
         )
 
+    def build_swaps(self, swaps: Union[str, List[str]]) -> Dict[str, SwapDefinition]:
+        """Build swaps from strings.
+
+        Args:
+            swaps: Each swap is defined as a string.
+
+        Returns:
+            Dictionary containing requested data.
+                the data is in form of a DataFrame.
+        """
+        return self._retrieve_value(SwapBuilder(self._client, swaps), False)
+
     def calculate_swap_key_figure(
         self,
-        currency_paid: str,
-        currency_received: str,
+        swaps: Union[SwapDefinition, list[SwapDefinition], dict[str, SwapDefinition]],
+        calc_date: datetime,
         keyfigures: Union[
             str,
             SwapKeyFigureName,
@@ -765,23 +785,6 @@ class NordeaAnalyticsCoreService:
             pd.Series,
             pd.Index,
         ],
-        type_paid: Union[str, SwapLegType],
-        type_received: Union[str, SwapLegType],
-        calc_date: datetime,
-        tenor: Union[str, datetime],
-        start_date: Optional[datetime] = None,
-        forward: Optional[str] = None,
-        fix_frequency_paid: Optional[Union[str, SwapFixingFrequency]] = None,
-        fix_frequency_received: Optional[Union[str, SwapFixingFrequency]] = None,
-        fixed_rate_paid: Optional[float] = None,
-        fixed_rate_received: Optional[float] = None,
-        floating_spread_paid: Optional[float] = None,
-        floating_spread_received: Optional[float] = None,
-        day_count_convention_paid: Optional[Union[str, SwapDayCountConvention]] = None,
-        day_count_convention_received: Optional[
-            Union[str, SwapDayCountConvention]
-        ] = None,
-        date_roll_convention: Optional[Union[str, DateRollConvention]] = None,
         shift_tenors: Optional[
             Union[
                 float,
@@ -789,6 +792,7 @@ class NordeaAnalyticsCoreService:
                 int,
                 List[int],
                 List[Union[float, int]],
+                List[List[Union[float, int]]],
             ]
         ] = None,
         shift_values: Optional[
@@ -798,6 +802,7 @@ class NordeaAnalyticsCoreService:
                 int,
                 List[int],
                 List[Union[float, int]],
+                List[List[Union[float, int]]],
             ]
         ] = None,
         ladder_definition: Optional[Union[float, List[float]]] = None,
@@ -806,24 +811,9 @@ class NordeaAnalyticsCoreService:
         """Calculate swap key figures.
 
         Args:
-            currency_paid: Currency code for paid leg.
-            currency_received: Currency code for received leg.
-            keyfigures: Swap key figures that should be valued.
-            type_paid: Whether paid leg should be fixed or floating.
-            type_received: Whether received leg should be fixed or floating.
+            swaps: Call method build_swaps() and add the retrieved list of SwapDefinitions or create it manually.
             calc_date: Date of calculation.
-            tenor: Tenor of the swap, e.g. 10Y or a datetime.
-            start_date: Optional. Start date of the swap. If not set, calc_date + settlement days.
-            forward: Optional. Forward starting period of the swap, e.g. 1Y.
-            fix_frequency_paid: Optional. Fixing frequency of paid leg. Allowed values 1D, RFR, 3M, 6M.
-            fix_frequency_received: Optional. Fixing frequency of receiving leg. Allowed values 1D, RFR, 3M, 6M.
-            fixed_rate_paid: Optional. Fixed rate of the paid leg. If not set, par rate is used for fixed leg. Expressed in decimals 0.01 => 1%
-            fixed_rate_received: Optional. Fixed rate of the received leg. If not set, par rate is used for fixed leg. Expressed in decimals 0.01 => 1%
-            floating_spread_paid: Optional. Floating spread of the paid leg. If not set it is 0. Expressed in decimals 0.01 => 100bps
-            floating_spread_received: Optional. Floating spread of the received leg. If not set it is 0. Expressed in decimals 0.01 => 100bps
-            day_count_convention_paid: Optional. Day count convention of paid leg.
-            day_count_convention_received: Optional. Day count convention of received leg.
-            date_roll_convention: Optional. Date roll convention of the swap.
+            keyfigures: Swap key figures that should be valued.
             shift_tenors: Optional. Tenors to shift curves expressed as float. For example [0.25, 0.5, 1, 3, 5].
             shift_values: Optional. Shift values in basispoints. For example [100, 100, 75, 100, 100].
             ladder_definition: Optional. Tenors to include in BPV ladder calculation. For example [0.25, 0.5, 1, 3, 5].
@@ -834,27 +824,13 @@ class NordeaAnalyticsCoreService:
             Dictionary containing requested data. if as_df is True,
                 the data is in form of a DataFrame.
         """
+
         return self._retrieve_value(
             SwapKeyFigureCalculator(
                 self._client,
-                currency_paid,
-                currency_received,
+                swaps,
                 keyfigures,
-                type_paid,
-                type_received,
                 calc_date,
-                tenor,
-                start_date,
-                forward,
-                fix_frequency_paid,
-                fix_frequency_received,
-                fixed_rate_paid,
-                fixed_rate_received,
-                floating_spread_paid,
-                floating_spread_received,
-                day_count_convention_paid,
-                day_count_convention_received,
-                date_roll_convention,
                 shift_tenors,
                 shift_values,
                 ladder_definition,
@@ -862,10 +838,9 @@ class NordeaAnalyticsCoreService:
             as_df,
         )
 
-    def calculate_swap_horizon_key_figure(
+    def calculate_horizon_swap_key_figure(
         self,
-        currency_paid: str,
-        currency_received: str,
+        swaps: Union[SwapDefinition, list[SwapDefinition]],
         keyfigures: Union[
             str,
             SwapHorizonKeyFigureName,
@@ -875,24 +850,8 @@ class NordeaAnalyticsCoreService:
             pd.Series,
             pd.Index,
         ],
-        type_paid: Union[str, SwapLegType],
-        type_received: Union[str, SwapLegType],
         calc_date: datetime,
         horizon_date: datetime,
-        tenor: Union[str, datetime],
-        start_date: Optional[datetime] = None,
-        forward: Optional[str] = None,
-        fix_frequency_paid: Optional[Union[str, SwapFixingFrequency]] = None,
-        fix_frequency_received: Optional[Union[str, SwapFixingFrequency]] = None,
-        fixed_rate_paid: Optional[float] = None,
-        fixed_rate_received: Optional[float] = None,
-        floating_spread_paid: Optional[float] = None,
-        floating_spread_received: Optional[float] = None,
-        day_count_convention_paid: Optional[Union[str, SwapDayCountConvention]] = None,
-        day_count_convention_received: Optional[
-            Union[str, SwapDayCountConvention]
-        ] = None,
-        date_roll_convention: Optional[Union[str, DateRollConvention]] = None,
         align_to_forward_curve: Optional[bool] = None,
         shift_tenors: Optional[
             Union[
@@ -901,6 +860,7 @@ class NordeaAnalyticsCoreService:
                 int,
                 List[int],
                 List[Union[float, int]],
+                List[List[Union[float, int]]],
             ]
         ] = None,
         shift_values: Optional[
@@ -910,6 +870,7 @@ class NordeaAnalyticsCoreService:
                 int,
                 List[int],
                 List[Union[float, int]],
+                List[List[Union[float, int]]],
             ]
         ] = None,
         ladder_definition: Optional[Union[float, List[float]]] = None,
@@ -918,25 +879,10 @@ class NordeaAnalyticsCoreService:
         """Calculate swap horizon key figures.
 
         Args:
-            currency_paid: Currency code for paid leg.
-            currency_received: Currency code for received leg.
+            swaps: Call method build_swaps() and add the retrieved list of SwapDefinitions or create it manually.
             keyfigures: Swap key figures that should be valued.
-            type_paid: Whether paid leg should be fixed or floating.
-            type_received: Whether received leg should be fixed or floating.
             calc_date: Date of calculation.
             horizon_date: Future date for which key figures are calculated for.
-            tenor: Tenor of the swap, e.g. 10Y or a datetime.
-            start_date: Optional. Start date of the swap. If not set, calc_date + settlement days.
-            forward: Optional. Forward starting period of the swap, e.g. 1Y.
-            fix_frequency_paid: Optional. Fixing frequency of paid leg. Allowed values 1D, 1M, 3M, 6M, 1Y.
-            fix_frequency_received: Optional. Fixing frequency of receiving leg. Allowed values 1D, 1M, 3M, 6M, 1Y.
-            fixed_rate_paid: Optional. Fixed rate of the paid leg. If not set, par rate is used for fixed leg. Expressed in decimals 0.01 => 1%
-            fixed_rate_received: Optional. Fixed rate of the received leg. If not set, par rate is used for fixed leg. Expressed in decimals 0.01 => 1%
-            floating_spread_paid: Optional. Floating spread of the paid leg. If not set it is 0. Expressed in decimals 0.01 => 100bps
-            floating_spread_received: Optional. Floating spread of the received leg. If not set it is 0. Expressed in decimals 0.01 => 100bps
-            day_count_convention_paid: Optional. Day count convention of paid leg.
-            day_count_convention_received: Optional. Day count convention of received leg.
-            date_roll_convention: Optional. Date roll convention of the swap.
             align_to_forward_curve: True if you want the curve used for horizon
                 calculations to be the respective forward curve.
                 Default is False.
@@ -953,25 +899,10 @@ class NordeaAnalyticsCoreService:
         return self._retrieve_value(
             SwapHorizonKeyFigureCalculator(
                 self._client,
-                currency_paid,
-                currency_received,
+                swaps,
                 keyfigures,
-                type_paid,
-                type_received,
                 calc_date,
                 horizon_date,
-                tenor,
-                start_date,
-                forward,
-                fix_frequency_paid,
-                fix_frequency_received,
-                fixed_rate_paid,
-                fixed_rate_received,
-                floating_spread_paid,
-                floating_spread_received,
-                day_count_convention_paid,
-                day_count_convention_received,
-                date_roll_convention,
                 align_to_forward_curve,
                 shift_tenors,
                 shift_values,
@@ -1059,7 +990,9 @@ class NordeaAnalyticsCoreService:
         months: Optional[int] = None,
         years: Optional[int] = None,
         exchange: Optional[Union[str, Exchange]] = None,
+        price_exchange: Optional[Union[str, Exchange]] = None,
         date_roll_convention: Optional[Union[str, DateRollConvention]] = None,
+        use_crossover: Optional[bool] = None,
     ) -> datetime:
         """Shifts a date using internal holiday calendars.
 
@@ -1072,8 +1005,10 @@ class NordeaAnalyticsCoreService:
             years: The number of years to shift 'date' with.
                 Negative values move date back in time.
             exchange: The exchange's holiday calendar will be used.
+            price_exchange: Price exchange holidays to follow.
             date_roll_convention: The convention to use for rolling
                 when a holiday is encountered.
+            use_crossover: When true, then crossover currency is used
 
         Returns:
             The shifted datetime is returned.
@@ -1085,7 +1020,9 @@ class NordeaAnalyticsCoreService:
             months,
             years,
             exchange,
+            price_exchange,
             date_roll_convention,
+            use_crossover,
         ).to_datetime()
 
     def get_date_sequence(

@@ -264,7 +264,7 @@ class BondKeyFigureHorizonCalculator(ValueRetriever):
         if not keyfigures:
             # There has to be at least one key figure in request,
             # but it will not be returned in the final results
-            keyfigures = ["yield"]  # type:ignore
+            keyfigures = ["yield"]  # type: ignore
 
         multipleScenarios: bool = (
             self.shift_tenors is not None

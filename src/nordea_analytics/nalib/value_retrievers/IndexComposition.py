@@ -118,7 +118,7 @@ class IndexComposition(ValueRetriever):
                 for x in index_data["underlyings"]
             ]
 
-            if not _index_dict["Market_Amount"].__contains__(None):
+            if None not in _index_dict["Market_Amount"]:
                 sum_market = sum(_index_dict["Market_Amount"])
                 _index_dict["Market_Weight"] = [
                     x / sum_market for x in _index_dict["Market_Amount"]

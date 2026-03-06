@@ -7,7 +7,7 @@ class ClientHttpError(Exception):
     def __init__(self, error_id: str, error_description: str) -> None:
         """Common base class for all Analytics API Server exceptions."""
         self.error_id = error_id
-        super(ClientHttpError, self).__init__(error_description)
+        super(ClientHttpError, self).__init__(error_id, error_description)
 
     def __str__(self) -> str:
         """Return str(self)."""

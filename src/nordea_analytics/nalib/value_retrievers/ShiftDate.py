@@ -31,7 +31,9 @@ class ShiftDate(ValueRetriever):
         months: Optional[int] = None,
         years: Optional[int] = None,
         exchange: Optional[Union[str, Exchange]] = None,
+        price_exchange: Optional[Union[str, Exchange]] = None,
         date_roll_convention: Optional[Union[str, DateRollConvention]] = None,
+        use_crossover: Optional[bool] = None,
     ) -> None:
         """Initialization of class.
 
@@ -43,8 +45,10 @@ class ShiftDate(ValueRetriever):
             years: The number of years to shift 'date' with. Negative values move date back in time.
             exchange: The exchange's holiday calendar will be used. If an Exchange object is provided,
                 it will be converted to a string.
+            price_exchange: Price exchange holidays to follow.
             date_roll_convention: The convention to use for rolling when a holiday is encountered.
                 If a DateRollConvention object is provided, it will be converted to a string.
+            use_crossover: When true, then crossover currency is used
         """
         super(ShiftDate, self).__init__(client)
         self._client = client
@@ -57,11 +61,17 @@ class ShiftDate(ValueRetriever):
             if isinstance(exchange, Exchange)
             else exchange
         )
+        self.price_exchange = (
+            convert_to_variable_string(price_exchange, Exchange)
+            if isinstance(price_exchange, Exchange)
+            else price_exchange
+        )
         self.date_roll_convention = (
             convert_to_variable_string(date_roll_convention, DateRollConvention)
             if isinstance(date_roll_convention, DateRollConvention)
             else date_roll_convention
         )
+        self.use_crossover = use_crossover or False
         self._data = self.shift_date()
 
     def shift_date(self) -> Dict:
@@ -95,7 +105,9 @@ class ShiftDate(ValueRetriever):
         months = (self.months,)
         years = (self.years,)
         exchange = self.exchange
+        price_exchange = self.price_exchange
         date_roll_convention = self.date_roll_convention
+        use_crossover = self.use_crossover
 
         request_dict = {
             "date": date,
@@ -103,7 +115,9 @@ class ShiftDate(ValueRetriever):
             "months": months,
             "years": years,
             "exchange": exchange,
+            "price-exchange": price_exchange,
             "date-roll-convention": date_roll_convention,
+            "use-crossover": use_crossover,
         }
 
         return request_dict

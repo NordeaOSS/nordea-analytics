@@ -31,7 +31,7 @@ lazy-object-proxy==1.6.0
 markupsafe==2.0.1
     # via jinja2
 matplotlib==3.7.2
-numpy==1.26.3
+numpy==2.4.1
 packaging==21.0
     # via
     #   rst2pdf

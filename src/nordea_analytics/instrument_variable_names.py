@@ -16,6 +16,7 @@ class BenchmarkName(Enum):
     DK_ARM_1Y = "DK ARM 1Y"
     DK_ARM_3Y = "DK ARM 3Y"
     DK_ARM_5Y = "DK ARM 5Y"
+    DK_MTG_20Y = "DK MTG 20Y"
     DK_MTG_30Y = "DK MTG 30Y"
     EU_3M = "EU 3M"
     EU_2Y = "EU 2Y"

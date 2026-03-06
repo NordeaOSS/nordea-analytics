@@ -41,6 +41,7 @@ from .search_bond_names import (
     Issuers,
 )
 from .shortcuts.utils import disable_analytics_warnings
+from .swap_definition import SwapDefinition  # type: ignore[attr-defined]
 
 # To distinguish between external and internal packages
 __internal_package__ = False
@@ -53,7 +54,7 @@ except (NameError, ModuleNotFoundError):
     from .shortcuts.open_banking import get_nordea_analytics_client  # type: ignore
     from .shortcuts.open_banking import get_nordea_analytics_preprod_client  # type: ignore # noqa: F401
 
-__version__ = "1.22.5"
+__version__ = "1.22.6"
 __all__ = [
     "get_nordea_analytics_client",
     "get_nordea_analytics_preprod_client",
@@ -84,6 +85,7 @@ __all__ = [
     "SpotForward",
     "SwapDayCountConvention",
     "SpotForwardTimeSeries",
+    "SwapDefinition",
     "SwapFixingFrequency",
     "SwapHorizonKeyFigureName",
     "SwapKeyFigureName",

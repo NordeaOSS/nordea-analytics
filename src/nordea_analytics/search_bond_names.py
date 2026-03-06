@@ -27,6 +27,7 @@ class AssetType(Enum):
 class SearchBondInstrumentGroup(Enum):
     """Instrument Groups available when searching for bonds."""
 
+    # Named as such to avoid conflict with InstrumentGroup enum
     CreditBonds = "Credit Bonds"
     CoCoBonds = "CoCo Bonds"
     DanishCallableMortgageBonds = "Danish Callable Mortgage Bonds"

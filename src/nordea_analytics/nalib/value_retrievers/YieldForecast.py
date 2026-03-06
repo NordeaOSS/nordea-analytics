@@ -109,7 +109,7 @@ class YieldForecast(ValueRetriever):
             for data in yield_type_data["forecast"]:
                 values = {}
 
-                values["Updated_at"] = datetime.strptime(
+                values["UpdatedAt"] = datetime.strptime(
                     yield_type_data["updated_at"].split("T")[0], "%Y-%m-%d"
                 )
 
@@ -140,7 +140,7 @@ class YieldForecast(ValueRetriever):
             orient="index",
         )
         df = df.reset_index().rename(
-            columns={"level_0": "Symbol", "level_1": "Yield_type", "level_2": "Horizon"}
+            columns={"level_0": "Symbol", "level_1": "YieldType", "level_2": "Horizon"}
         )
 
         return df

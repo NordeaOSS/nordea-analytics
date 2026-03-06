@@ -77,7 +77,7 @@ class CurveTimeSeries(ValueRetriever):
         ]
         self.from_date = from_date
         self.to_date = to_date
-        _tenors: List = tenors if isinstance(tenors, list) else [tenors]  # type:ignore
+        _tenors: List = tenors if isinstance(tenors, list) else [tenors]  # type: ignore
         self.tenors = [str(t) for t in _tenors]
         self.curve_type = (
             convert_to_variable_string(curve_type, CurveType)

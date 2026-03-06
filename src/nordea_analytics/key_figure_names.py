@@ -231,6 +231,7 @@ class TimeSeriesKeyFigureName(Enum):
     OutstandingAmountCorrected = "corrected_outstanding_amount"
     PaymentScheduled = "schedpayment"
     PaymentTotal = "totpaymentamt"
+    PaymentTotalPercentage = "totpayment"
     PrePayment = "prepublished_prepayment"
     PrePaymentPercentage = "prepayment"
     PrePaymentPreliminary = "prelimprepayment"
