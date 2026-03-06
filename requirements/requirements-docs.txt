@@ -1,4 +1,4 @@
-alabaster==0.7.12
+alabaster==0.7.16
     # via sphinx
 astroid==3.3.11
     # via sphinx-autoapi
@@ -95,6 +95,7 @@ zipp==3.23.0
 
 # The following packages are considered to be unsafe in a requirements file:
 # setuptools
+
 
 
 
