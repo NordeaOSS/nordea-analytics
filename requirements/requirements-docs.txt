@@ -82,7 +82,7 @@ sphinxcontrib-qthelp==1.0.8
     # via sphinx
 sphinxcontrib-serializinghtml==1.1.10
     # via sphinx
-typing-extensions==3.10.0.2
+typing-extensions==4.14.1
     # via astroid
 unidecode==1.4.0
     # via sphinx-autoapi
@@ -95,6 +95,7 @@ zipp==3.23.0
 
 # The following packages are considered to be unsafe in a requirements file:
 # setuptools
+
 
 
 
