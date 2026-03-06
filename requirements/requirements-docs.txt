@@ -39,7 +39,7 @@ packaging==25.0
 pandas==2.3.1
 pillow==11.3.0
     # via reportlab
-pygments==2.12.0
+pygments==2.19.1
     # via
     #   rst2pdf
     #   sphinx
@@ -95,6 +95,7 @@ zipp==3.23.0
 
 # The following packages are considered to be unsafe in a requirements file:
 # setuptools
+
 
 
 
