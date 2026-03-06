@@ -52,7 +52,7 @@ class CalculationStatusDto(BaseDto):
         self.__error = value
 
 
-class BondsCalculationStatusDto(BaseDto):
+class InstrumentCalculationStatusDto(BaseDto):
     __calculations: List[CalculationStatusDto]
 
     @property
@@ -64,11 +64,13 @@ class BondsCalculationStatusDto(BaseDto):
         self.__calculations = [CalculationStatusDto(v) for v in value]
 
 
-class PostBondsBulkCalculationData(BaseDto):
-    __standard: BondsCalculationStatusDto
-    __advanced: BondsCalculationStatusDto
-    __horizon: BondsCalculationStatusDto
-    __repo: BondsCalculationStatusDto
+class PostBulkCalculationData(BaseDto):
+    __standard: InstrumentCalculationStatusDto
+    __advanced: InstrumentCalculationStatusDto
+    __horizon: InstrumentCalculationStatusDto
+    __repo: InstrumentCalculationStatusDto
+    __swap_standard: InstrumentCalculationStatusDto
+    __swap_horizon: InstrumentCalculationStatusDto
     __id: str
 
     @property
@@ -80,36 +82,52 @@ class PostBondsBulkCalculationData(BaseDto):
         self.__id = value
 
     @property
-    def standard(self) -> BondsCalculationStatusDto:
+    def standard(self) -> InstrumentCalculationStatusDto:
         return self.__standard
 
     @standard.setter
     def standard(self, value):
-        self.__standard = BondsCalculationStatusDto(value)
+        self.__standard = InstrumentCalculationStatusDto(value)
 
     @property
-    def advanced(self) -> BondsCalculationStatusDto:
+    def advanced(self) -> InstrumentCalculationStatusDto:
         return self.__advanced
 
     @advanced.setter
     def advanced(self, value):
-        self.__advanced = BondsCalculationStatusDto(value)
+        self.__advanced = InstrumentCalculationStatusDto(value)
 
     @property
-    def horizon(self) -> BondsCalculationStatusDto:
+    def horizon(self) -> InstrumentCalculationStatusDto:
         return self.__horizon
 
     @horizon.setter
     def horizon(self, value):
-        self.__horizon = BondsCalculationStatusDto(value)
+        self.__horizon = InstrumentCalculationStatusDto(value)
 
     @property
-    def repo(self) -> BondsCalculationStatusDto:
+    def repo(self) -> InstrumentCalculationStatusDto:
         return self.__repo
 
     @repo.setter
     def repo(self, value):
-        self.__repo = BondsCalculationStatusDto(value)
+        self.__repo = InstrumentCalculationStatusDto(value)
+
+    @property
+    def swap_standard(self) -> InstrumentCalculationStatusDto:
+        return self.__swap_standard
+
+    @swap_standard.setter
+    def swap_standard(self, value):
+        self.__swap_standard = InstrumentCalculationStatusDto(value)
+
+    @property
+    def swap_horizon(self) -> InstrumentCalculationStatusDto:
+        return self.__swap_horizon
+
+    @swap_horizon.setter
+    def swap_horizon(self, value):
+        self.__swap_horizon = InstrumentCalculationStatusDto(value)
 
 
 class BondsBulkCalculationStatusData(BaseDto):

@@ -26,18 +26,18 @@ class DayCountConvention(Enum):
 class SwapDayCountConvention(Enum):
     """Day count conventions available in the service."""
 
-    ActAct = "act/act"
-    ExaExa = "exa/exa"
-    Act365 = "act/365"
-    Act360 = "act/360"
-    Bond = "30/360"
+    ActAct = "actact"
+    ExaExa = "exaexa"
+    Act365 = "act365"
+    Act360 = "act360"
+    Bond = "30360"
     Bond30E360 = "30e360"
     Bond30E360Isda = "30e360isda"
     BondBund = "bund"
     Isda360 = "30d360"
-    Act36525 = "act/365.25"
-    ActUst = "act/ust"
-    ActActIcma = "act/act.icma"
+    Act36525 = "act365.25"
+    ActUst = "actust"
+    ActActIcma = "actact.icma"
 
 
 class TimeConvention(Enum):

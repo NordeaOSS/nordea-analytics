@@ -24,7 +24,7 @@ class ApiServerError(Exception):
     def __init__(self, error_id: str, error_description: str) -> None:
         """Common base class for all Analytics API Server exceptions."""
         self.error_id = error_id
-        super(ApiServerError, self).__init__(error_description)
+        super(ApiServerError, self).__init__(error_id, error_description)
 
     def __str__(self) -> str:
         """Return str(self)."""
@@ -73,6 +73,7 @@ class CustomWarning(Warning):
         """
         self.message = message
         warnings.warn(self.message, category=category, stacklevel=STACKLEVEL)
+        super().__init__(message, category)
 
 
 class CustomWarningCheck:

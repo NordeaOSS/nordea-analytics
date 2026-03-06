@@ -163,8 +163,8 @@ def convert_to_variable_string(
         YieldHorizon,
     ):
         try:
-            variable_type(variable.value)  # type:ignore
-            return variable.value  # type:ignore
+            variable_type(variable.value)  # type: ignore
+            return variable.value  # type: ignore
         except ValueError as e:
             raise e
     elif type(variable) is str:
@@ -312,7 +312,7 @@ def convert_to_original_format(
     """Convert the output to be the same as the input."""
     original = originals[
         [
-            f.lower() if isinstance(f, str) else f.value.lower()  # type:ignore
+            f.lower() if isinstance(f, str) else f.value.lower()  # type: ignore
             for f in originals
         ].index(new.lower())
     ]
@@ -320,7 +320,7 @@ def convert_to_original_format(
         return original
     else:
         try:
-            return original.name  # type:ignore
+            return original.name  # type: ignore
         except Exception:
             AnalyticsResponseError(
                 "Conversion function not working properly, report this to package provider."
@@ -353,6 +353,31 @@ def pascal_case(s: str) -> str:
     """Convert to PascalCase, only for formatting user output."""
     s = sub(r"(_|-)+", " ", s).title().replace(" ", "")
     return "".join([s[0].upper(), s[1:]])
+
+
+def convert_enum_symbols_to_strings(
+    symbols: Union[
+        List[str],
+        List[Enum],
+        List[Union[str, Enum]],
+    ],
+) -> List[Any]:
+    """Convert enum symbols to their string representations.
+
+    Args:
+        symbols: Single symbol or list of symbols that can be strings or Enum instances.
+
+    Returns:
+        List of string representations of the symbols.
+    """
+    converted_symbols = []
+    for symbol in symbols:
+        if isinstance(symbol, Enum):
+            converted_symbols.append(symbol.value)
+        else:
+            converted_symbols.append(symbol)
+
+    return converted_symbols
 
 
 class RequestMethod(Enum):

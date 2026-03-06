@@ -83,7 +83,7 @@ class FXForecast(ValueRetriever):
             for data in fx_type_data["forecast"]:
                 values = {}
 
-                values["Updated_at"] = datetime.strptime(
+                values["UpdatedAt"] = datetime.strptime(
                     fx_type_data["updated_at"].split("T")[0], "%Y-%m-%d"
                 )
 
@@ -114,7 +114,7 @@ class FXForecast(ValueRetriever):
             orient="index",
         )
         df = df.reset_index().rename(
-            columns={"level_0": "Symbol", "level_1": "FX_type", "level_2": "Horizon"}
+            columns={"level_0": "Symbol", "level_1": "FXType", "level_2": "Horizon"}
         )
 
         return df

@@ -14,6 +14,7 @@ from nordea_analytics.nalib.data_retrieval_client import (
 )
 from nordea_analytics.nalib.exceptions import AnalyticsInputError
 from nordea_analytics.nalib.util import (
+    convert_enum_symbols_to_strings,
     convert_to_list,
     convert_to_float_if_float,
     convert_to_original_format,
@@ -72,6 +73,7 @@ class BondKeyFigures(ValueRetriever):
         super(BondKeyFigures, self).__init__(client)
 
         self.symbols = convert_to_list(symbols)
+        self.symbols = convert_enum_symbols_to_strings(self.symbols)
 
         # Convert keyfigures to a list of strings
         self.keyfigures_original: List = (

@@ -9,7 +9,7 @@ from nordea_analytics.nalib.http.models import AnalyticsApiResponse
 class OpenBankingForbiddenRequestError(ForbiddenRequestError):
     """Analytics API server is refusing action due to insufficient privileges."""
 
-    def __init__(self, error_id: str) -> None:
+    def __init__(self, error_id: str) -> None:  # noqa: B042
         """Create a new instance of OpenBankingUnauthorizedRequestError."""
         self._error_description = (
             "Your client_id and client_secret are correct, "
@@ -29,7 +29,7 @@ class OpenBankingUnauthorizedRequestError(ClientHttpError):
     Check that you pass correct client_id and client_secret values and that you have proper access to Analytics API.
     """
 
-    def __init__(self, error_id: str) -> None:
+    def __init__(self, error_id: str) -> None:  # noqa: B042
         """Create a new instance of OpenBankingUnauthorizedRequestError."""
         self._error_description = (
             "Authentication has failed. "

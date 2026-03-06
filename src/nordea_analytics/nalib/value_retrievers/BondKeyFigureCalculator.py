@@ -103,6 +103,8 @@ class BondKeyFigureCalculator(ValueRetriever):
         ladder_definition: Optional[Union[float, List[float]]] = None,
         cashflow_type: Optional[Union[str, CashflowType]] = None,
         dmb_model: Optional[Union[str, DmbModel]] = None,
+        prepayments: Optional[Union[float, List[float]]] = None,
+        remaining_prepayments: Optional[float] = None,
     ) -> None:
         """Initialization of class.
 
@@ -129,6 +131,10 @@ class BondKeyFigureCalculator(ValueRetriever):
             dmb_model: If 'default', returns key figures with the new DMB model.
                 If 'default_old', returns key figures with the old DMB model.
                 If empty, returns the key figures that were the standard for the given date.
+            prepayments: Optional. From calculation date onwards,
+                each entry overrides the next prepayment with a user defined one.
+            remaining_prepayments: Optional. Sets all prepayments after prepayments parameter to a fixed value.
+                If remaining_prepayments is empty, model prepayments are used.
 
         Raises:
             AnalyticsInputError: Raises exception with incorrect key figure enum
@@ -188,6 +194,12 @@ class BondKeyFigureCalculator(ValueRetriever):
         self.shift_tenors = shift_tenors
         self.shift_values = shift_values
         self.pp_speed = pp_speed
+
+        if isinstance(prepayments, list):
+            self.prepayments = prepayments
+        else:
+            self.prepayments = [prepayments]  # type: ignore
+        self.remaining_prepayments = remaining_prepayments
 
         _prices: Union[List[float], None]
         if isinstance(prices, list):
@@ -319,6 +331,8 @@ class BondKeyFigureCalculator(ValueRetriever):
                     "ladder_definition": self.ladder_definition,
                     "cashflow_type": self.cashflow_type,
                     "dmb_model": self.dmb_model,
+                    "prepayments": self.prepayments,
+                    "remaining_prepayments": self.remaining_prepayments,
                 }
                 request = {
                     key: initial_request[key]
@@ -375,7 +389,7 @@ class BondKeyFigureCalculator(ValueRetriever):
                             ): convert_to_float_if_float(ladder["value"])
                             for ladder in curve_data["ladder"]
                         }
-                        formatted_result = ladder_dict  # type:ignore
+                        formatted_result = ladder_dict  # type: ignore
                     elif key_figure == "expectedcashflow":
                         # Convert cashflow data to dictionary with datetime object as key
                         cashflow_dict = {
@@ -387,18 +401,18 @@ class BondKeyFigureCalculator(ValueRetriever):
                             }
                             for cashflow in curve_data["cashflows"]
                         }
-                        formatted_result = cashflow_dict  # type:ignore
+                        formatted_result = cashflow_dict  # type: ignore
                     elif key_figure == "vegamatrix":
                         # Convert vega points data to dictionary
                         vega_dict = {
                             vega_list["key"]: vega_list["value"]
                             for vega_list in curve_data["vega_points"]
                         }
-                        formatted_result = vega_dict  # type:ignore
+                        formatted_result = vega_dict  # type: ignore
                     else:
                         formatted_result = convert_to_float_if_float(
                             curve_data["value"]
-                        )  # type:ignore
+                        )  # type: ignore
 
                     _data_dict[
                         convert_to_original_format(

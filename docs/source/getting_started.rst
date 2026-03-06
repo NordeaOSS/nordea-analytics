@@ -48,6 +48,13 @@ The second package:
 * :meth:`calculate_repo_bond_key_figure() <nordea_analytics.nordea_analytics_service.core.NordeaAnalyticsCoreService.calculate_repo_bond_key_figure>`.
 * :meth:`get_bond_live_key_figures() <nordea_analytics.nordea_analytics_service.core.NordeaAnalyticsCoreService.get_bond_live_key_figures>`.
 
+The third package:
+
+* Includes all endpoints from the first and second package
+* :meth:`calculate_swap_key_figure() <nordea_analytics.nordea_analytics_service.core.NordeaAnalyticsCoreService.calculate_swap_key_figure>`.
+* :meth:`calculate_horizon_swap_key_figure() <nordea_analytics.nordea_analytics_service.core.NordeaAnalyticsCoreService.calculate_horizon_swap_key_figure>`.
+
+
 Enumeration classes for input parameters
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 Many input parameters are controlled by enumeration classes. From `nordea_analytics` the following are available:
@@ -138,7 +145,7 @@ are shifted up by 5 bps on the 6M, 5Y and 10Y tenor.
     #     [25, 30, 100, 150]
     # ]
 
-    bonds_key_figures = na_service.calculate_bond_key_figure(symbols=isin,
+    bond_key_figures = na_service.calculate_bond_key_figure(symbols=isin,
                                                              keyfigures=bond_key_figure,
                                                              calc_date=value_date,
                                                              curves=curves,
@@ -169,7 +176,7 @@ at 14th of February 2022 for the ISIN `DK0002000421`. Key figure "PriceClean" sh
     value_date = datetime(2022, 2, 14)
     horizon_date = datetime(2022, 2, 18)
 
-    bonds_key_figures = na_service.calculate_horizon_bond_key_figure(symbols=isin,
+    bond_key_figures = na_service.calculate_horizon_bond_key_figure(symbols=isin,
                                                                      keyfigures=bond_key_figure,
                                                                      calc_date=value_date,
                                                                      horizon_date=horizon_date,
@@ -198,7 +205,7 @@ at 13th of February 2023 for the ISIN `DK0002044551` and `DK0002000421`, and ret
     forward_date = datetime(2024, 2, 13)
     prices = [47, 101]
     forward_price = [50, 100]
-    df = na_service.calculate_repo_bond_key_figure(isin,
+    bond_key_figures = na_service.calculate_repo_bond_key_figure(isin,
                                                 bond_key_figures,
                                                 calc_date,
                                                 forward_date,
@@ -206,12 +213,93 @@ at 13th of February 2023 for the ISIN `DK0002044551` and `DK0002000421`, and ret
                                                 forward_price,
                                                 as_df=True)
 
-
 Price, Forward Price and Repo Rate are all optional inputs, but two of them always need to be given in order to
 solve for the third one. As in the example above, we want to solve for repo rate, an give therefor price and forward
 price as inputs.
 Note that if one wants to calculate repo bond key figures for multiple ISINs, as many prices, forward prices or repo
 rates need to be given and the values need to be located in the list at the same place as their respective ISIN.
+
+Build Swap
+^^^^^^^^^^^^^^^^^^^^^^^^^^^
+The following example builds a SwapDefinition object that is used for calculating key figures.
+
+.. code-block:: python
+
+    from nordea_analytics import get_nordea_analytics_client
+
+    na_service = get_nordea_analytics_client(client_id="Your client id", client_secret="Your client secret")
+
+    swaps = na_service.build_swaps("DKK PAY 10Y,SEK REC 5Y")
+
+Examples of other swap strings include:
+
+* DKK PAY 10Y
+* DKK REC 10Y
+* DKK PAY 10Y ATM+0.005
+* DKK PAY 10Y 0.035
+* DKK PAY 10Y RFR
+* DKK PAY 5Y10Y
+* DKK PAY 1JAN49
+* DKK PAY 1JAN191jan49 (start date, tenor)
+* DKK PAY 1JAN3910Y (forward, tenor)
+* DKK PAY 10Y 3M (float)
+* DKK PAY 10Y 3M (float) ACT360 (fixed)
+* USDDKK XCCY 10Y
+* USDDKK XCCY 10Y 3M RFR
+
+
+Calculate Swap Key Figure
+^^^^^^^^^^^^^^^^^^^^^^^^^^^
+The following example calculates the present value, implied rate, implied spread, actual fixed rate and actual floating spread for a 10 year swap.
+The tenor can also be expressed as a datetime.
+
+.. code-block:: python
+
+    from datetime import datetime
+    from nordea_analytics import get_nordea_analytics_client
+    from nordea_analytics import SwapKeyFigureName, SwapLegType
+
+    na_service = get_nordea_analytics_client(client_id="Your client id", client_secret="Your client secret")
+
+    swaps = na_service.build_swaps("DKK PAY 10Y")
+    swap_key_figures = na_service.calculate_swap_key_figure(swaps=swaps,
+                                                            calc_date=datetime(2025, 9, 4),
+                                                            keyfigures=[SwapKeyFigureName.PVonTS,
+                                                                        SwapKeyFigureName.ImpliedRate,
+                                                                        SwapKeyFigureName.ImpliedSpread,
+                                                                        SwapKeyFigureName.FixedRatePaid,
+                                                                        SwapKeyFigureName.FloatingSpreadReceived,
+                                                                        ],
+                                                            as_df=True)
+
+Other optional input variables can be found in :meth:`calculate_swap_key_figure()
+<nordea_analytics.nordea_analytics_service.core.NordeaAnalyticsCoreService.calculate_swap_key_figure>`
+
+Calculate Horizon Swap Key Figure
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+The following example calculates present value, actual fixed rate and actual floating spread of the swap.
+Implied rate is for the swap from the horizon date.
+
+.. code-block:: python
+
+    from datetime import datetime
+    from nordea_analytics import get_nordea_analytics_client
+    from nordea_analytics import SwapHorizonKeyFigureName, SwapLegType
+
+    na_service = get_nordea_analytics_client(client_id="Your client id", client_secret="Your client secret")
+
+    swap_key_figures = na_service.calculate_horizon_swap_key_figure(swaps=swaps,
+                                                                    calc_date=datetime(2025, 9, 4),
+                                                                    horizon_date=datetime(2026, 9, 4),
+                                                                    keyfigures=[SwapHorizonKeyFigureName.PVonTS,
+                                                                                SwapHorizonKeyFigureName.ImpliedRate,
+                                                                                SwapHorizonKeyFigureName.FixedRatePaid,
+                                                                                SwapHorizonKeyFigureName.FloatingSpreadReceived
+                                                                                ],
+                                                                    as_df=True)
+
+Other optional input variables can be found in :meth:`calculate_horizon_swap_key_figure()
+<nordea_analytics.nordea_analytics_service.core.NordeaAnalyticsCoreService.calculate_horizon_swap_key_figure>`
 
 Get Benchmark Definition
 ^^^^^^^^^^^^^^^^^^^^^
@@ -228,8 +316,6 @@ The following example retrieves the underlying bonds of benchmarks and returns t
 
     underlying_bonds = na_service.get_benchmark_definition(benchmarks=benchmark_bond,
                                                            as_df=True)
-
-
 
 Get Bond Key Figures
 ^^^^^^^^^^^^^^^^^^^^^
@@ -252,11 +338,10 @@ The following example retrieves Vega, BPV and CVX for a given set of ISINs and r
                                                         calc_date=value_date,
                                                         as_df=True)
 
-
 Get Curve
 ^^^^^^^^^
 The following example retrieves the `DKKSWAP Libor` spot par curve with for the value date
-3rd of January 20222 and returns the results in a pandas DataFrame.
+3rd of January 2022 and returns the results in a pandas DataFrame.
 
 .. code-block:: python
 
