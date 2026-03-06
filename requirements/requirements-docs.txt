@@ -10,7 +10,7 @@ charset-normalizer==2.0.7
     # via requests
 colorama==0.4.5
     # via sphinx
-docutils==0.17.1
+docutils==0.22.4
     # via
     #   rst2pdf
     #   sphinx
@@ -95,6 +95,7 @@ zipp==3.23.0
 
 # The following packages are considered to be unsafe in a requirements file:
 # setuptools
+
 
 
 
