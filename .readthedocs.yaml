@@ -10,9 +10,9 @@ build:
    tools:
       python: "3.13"
    jobs:
-     pre_install:
-       - pip install --upgrade pip setuptools wheel
-       - pip install --only-binary=scipy
+      pre_install:
+         - pip install --upgrade pip setuptools wheel
+         - pip install --only-binary=scipy
    #apt_packages:
    #  - gfortran   # for scipy compilation
    #  - libblas-dev   # for scipy compilation
@@ -30,6 +30,7 @@ formats:
 python:
    install:
    - requirements: requirements/requirements-docs.txt
+
 
 
 
