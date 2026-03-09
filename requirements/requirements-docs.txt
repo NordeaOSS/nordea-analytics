@@ -59,7 +59,7 @@ smartypants==2.0.1
     # via rst2pdf
 snowballstemmer==2.2.0
     # via sphinx
-sphinx==7.4.7
+sphinx==9.1.0
     # via
     #   -r requirements\requirements-docs.in
     #   sphinx-autoapi
@@ -93,6 +93,7 @@ zipp==3.23.0
 
 # The following packages are considered to be unsafe in a requirements file:
 # setuptools
+
 
 
 
