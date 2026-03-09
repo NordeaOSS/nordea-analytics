@@ -1,14 +1,14 @@
 Get started with Nordea Analytics python
-=========================================
+========================================
 
 Install
------------
+-------
 Run: `pip install nordea-analytics`
 
 Note that in order to retrieve data from the package, access is required and python 3.9 or newer.
 
 Start coding with Nordea Analytics python
-------------------------------------------
+-----------------------------------------
 All methods available in the Nordea Analytics python can be retrieved through the
 get_nordea_analytics_client class. Most of then can return results in the form of a dictionary(default) or as a pandas DataFrame (as_df=True).
 
@@ -17,7 +17,7 @@ get_nordea_analytics_client class. Most of then can return results in the form o
     from nordea_analytics import get_nordea_analytics_client
 
 Available methods by package
-^^^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 Two packages are available, the first mainly includes endpoints for retrieving historical data.
 The second package everything from the first and real-time bond endpoints
 
@@ -56,7 +56,7 @@ The third package:
 
 
 Enumeration classes for input parameters
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 Many input parameters are controlled by enumeration classes. From `nordea_analytics` the following are available:
 
 For keyfigures
@@ -98,9 +98,9 @@ For instruments
 
 
 Basic examples
----------------
+--------------
 Get All Available Instruments
-^^^^^^^^^^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 The following example retrieves all available instruments.
 
 .. code-block:: python
@@ -115,7 +115,7 @@ Other optional input variables can be found in :meth:`get_available_instruments(
 <nordea_analytics.nordea_analytics_service.core.NordeaAnalyticsCoreService.get_available_instruments>`
 
 Calculate Bond Key Figure
-^^^^^^^^^^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^^^^^
 The following example calculates the spread and bpv for the ISIN `DK0002000421` at 15th of January 2021.
 The returned DataFrame shows results for both given discount curves, `DKKSWAP Disc OIS` and `DKKSWAP Libor`, where they
 are shifted up by 5 bps on the 6M, 5Y and 10Y tenor.
@@ -157,7 +157,7 @@ Other optional input variables can be found in :meth:`calculate_bond_key_figure(
 <nordea_analytics.nordea_analytics_service.core.NordeaAnalyticsCoreService.calculate_bond_key_figure>`
 
 Calculate Horizon Bond Key Figure
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 The following example calculates the BPV, CVX, Spread and Clean Price for the future date 18th of February 2022, given information
 at 14th of February 2022 for the ISIN `DK0002000421`. Key figure "PriceClean" shows the clean price at
 14th of February 2022.
@@ -186,7 +186,7 @@ Other optional input variables can be found in :meth:`calculate_horizon_bond_key
 <nordea_analytics.nordea_analytics_service.core.NordeaAnalyticsCoreService.calculate_horizon_bond_key_figure>`
 
 Calculate Repo Bond Key Figure
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 The following example calculates the Repo Rate and Forward Yield for the future date 13th of February 2024, given information
 at 13th of February 2023 for the ISIN `DK0002044551` and `DK0002000421`, and returns it in a DataFrame format.
 
@@ -220,7 +220,7 @@ Note that if one wants to calculate repo bond key figures for multiple ISINs, as
 rates need to be given and the values need to be located in the list at the same place as their respective ISIN.
 
 Build Swap
-^^^^^^^^^^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^
 The following example builds a SwapDefinition object that is used for calculating key figures.
 
 .. code-block:: python
@@ -249,7 +249,7 @@ Examples of other swap strings include:
 
 
 Calculate Swap Key Figure
-^^^^^^^^^^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^^^^^
 The following example calculates the present value, implied rate, implied spread, actual fixed rate and actual floating spread for a 10 year swap.
 The tenor can also be expressed as a datetime.
 
@@ -276,7 +276,7 @@ Other optional input variables can be found in :meth:`calculate_swap_key_figure(
 <nordea_analytics.nordea_analytics_service.core.NordeaAnalyticsCoreService.calculate_swap_key_figure>`
 
 Calculate Horizon Swap Key Figure
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 The following example calculates present value, actual fixed rate and actual floating spread of the swap.
 Implied rate is for the swap from the horizon date.
 
@@ -302,7 +302,7 @@ Other optional input variables can be found in :meth:`calculate_horizon_swap_key
 <nordea_analytics.nordea_analytics_service.core.NordeaAnalyticsCoreService.calculate_horizon_swap_key_figure>`
 
 Get Benchmark Definition
-^^^^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^^^^
 The following example retrieves the underlying bonds of benchmarks and returns the results in a pandas DataFrame.
 
 .. code-block:: python
@@ -318,7 +318,7 @@ The following example retrieves the underlying bonds of benchmarks and returns t
                                                            as_df=True)
 
 Get Bond Key Figures
-^^^^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^
 The following example retrieves Vega, BPV and CVX for a given set of ISINs and returns the results in a pandas DataFrame.
 
 .. code-block:: python
@@ -411,7 +411,7 @@ curve definition can be retrieved, therefore we have a special enumeration class
                                                        as_df=True)
 
 Get Curve Time Series
-^^^^^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^
 The following example retrieves daily points on the 0.5Y and 1Y `DKKSWAP` spot par curve for the last 30 days
 and returns the results in a pandas DataFrame. The curve is constructed using time convention 30/360.
 
@@ -471,7 +471,7 @@ has to be given.
                                                          as_df=True)
 
 Get Date Sequence
-^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^
 The following example generates a date sequence by rolling out a list of business days between 1st of January
 and 1st of February 2022 and returns it in a list.
 
@@ -492,7 +492,7 @@ and 1st of February 2022 and returns it in a list.
                                                  day_count_convention=day_count_convention)
 
 Get FX Forecast
-^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^
 The following example retrieves Nordea's latest FX forecast for the EUR/DKK cross currency pair.
 
 .. code-block:: python
@@ -507,7 +507,7 @@ The following example retrieves Nordea's latest FX forecast for the EUR/DKK cros
                                                as_df=True)
 
 Get Index Composition
-^^^^^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^
 The following example retrieves index composition for a set of Indices for the the 3rd of January 2023 and returns the result
 in a pandas DataFrame.
 
@@ -526,7 +526,7 @@ in a pandas DataFrame.
                                                           as_df=True)
 
 Get Live Bond Key Figure Snapshot
-^^^^^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 The following example returns the latest available live Quote and CVX in a pandas DataFrame.
 
 .. code-block:: python
@@ -545,7 +545,7 @@ The following example returns the latest available live Quote and CVX in a panda
                                                                   as_df=True)
 
 Get Live Bond Key Figures
-^^^^^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^^^^^
 The following example returns live Quote and CVX in a pandas DataFrame format and stops the feed after one minute.
 
 .. code-block:: python
@@ -571,7 +571,7 @@ The following example returns live Quote and CVX in a pandas DataFrame format an
             live_bond_keyfigure.stop()
 
 Get Quotes
-^^^^^^^^^^^^^^^^
+^^^^^^^^^^
 The following example retrieves real-time quotes for a set of instruments in a pandas DataFrame.
 
 .. code-block:: python
@@ -617,7 +617,7 @@ can also retrieve time series for swaps, FX, FX swap point, then the key figure 
                                              as_df=True)
 
 Get Shift Days
-^^^^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^
 The following example shifts a date forward 1 bank day and returns the results as a datetime.
 
 .. code-block:: python
@@ -641,7 +641,7 @@ The following example shifts a date forward 1 bank day and returns the results a
                                              date_roll_convention=date_roll_convention)
 
 Get Yield Forecast
-^^^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^
 The following retrieves Nordea's latest yield forecast for CIBOR 3M
 
 .. code-block:: python
@@ -660,7 +660,7 @@ The following retrieves Nordea's latest yield forecast for CIBOR 3M
                                                     as_df=True)
 
 Get Year Fraction
-^^^^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^
 The following example calculates the time between two dates as a year fraction and returns the result as double.
 
 .. code-block:: python
@@ -680,7 +680,7 @@ The following example calculates the time between two dates as a year fraction a
                                                  time_convention=time_convention)
 
 Search Bonds
-^^^^^^^^^^^^^
+^^^^^^^^^^^^
 The search_bonds() function requires at least one search criteria.
 The following example returns list of ISINs and bond names for USD Fixed to Float Bond with annuity as amortisation
 type. The results are in a DataFrame format.
@@ -748,7 +748,7 @@ Other serach criterias are listed in :meth:`search_bonds()
 
 
 Search Instruments
-^^^^^^^^^^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^
 The following example retrieves all instruments which symbol or name contains USDDKK (case insensitive).
 
 .. code-block:: python
@@ -799,10 +799,10 @@ Other optional input variables can be found in :meth:`search_instruments()
 <nordea_analytics.nordea_analytics_service.core.NordeaAnalyticsCoreService.search_instruments>`
 
 Advanced examples
--------------------
+-----------------
 
 Live Dash board
-^^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^
 .. code-block:: python
 
     from datetime import datetime
@@ -861,7 +861,7 @@ Live Dash board
 
 
 Live Time Series Plot
-^^^^^^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^
 Live plot with the time series for Spread for the last 365 days to the most recent live value. The graph updates
 when new live key figures are in.
 
@@ -921,7 +921,7 @@ when new live key figures are in.
 .. image:: images/live_timeseries_plot.jpg
 
 Make key figure report on portfolio or index (or both)
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 .. code-block:: python
 
     import pandas as pd
@@ -951,7 +951,7 @@ Make key figure report on portfolio or index (or both)
 
 
 Plot Curve
-^^^^^^^^^^^^^
+^^^^^^^^^^
 .. code-block:: python
 
     import pandas as pd
@@ -983,7 +983,7 @@ Plot Curve
 .. image:: images/curve_plot.png
 
 Plot Curve Time series
-^^^^^^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^^
 .. code-block:: python
 
     import matplotlib.pyplot as plt
@@ -1007,7 +1007,7 @@ Plot Curve Time series
 .. image:: images/curve_ts.png
 
 Plot time series key figure
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^^^^^^^
 .. code-block:: python
 
     import matplotlib.pyplot as plt
@@ -1029,7 +1029,7 @@ Plot time series key figure
 .. image:: images/ts_plot.png
 
 Plot time series key figure with crispy charts
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 .. code-block:: python
 
     import pandas as pd
@@ -1092,7 +1092,7 @@ Plot time series key figure with crispy charts
 .. image:: images/crisp.png
 
 Showing why buybacks are making bonds more rich
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 2.5%53 vs 1%50
 
 .. code-block:: python
