@@ -53,7 +53,7 @@ reportlab==4.4.2
     # via rst2pdf
 requests==2.32.4
     # via sphinx
-scipy==1.13.1
+scipy==1.11.4
 setuptools==69.5.1
 smartypants==2.0.1
     # via rst2pdf
@@ -93,6 +93,7 @@ zipp==3.23.0
 
 # The following packages are considered to be unsafe in a requirements file:
 # setuptools
+
 
 
 
