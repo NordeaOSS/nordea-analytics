@@ -1,8 +1,8 @@
-alabaster==0.7.16
+alabaster==0.7.12
     # via sphinx
 astroid==3.3.11
     # via sphinx-autoapi
-babel==2.17.0
+babel==2.9.1
     # via sphinx
 certifi==2021.10.8
     # via requests
@@ -10,7 +10,7 @@ charset-normalizer==2.0.7
     # via requests
 colorama==0.4.5
     # via sphinx
-docutils==0.21.1
+docutils==0.17.1
     # via
     #   rst2pdf
     #   sphinx
@@ -19,27 +19,27 @@ idna==3.3
     # via requests
 imagesize==1.3.0
     # via sphinx
-importlib-metadata==8.0.0
+importlib-metadata==4.8.1
     # via rst2pdf
-jinja2==3.1
+jinja2==3.0.2
     # via
     #   rst2pdf
     #   sphinx
     #   sphinx-autoapi
-lazy-object-proxy==1.12.0
+lazy-object-proxy==1.6.0
     # via astroid
 markupsafe==2.0.1
     # via jinja2
 matplotlib==3.7.2
-numpy==2.0.2
-packaging==24.0
+numpy==2.4.1
+packaging==21.0
     # via
     #   rst2pdf
     #   sphinx
 pandas==2.3.1
 pillow==11.3.0
     # via reportlab
-pygments==2.19.1
+pygments==2.12.0
     # via
     #   rst2pdf
     #   sphinx
@@ -47,40 +47,41 @@ pyparsing==3.0.1
     # via packaging
 pytz==2021.3
     # via babel
-pyyaml==6.0.3
+pyyaml==6.0
     # via sphinx-autoapi
 reportlab==4.4.2
     # via rst2pdf
 requests==2.32.4
     # via sphinx
-scipy==1.17.1
-setuptools==69.5.1
+rst2pdf==0.100
+    # via -r requirements\requirements-docs.in
+scipy==1.11.1
 smartypants==2.0.1
     # via rst2pdf
-snowballstemmer==2.2.0
+snowballstemmer==2.1.0
     # via sphinx
-sphinx==9.1.0
+sphinx==5.2.0
     # via
     #   -r requirements\requirements-docs.in
     #   sphinx-autoapi
     #   sphinx-rtd-theme
-sphinx-autoapi==3.0.0
+sphinx-autoapi==2.1.0
     # via -r requirements\requirements-docs.in
-sphinx-rtd-theme==3.1.0
+sphinx-rtd-theme==1.0.0
     # via -r requirements\requirements-docs.in
-sphinxcontrib-applehelp==1.0.8
+sphinxcontrib-applehelp==1.0.2
     # via sphinx
-sphinxcontrib-devhelp==1.0.6
+sphinxcontrib-devhelp==1.0.2
     # via sphinx
-sphinxcontrib-htmlhelp==2.0.6
+sphinxcontrib-htmlhelp==2.0.0
     # via sphinx
 sphinxcontrib-jsmath==1.0.1
     # via sphinx
-sphinxcontrib-qthelp==1.0.8
+sphinxcontrib-qthelp==1.0.3
     # via sphinx
-sphinxcontrib-serializinghtml==1.1.10
+sphinxcontrib-serializinghtml==1.1.5
     # via sphinx
-typing-extensions==4.14.1
+typing-extensions==3.10.0.2
     # via astroid
 unidecode==1.4.0
     # via sphinx-autoapi
