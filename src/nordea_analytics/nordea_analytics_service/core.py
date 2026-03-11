@@ -525,8 +525,12 @@ class NordeaAnalyticsCoreService:
         ] = None,
         pp_speed: Optional[float] = None,
         prices: Optional[Union[float, List[float]]] = None,
-        spread: Optional[float] = None,
-        spread_curve: Optional[Union[str, CurveName]] = None,
+        spread: Optional[Union[float, List[float]]] = None,
+        spread_curve: Optional[
+            Union[
+                str, List[str], CurveName, List[CurveName], List[Union[str, CurveName]]
+            ]
+        ] = None,
         yield_input: Optional[float] = None,
         asw_fix_frequency: Optional[str] = None,
         ladder_definition: Optional[Union[float, List[float]]] = None,
@@ -547,7 +551,7 @@ class NordeaAnalyticsCoreService:
             shift_values: Optional. Shift values in basispoints. For example [100, 100, 75, 100, 100].
             pp_speed: Optional. Prepayment speed. Default = 1.
             prices: Optional. Fixed price per bond
-            spread: Optional. Fixed spread for bond. Mandatory to give
+            spread: Optional. Fixed spread for each bond. Mandatory to give
                 spread_curve also as an input.
             spread_curve: Optional. Spread curve to calculate the
                 key figures when a fixed spread is given.
@@ -840,7 +844,7 @@ class NordeaAnalyticsCoreService:
 
     def calculate_horizon_swap_key_figure(
         self,
-        swaps: Union[SwapDefinition, list[SwapDefinition]],
+        swaps: Union[SwapDefinition, list[SwapDefinition], dict[str, SwapDefinition]],
         keyfigures: Union[
             str,
             SwapHorizonKeyFigureName,
