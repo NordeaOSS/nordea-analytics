@@ -43,8 +43,8 @@ class BondKeyFigureCalculator(ValueRetriever):
                       For example [100, 100, 75, 100, 100].
         pp_speed: Prepayment speed. Default = 1.
         prices: fixed price per bond.
-        spread: fixed spread for bond. Mandatory to give spread_curve also as an input.
-        spread_curve: spread curve to calculate the key figures when a fixed spread is given.
+        spreads: fixed spread for bond. Mandatory to give spread_curve also as an input.
+        spread_curves: spread curve to calculate the key figures when a fixed spread is given.
         yield_input: fixed yield for bond.
         asw_fix_frequency: Fixing frequency of swap in ASW calculation.
                             Mandatory input in all ASW calculations.
@@ -96,8 +96,16 @@ class BondKeyFigureCalculator(ValueRetriever):
         ] = None,
         pp_speed: Optional[float] = None,
         prices: Optional[Union[float, List[float]]] = None,
-        spread: Optional[float] = None,
-        spread_curve: Optional[Union[str, CurveName]] = None,
+        spreads: Optional[Union[float, List[float]]] = None,
+        spread_curves: Optional[
+            Union[
+                str,
+                CurveName,
+                List[str],
+                List[CurveName],
+                List[Union[str, CurveName]],
+            ]
+        ] = None,
         yield_input: Optional[float] = None,
         asw_fix_frequency: Optional[str] = None,
         ladder_definition: Optional[Union[float, List[float]]] = None,
@@ -118,9 +126,9 @@ class BondKeyFigureCalculator(ValueRetriever):
             shift_values: Shift values in basispoints. For example [100, 100, 75, 100, 100].
             pp_speed: Prepayment speed. Default = 1.
             prices: fixed price per bond.
-            spread: fixed spread for bond. Mandatory to give
+            spreads: fixed spread for each bonds. Mandatory to give
                 spread_curve also as an input.
-            spread_curve: spread curve to calculate the
+            spread_curves: spread curve to calculate the
                 key figures when a fixed spread is given.
             yield_input: fixed yield for bond.
             asw_fix_frequency: Fixing frequency of swap in ASW calculation.
@@ -210,13 +218,59 @@ class BondKeyFigureCalculator(ValueRetriever):
             _prices = None
 
         self.prices = _prices
-        self.spread = spread
-        _spread_curve = (
-            convert_to_variable_string(spread_curve, CurveName)
-            if spread_curve
-            else None
-        )
-        self.spread_curve = _spread_curve
+
+        self.spreads: Union[list]
+        if isinstance(spreads, list):
+            self.spreads = spreads
+        elif isinstance(spreads, float):
+            self.spreads = [spreads]
+        elif isinstance(spreads, int):
+            self.spreads = [spreads]
+        else:
+            self.spreads = [None]
+
+        _spread_curves: Union[List[str], List[None]]
+        if isinstance(spread_curves, list):
+            _spread_curves = [
+                (
+                    convert_to_variable_string(spread_curve, CurveName)
+                    if isinstance(spread_curve, CurveName)
+                    else spread_curve
+                )
+                for spread_curve in spread_curves
+            ]
+        elif spread_curves is not None:
+            # mypy doesn't know that curves in this line is never a list
+            _spread_curves = [convert_to_variable_string(spread_curves, CurveName)]  # type: ignore
+        else:
+            _spread_curves = [None]
+
+        self.spread_curves = _spread_curves
+        if len(self.spreads) != 1 and len(self.spreads) != len(self.symbols):
+            raise AnalyticsInputError(
+                "'spreads' must have same length as 'symbols' or a length of 1"
+            )
+        if len(self.spread_curves) != 1 and len(self.spread_curves) != len(
+            self.symbols
+        ):
+            raise AnalyticsInputError(
+                "'spread_curves' must have same length as 'symbols' or a length of 1"
+            )
+        if len(self.spreads) == 1:
+            for _x in range(1, len(self.symbols)):
+                self.spreads.append(self.spreads[0])
+        if len(self.spread_curves) == 1:
+            for _x in range(1, len(self.symbols)):
+                self.spread_curves.append(self.spread_curves[0])  # type: ignore
+        if (
+            len(self.spreads) > 1
+            and len(self.spread_curves) > 1
+            and len(self.spreads) != len(self.symbols)
+        ):
+            raise AnalyticsInputError(
+                "'spreads' and 'spread_curves' must have same length"
+            )
+
         self.yield_input = yield_input
         self.asw_fix_frequency = asw_fix_frequency
         self.ladder_definition = (
@@ -324,8 +378,8 @@ class BondKeyFigureCalculator(ValueRetriever):
                         if self.prices is not None and x < len(self.prices)
                         else None
                     ),
-                    "spread": self.spread,
-                    "spread_curve": self.spread_curve,
+                    "spread": self.spreads[x],
+                    "spread_curve": self.spread_curves[x],
                     "yield": self.yield_input,
                     "asw_fix_frequency": self.asw_fix_frequency,
                     "ladder_definition": self.ladder_definition,

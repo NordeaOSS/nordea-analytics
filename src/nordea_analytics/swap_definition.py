@@ -56,48 +56,63 @@ class SwapDefinition:
         """
         self.currency_paid = currency_paid
         self.currency_received = currency_received
-        self.type_paid = (type_paid.value
-                          if isinstance(type_paid, SwapLegType)
-                          else type_paid)
-        self.type_received = (type_received.value
-                              if isinstance(type_received, SwapLegType)
-                              else type_received)
+        self.type_paid = (
+            type_paid.value if isinstance(type_paid, SwapLegType) else type_paid
+        )
+        self.type_received = (
+            type_received.value
+            if isinstance(type_received, SwapLegType)
+            else type_received
+        )
         self.tenor = tenor
         self.start = start
-        self.fix_frequency_paid = (fix_frequency_paid.value
-                                   if isinstance(fix_frequency_paid, SwapFixingFrequency)
-                                   else fix_frequency_paid)
-        self.fix_frequency_received = (fix_frequency_received.value
-                                       if isinstance(fix_frequency_received, SwapFixingFrequency)
-                                       else fix_frequency_received)
+        self.fix_frequency_paid = (
+            fix_frequency_paid.value
+            if isinstance(fix_frequency_paid, SwapFixingFrequency)
+            else fix_frequency_paid
+        )
+        self.fix_frequency_received = (
+            fix_frequency_received.value
+            if isinstance(fix_frequency_received, SwapFixingFrequency)
+            else fix_frequency_received
+        )
         self.fixed_rate_paid = fixed_rate_paid
         self.fixed_rate_received = fixed_rate_received
         self.floating_spread_paid = floating_spread_paid
         self.floating_spread_received = floating_spread_received
-        self.day_count_convention_paid = (day_count_convention_paid.value
-                                          if isinstance(day_count_convention_paid, SwapDayCountConvention)
-                                          else day_count_convention_paid)
-        self.day_count_convention_received = (day_count_convention_received.value
-                                              if isinstance(day_count_convention_received, SwapDayCountConvention)
-                                              else day_count_convention_received)
-        self.date_roll_convention = (date_roll_convention.value
-                                     if isinstance(date_roll_convention, DateRollConvention)
-                                     else date_roll_convention)
 
+        self.day_count_convention_paid = (
+            day_count_convention_paid.value
+            if isinstance(day_count_convention_paid, SwapDayCountConvention)
+            else day_count_convention_paid
+        )
+        self.day_count_convention_received = (
+            day_count_convention_received.value
+            if isinstance(day_count_convention_received, SwapDayCountConvention)
+            else day_count_convention_received
+        )
+        self.date_roll_convention = (
+            date_roll_convention.value
+            if isinstance(date_roll_convention, DateRollConvention)
+            else date_roll_convention
+        )
         self.name = "-".join(
-            filter(None, [
-                self.currency_paid,
-                self.currency_received,
-                self.type_paid,
-                self.type_received,
-                self.start,
-                self.tenor,
-                self.fixed_rate_paid,
-                self.fixed_rate_received,
-                self.floating_spread_paid,
-                self.floating_spread_received,
-                self.day_count_convention_paid,
-                self.day_count_convention_received,
-                self.date_roll_convention,
-            ])
+            filter(
+                None,
+                [
+                    self.currency_paid,
+                    self.currency_received,
+                    self.type_paid,
+                    self.type_received,
+                    self.start,
+                    self.tenor,
+                    self.fixed_rate_paid,
+                    self.fixed_rate_received,
+                    self.floating_spread_paid,
+                    self.floating_spread_received,
+                    self.day_count_convention_paid,
+                    self.day_count_convention_received,
+                    self.date_roll_convention,
+                ],
+            )
         )

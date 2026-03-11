@@ -42,7 +42,7 @@ class SwapHorizonKeyFigureCalculator(ValueRetriever):
     def __init__(
         self,
         client: DataRetrievalServiceClient,
-        swaps: Union[SwapDefinition, list[SwapDefinition]],
+        swaps: Union[SwapDefinition, list[SwapDefinition], dict[str, SwapDefinition]],
         keyfigures: Union[
             str,
             SwapHorizonKeyFigureName,
@@ -96,7 +96,12 @@ class SwapHorizonKeyFigureCalculator(ValueRetriever):
         super(SwapHorizonKeyFigureCalculator, self).__init__(client)
         self._client = client
 
-        self.swaps = swaps if isinstance(swaps, list) else [swaps]
+        if isinstance(swaps, list):
+            self.swaps = swaps
+        elif isinstance(swaps, dict):
+            self.swaps = list(swaps.values())
+        elif isinstance(swaps, SwapDefinition):
+            self.swaps = [swaps]
 
         self.calc_date = calc_date
         self.horizon_date = horizon_date
