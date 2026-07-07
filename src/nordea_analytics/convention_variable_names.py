@@ -34,7 +34,6 @@ class SwapDayCountConvention(Enum):
     Bond30E360 = "30e360"
     Bond30E360Isda = "30e360isda"
     BondBund = "bund"
-    Isda360 = "30d360"
     Act36525 = "act365.25"
     ActUst = "actust"
     ActActIcma = "actact.icma"

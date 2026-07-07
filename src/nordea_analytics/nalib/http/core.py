@@ -77,7 +77,7 @@ class RestApiHttpClient(ABC):
     def __init__(self) -> None:
         """Create new instance of RestApiHttpClient."""
         self.__history: List[AnalyticsApiResponse] = []
-        self.__session = None
+        self.__session: Optional[requests.Session] = None
 
     @property
     def history(self) -> List[AnalyticsApiResponse]:

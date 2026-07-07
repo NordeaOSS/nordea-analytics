@@ -96,6 +96,7 @@ class SwapDefinition:
             if isinstance(date_roll_convention, DateRollConvention)
             else date_roll_convention
         )
+
         self.name = "-".join(
             filter(
                 None,

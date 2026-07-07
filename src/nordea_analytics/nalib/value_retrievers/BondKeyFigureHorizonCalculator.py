@@ -80,7 +80,7 @@ class BondKeyFigureHorizonCalculator(ValueRetriever):
         prepayments: Optional[Union[float, List[float]]] = None,
         reinvest_in_series: Optional[bool] = None,
         reinvestment_rate: Optional[float] = None,
-        spread_change_horizon: Optional[float] = None,
+        spread_change_horizon: Optional[Union[float, int]] = None,
         align_to_forward_curve: Optional[bool] = None,
     ) -> None:
         """Initialization of class.

@@ -1,5 +1,5 @@
 from json import JSONDecodeError
-from typing import Any, Optional, Dict
+from typing import Any, Optional, Dict, cast
 
 import requests
 
@@ -20,12 +20,12 @@ class AnalyticsApiResponse:
     @property
     def url(self) -> str:
         """Url of request."""
-        return self.raw_response.request.url
+        return cast(str, self.raw_response.request.url)
 
     @property
     def method(self) -> str:
         """Method of request."""
-        return self.raw_response.request.method
+        return cast(str, self.raw_response.request.method)
 
     @property
     def request_id(self) -> str:
