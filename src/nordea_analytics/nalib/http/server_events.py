@@ -1,5 +1,5 @@
 import time
-from typing import Iterator, List, Self
+from typing import Iterator, List, Optional, Self
 
 import requests
 
@@ -84,7 +84,7 @@ class ServerEventsStreamer:
         self.http_client = http_client
         self.stream_suffix = stream_suffix
         self._stream_url: str = ""
-        self._stream: requests.Response = None
+        self._stream: Optional[requests.Response] = None
 
     def __enter__(self) -> Self:
         """Entry to the body of the 'with' statement."""

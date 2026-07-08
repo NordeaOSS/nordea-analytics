@@ -15,7 +15,8 @@ from pathlib import Path
 from sphinx.ext.autodoc import between
 import os
 
-na_analytics_src = "\\".join(Path(__file__)._parts[:-3] +['src'])
+project_root = Path(__file__).parent.parent.parent
+na_analytics_src = str(project_root / 'src')
 sys.path.insert(0, na_analytics_src)
 
 
@@ -23,7 +24,7 @@ sys.path.insert(0, na_analytics_src)
 
 project = 'Nordea Analytics python library'
 copyright = '2022, Nordea'
-author = 'Nordea Desk Quants and Markets Advisory Tools'
+author = 'Nordea Markets Advisory Tools'
 
 
 # -- General configuration ---------------------------------------------------

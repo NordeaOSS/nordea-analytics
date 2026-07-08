@@ -96,7 +96,9 @@ class BondKeyFigureCalculator(ValueRetriever):
         ] = None,
         pp_speed: Optional[float] = None,
         prices: Optional[Union[float, List[float]]] = None,
-        spreads: Optional[Union[float, List[float]]] = None,
+        spreads: Optional[
+            Union[float, int, List[float], List[float], List[Union[float, int]]]
+        ] = None,
         spread_curves: Optional[
             Union[
                 str,
@@ -222,12 +224,21 @@ class BondKeyFigureCalculator(ValueRetriever):
         self.spreads: Union[list]
         if isinstance(spreads, list):
             self.spreads = spreads
-        elif isinstance(spreads, float):
-            self.spreads = [spreads]
-        elif isinstance(spreads, int):
+        elif isinstance(spreads, float) or isinstance(spreads, int):
             self.spreads = [spreads]
         else:
             self.spreads = [None]
+
+        # _spread_curves: Union[List, List[None]] = (
+        #     spread_curves
+        #     if isinstance(spread_curves, list)
+        #     else (
+        #         [spread_curves]
+        #         if isinstance(spread_curves, str)
+        #         or isinstance(spread_curves, CurveName)
+        #         else None
+        #     )
+        # )
 
         _spread_curves: Union[List[str], List[None]]
         if isinstance(spread_curves, list):

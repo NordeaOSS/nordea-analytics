@@ -1,5 +1,7 @@
 nox>=2025.2.9
 pip-system-certs>=4.0
+poetry>=2.3
+poetry-plugin-export>=1.10
 pygit2==1.19.1
 pytest>=8.0
 requests>=2.32.3

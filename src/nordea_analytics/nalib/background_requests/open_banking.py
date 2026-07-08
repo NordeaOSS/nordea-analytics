@@ -134,6 +134,8 @@ class PollingBackgroundRequestsClient(BackgroundRequestsClient):
             self._any_valid_calculation(bulk_data.advanced),
             self._any_valid_calculation(bulk_data.repo),
             self._any_valid_calculation(bulk_data.horizon),
+            self._any_valid_calculation(bulk_data.swap_standard),
+            self._any_valid_calculation(bulk_data.swap_horizon),
         ]
 
         if all(not valid for valid in calculation_statuses):
@@ -184,6 +186,8 @@ class PollingBackgroundRequestsClient(BackgroundRequestsClient):
         valid_jobs.update(self._validate_and_get_symbol_map(data.advanced))
         valid_jobs.update(self._validate_and_get_symbol_map(data.horizon))
         valid_jobs.update(self._validate_and_get_symbol_map(data.repo))
+        valid_jobs.update(self._validate_and_get_symbol_map(data.swap_standard))
+        valid_jobs.update(self._validate_and_get_symbol_map(data.swap_horizon))
 
         results = self._get_jobs_results(valid_jobs, api_response.request_id)
 
