@@ -1,5 +1,6 @@
 """Script for various methods for auth nordea analytics library."""
 
+from typing import Optional
 from urllib.parse import urljoin, urlparse
 
 import requests
@@ -11,7 +12,7 @@ from nordea_analytics.nalib.util import get_config
 config = get_config()
 
 
-def authenticate() -> cookies.RequestsCookieJar:
+def authenticate() -> Optional[cookies.RequestsCookieJar]:
     """Function provide OAUTH2 authentication.
 
     Returns:

@@ -172,6 +172,8 @@ class CurveTimeSeries(ValueRetriever):
             )
             date_interv.append({"from": new_from_date, "to": new_to_date})
             new_from_date = new_to_date.replace(day=new_to_date.day + 1)
+        if new_from_date > self.to_date:
+            new_from_date = self.to_date  # To ensure from_date is never after to_date
         date_interv.append({"from": new_from_date, "to": self.to_date})
 
         request_list = []  # List to store request dictionaries

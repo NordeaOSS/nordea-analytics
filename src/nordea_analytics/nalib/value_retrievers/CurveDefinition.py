@@ -155,6 +155,8 @@ class CurveDefinition(ValueRetriever):
         _curve_def_dict: Dict[Any, Any] = {}
         for curve_def in self._data["values"]:
             _curve_def_dict = {}
+            if "isin" in curve_def:
+                _curve_def_dict["Isin"] = curve_def["isin"]
             if "quote" in curve_def["asset"]:
                 _curve_def_dict["Quote"] = convert_to_float_if_float(
                     curve_def["asset"]["quote"]
