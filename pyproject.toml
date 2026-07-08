@@ -6,7 +6,7 @@ requires = [
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "nordea-analytics-internal"
+name = "nordea-analytics"
 dynamic = ["version"]
 authors = [
     {name = "Nordea Desk Quants and Markets Advisory Tools", email = "E-advisorySupport@nordea.com"},

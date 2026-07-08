@@ -16,7 +16,7 @@ from sphinx.ext.autodoc import between
 import os
 
 project_root = Path(__file__).parent.parent.parent
-na_analytics_src = "\\".join(str(project_root / 'src'))
+na_analytics_src = str(project_root / 'src')
 sys.path.insert(0, na_analytics_src)
 
 
