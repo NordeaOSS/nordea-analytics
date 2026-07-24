@@ -4,10 +4,10 @@ from datetime import datetime
 from typing import Optional, Union
 
 from nordea_analytics.convention_variable_names import (
-    SwapDayCountConvention,
     DateRollConvention,
-    SwapLegType,
+    SwapDayCountConvention,
     SwapFixingFrequency,
+    SwapLegType,
 )
 
 
@@ -105,12 +105,36 @@ class SwapDefinition:
                     self.currency_received,
                     self.type_paid,
                     self.type_received,
-                    self.start,
-                    self.tenor,
-                    self.fixed_rate_paid,
-                    self.fixed_rate_received,
-                    self.floating_spread_paid,
-                    self.floating_spread_received,
+                    (
+                        self.start.strftime("%d-%m-%Y")
+                        if isinstance(self.start, datetime)
+                        else self.start
+                    ),
+                    (
+                        self.tenor.strftime("%d-%m-%Y")
+                        if isinstance(self.tenor, datetime)
+                        else self.tenor
+                    ),
+                    (
+                        str(self.fixed_rate_paid)
+                        if isinstance(self.fixed_rate_paid, float)
+                        else self.fixed_rate_paid
+                    ),
+                    (
+                        str(self.fixed_rate_paid)
+                        if isinstance(self.fixed_rate_paid, float)
+                        else self.fixed_rate_paid
+                    ),
+                    (
+                        str(self.floating_spread_paid)
+                        if isinstance(self.floating_spread_paid, float)
+                        else self.floating_spread_paid
+                    ),
+                    (
+                        str(self.floating_spread_received)
+                        if isinstance(self.floating_spread_received, float)
+                        else self.floating_spread_received
+                    ),
                     self.day_count_convention_paid,
                     self.day_count_convention_received,
                     self.date_roll_convention,

@@ -7,8 +7,8 @@ from .convention_variable_names import (
     DmbModel,
     Exchange,
     SwapDayCountConvention,
-    SwapLegType,
     SwapFixingFrequency,
+    SwapLegType,
     TimeConvention,
 )
 from .curve_variable_names import (
@@ -37,8 +37,8 @@ from .search_bond_names import (
     AssetType,
     CapitalCentres,
     CapitalCentreTypes,
-    SearchBondInstrumentGroup,
     Issuers,
+    SearchBondInstrumentGroup,
 )
 from .shortcuts.utils import disable_analytics_warnings
 from .swap_definition import SwapDefinition  # type: ignore[attr-defined]
@@ -46,15 +46,19 @@ from .swap_definition import SwapDefinition  # type: ignore[attr-defined]
 # To distinguish between external and internal packages
 __internal_package__ = False
 try:
-    from .shortcuts.nordea import get_nordea_analytics_client  # type: ignore
-    from .shortcuts.nordea import get_nordea_analytics_preprod_client  # type: ignore # noqa: E401
+    from .shortcuts.nordea import (
+        get_nordea_analytics_client,  # type: ignore
+        get_nordea_analytics_preprod_client,  # type: ignore # noqa: E401
+    )
 
     __internal_package__ = True
 except (NameError, ModuleNotFoundError):
-    from .shortcuts.open_banking import get_nordea_analytics_client  # type: ignore
-    from .shortcuts.open_banking import get_nordea_analytics_preprod_client  # type: ignore # noqa: F401
+    from .shortcuts.open_banking import (  # type: ignore[assignment]
+        get_nordea_analytics_client,  # type: ignore
+        get_nordea_analytics_preprod_client,  # type: ignore # noqa: F401
+    )
 
-__version__ = "1.22.9"
+__version__ = "1.22.10"
 __all__ = [
     "get_nordea_analytics_client",
     "get_nordea_analytics_preprod_client",

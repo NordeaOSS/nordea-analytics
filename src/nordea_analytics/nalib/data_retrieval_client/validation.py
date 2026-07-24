@@ -1,6 +1,6 @@
 from typing import Dict, Optional
 
-from nordea_analytics.nalib.exceptions import CustomWarning, AnalyticsWarning
+from nordea_analytics.nalib.exceptions import AnalyticsWarning, CustomWarning
 from nordea_analytics.nalib.http.models import AnalyticsApiResponse
 
 

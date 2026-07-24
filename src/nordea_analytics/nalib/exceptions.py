@@ -1,5 +1,5 @@
-from typing import Any
 import warnings
+from typing import Any
 
 from nordea_analytics.nalib.http.errors import BadRequestError
 

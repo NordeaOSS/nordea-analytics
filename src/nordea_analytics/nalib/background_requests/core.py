@@ -4,8 +4,8 @@ from typing import Any, Dict, List, Literal
 from nordea_analytics.nalib.data_retrieval_client import validation
 from nordea_analytics.nalib.exceptions import (
     AnalyticsWarning,
-    CustomWarning,
     BackgroundCalculationFailedWarning,
+    CustomWarning,
 )
 from nordea_analytics.nalib.http.core import RestApiHttpClient
 

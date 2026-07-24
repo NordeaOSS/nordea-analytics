@@ -1,7 +1,7 @@
 """Core functionality to acces API."""
 
 from datetime import datetime
-from typing import Optional, Any, Dict, Iterator, List, Union
+from typing import Any, Dict, Iterator, List, Optional, Union
 
 import pandas
 import pandas as pd
@@ -86,8 +86,6 @@ from nordea_analytics.search_bond_names import (
     CapitalCentres,
     CapitalCentreTypes,
     Issuers,
-)
-from nordea_analytics.search_bond_names import (
     SearchBondInstrumentGroup,
 )
 from nordea_analytics.swap_definition import SwapDefinition  # type: ignore[attr-defined]

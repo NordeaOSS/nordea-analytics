@@ -1,4 +1,5 @@
 # flake8: noqa
+# ruff: noqa
 from typing import Dict, Optional
 
 

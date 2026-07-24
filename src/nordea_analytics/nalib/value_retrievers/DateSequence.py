@@ -1,6 +1,6 @@
-from datetime import datetime
 import typing
-from typing import Optional, Dict, List, Union
+from datetime import datetime
+from typing import Dict, List, Optional, Union
 
 import pandas as pd
 

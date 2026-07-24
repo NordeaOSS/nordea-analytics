@@ -2,8 +2,8 @@ import copy
 from datetime import datetime
 from typing import Any, Dict, List, Optional, Union
 
-import pandas as pd
 import numpy as np
+import pandas as pd
 
 from nordea_analytics.convention_variable_names import CashflowType
 from nordea_analytics.curve_variable_names import (
@@ -17,8 +17,8 @@ from nordea_analytics.nalib.data_retrieval_client import (
 )
 from nordea_analytics.nalib.exceptions import AnalyticsInputError
 from nordea_analytics.nalib.util import (
-    convert_to_list,
     convert_to_float_if_float,
+    convert_to_list,
     convert_to_original_format,
     convert_to_variable_string,
     get_config,

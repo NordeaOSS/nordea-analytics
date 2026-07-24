@@ -1,4 +1,4 @@
-from typing import Dict, Any
+from typing import Any, Dict
 
 from nordea_analytics.nalib.http.core import RestApiHttpClient
 from nordea_analytics.nalib.http.models import AnalyticsApiResponse

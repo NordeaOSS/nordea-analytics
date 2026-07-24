@@ -1,4 +1,5 @@
 # flake8: noqa
+# ruff: noqa
 from typing import List
 
 from nordea_analytics.nalib.data_retrieval_client.dto.background import BaseDto

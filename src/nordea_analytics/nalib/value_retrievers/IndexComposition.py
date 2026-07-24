@@ -8,8 +8,8 @@ from nordea_analytics.nalib.data_retrieval_client import (
     DataRetrievalServiceClient,
 )
 from nordea_analytics.nalib.util import (
-    convert_to_list,
     convert_to_float_if_float,
+    convert_to_list,
     convert_to_original_format,
     convert_to_variable_string,
     get_config,

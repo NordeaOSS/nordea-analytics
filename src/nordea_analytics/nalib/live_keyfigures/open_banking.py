@@ -1,7 +1,7 @@
 import datetime
+import urllib.parse
 from threading import Event
 from typing import Any, Iterator, List
-import urllib.parse
 
 import requests
 

@@ -1,10 +1,10 @@
 import ast
 import ctypes.wintypes
-from pathlib import Path
 import platform
-from typing import Optional, Any, Dict, Union
 import urllib.parse
 import urllib.request
+from pathlib import Path
+from typing import Any, Dict, Optional, Union
 
 
 class ProxyFinder:

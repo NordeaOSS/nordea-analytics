@@ -5,20 +5,18 @@ from nordea_analytics.nalib.background_requests.core import BackgroundRequestsCl
 from nordea_analytics.nalib.data_retrieval_client import validation
 from nordea_analytics.nalib.data_retrieval_client.dto.background import (
     BackgroundJobResponse,
-)
-from nordea_analytics.nalib.data_retrieval_client.dto.background import (
     BackgroundJobStatusResponse,
 )
 from nordea_analytics.nalib.data_retrieval_client.dto.bulk_calculation import (
-    PostBulkCalculationData,
     BondsBulkCalculationStatusData,
     InstrumentCalculationStatusDto,
+    PostBulkCalculationData,
 )
 from nordea_analytics.nalib.exceptions import (
+    AnalyticsWarning,
     BackgroundCalculationFailed,
     BackgroundCalculationTimeout,
     CustomWarning,
-    AnalyticsWarning,
 )
 from nordea_analytics.nalib.http.core import RestApiHttpClient
 from nordea_analytics.nalib.http.models import AnalyticsApiResponse

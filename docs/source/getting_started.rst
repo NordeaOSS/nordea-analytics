@@ -18,8 +18,7 @@ get_nordea_analytics_client class. Most of then can return results in the form o
 
 Available methods by package
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-Three packages are available.
-The first mainly includes endpoints for retrieving historical data.
+Three packages are available, the first mainly includes endpoints for retrieving historical data.
 The second package includes everything from the first and real-time bond endpoints.
 The third package includes everything from the first and second and real-time swap endpoints.
 

@@ -1,8 +1,8 @@
 """Script for various methods for nordea analytics library."""
 
+import json
 from abc import ABC
 from enum import Enum
-import json
 from pathlib import Path
 from re import sub
 from typing import Any, Callable, Dict, List, Mapping, Optional, Union
@@ -214,7 +214,7 @@ def get_user(user_path: Path) -> str:
         return ""
 
 
-class ConfigContainer(ABC):
+class ConfigContainer(ABC):  # noqa: B024
     """Store config data."""
 
     config: Dict = {}

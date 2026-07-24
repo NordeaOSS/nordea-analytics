@@ -1,20 +1,19 @@
 [build-system]
 requires = [
-    "setuptools>=46.4",
-    "wheel",
+    "poetry-core>=2.0.0,<3.0.0",
+    "setuptools>=78.1.1",
+    "wheel>=0.46.2",
 ]
 build-backend = "setuptools.build_meta"
 
 [project]
 name = "nordea-analytics"
-dynamic = ["version"]
-authors = [
-    {name = "Nordea Desk Quants and Markets Advisory Tools", email = "E-advisorySupport@nordea.com"},
+dynamic = [
+    "version",
 ]
 description = "Nordea Analytics Python library"
 readme = "README.md"
-requires-python = ">=3.9"
-license = {text = "GPL-3.0"}
+requires-python = ">=3.12,<4.0"
 classifiers = [
     "Programming Language :: Python :: 3",
     "Programming Language :: Python :: 3 :: Only",
@@ -32,47 +31,115 @@ dependencies = [
     "pip_system_certs",
 ]
 
+[[project.authors]]
+name = "Nordea Desk Quants and Markets Advisory Tools"
+email = "E-advisorySupport@nordea.com"
+
+[project.license]
+text = "GPL-3.0"
+
 [project.urls]
 Homepage = "https://github.com/NordeaOSS/nordea-analytics"
 
 [tool.setuptools.packages.find]
-where = ["src"]
+where = [
+    "src",
+]
 
-[tool.setuptools.dynamic]
-version = {attr = "nordea_analytics.__version__"}
+[tool.setuptools.dynamic.version]
+attr = "nordea_analytics.__version__"
+
+[tool.ruff]
+line-length = 120
+src = [
+    "src",
+    "tests",
+]
+
+[tool.ruff.lint]
+select = [
+    "ANN",
+    "B",
+    "C90",
+    "D",
+    "E",
+    "F",
+    "I",
+    "S",
+    "W",
+]
+extend-select = [
+    "D417",
+]
+ignore = [
+    "ANN401",
+    "C901",
+    "D100",
+    "D202",
+    "D403",
+    "E203",
+    "E501",
+]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/*" = [
+    "S101",
+]
+
+[tool.ruff.lint.mccabe]
+max-complexity = 10
+
+[tool.ruff.lint.pydocstyle]
+convention = "google"
+
+[tool.ruff.lint.isort]
+known-first-party = [
+    "nordea_analytics",
+    "tests",
+]
 
 [tool.coverage.paths]
-source = ["src", "*/site-packages"]
+source = [
+    "src",
+    "*/site-packages",
+]
 
 [tool.coverage.run]
 branch = true
-source = ["nordea_analytics"]
-omit = ["*\\__main__.py"]
-
+source = [
+    "nordea_analytics",
+]
+omit = [
+    "*\\__main__.py",
+]
 
 [tool.poetry]
-packages = [{include = "nordea_analytics", from = "src"}]
+version = "1.22.9"
+packages = [
+    { include = "nordea_analytics", from = "src" },
+]
 
 [tool.poetry.group.dev.dependencies]
 nox = ">=2025.2.9"
 pip-system-certs = ">=4.0"
+dulwich = ">=0.20.0,<1.0.0"
 poetry = ">=2.3"
 poetry-plugin-export = ">=1.10"
-pygit2 = ">=1.19.1"
 pytest = ">=8.0"
 requests = ">=2.32.3"
-setuptools = ">=76.0.0"
-wheel = ">=0.45.1"
+setuptools = ">=78.1.1"
+tomli-w = ">=1.0.0"
+wheel = ">=0.46.2"
 
 [tool.poetry.group.docs.dependencies]
 requests = ">=2.23.0, <3.0.0"
 matplotlib = ">=3.7.2"
-numpy = ">=2.0.2"
+numpy = ">=2.4.6"
 pandas = ">=2.3.1"
 poetry = ">=2.3.0"
-scipy = ">=1.17.1"
+scipy = ">=1.17.1,<1.18.0"
 sphinx = ">=9.1.0"
-sphinx-autoapi = ">=2.0.1"
+sphinx-autoapi = ">=3.8.0"
 sphinx-rtd-theme = ">=3.1.0"
 
 [tool.poetry.group.main.dependencies]
@@ -83,41 +150,6 @@ requests = ">=2.32.3"
 requests-kerberos = ">=0.15.0"
 
 [[tool.poetry.source]]
-name = "numpy"
-url = "https://[USERID]:[TOKEN]]@artifactory.oneadr.net/artifactory/api/pypi/remote-pypi/simple"
-priority = "primary"
-
-[[tool.poetry.source]]
-name = "matplotlib"
-url = "https://[USERID]:[TOKEN]]@artifactory.oneadr.net/artifactory/api/pypi/remote-pypi/simple"
-priority = "primary"
-
-[[tool.poetry.source]]
-name = "pandas"
-url = "https://[USERID]:[TOKEN]]@artifactory.oneadr.net/artifactory/api/pypi/remote-pypi/simple"
-priority = "primary"
-
-[[tool.poetry.source]]
-name = "scipy"
-url = "https://[USERID]:[TOKEN]]@artifactory.oneadr.net/artifactory/api/pypi/remote-pypi/simple"
-priority = "primary"
-
-[[tool.poetry.source]]
-name = "setuptools"
-url = "https://[USERID]:[TOKEN]]@artifactory.oneadr.net/artifactory/api/pypi/remote-pypi/simple"
-priority = "primary"
-
-[[tool.poetry.source]]
-name = "sphinx"
-url = "https://[USERID]:[TOKEN]]@artifactory.oneadr.net/artifactory/api/pypi/remote-pypi/simple"
-priority = "primary"
-
-[[tool.poetry.source]]
-name = "sphinx-autoapi"
-url = "https://[USERID]:[TOKEN]]@artifactory.oneadr.net/artifactory/api/pypi/remote-pypi/simple"
-priority = "primary"
-
-[[tool.poetry.source]]
-name = "sphinx-rtd-theme"
-url = "https://[USERID]:[TOKEN]]@artifactory.oneadr.net/artifactory/api/pypi/remote-pypi/simple"
+name = "artifactory"
+url = "https://artifactory.oneadr.net/artifactory/api/pypi/remote-pypi/simple"
 priority = "primary"

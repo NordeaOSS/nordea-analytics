@@ -1,20 +1,23 @@
 import time
 from abc import ABC, abstractmethod
-from typing import Optional, Any, Dict, List, Union
+from typing import Any, Dict, List, Optional, Union
 from urllib.parse import urljoin
 
 import requests
 
 import nordea_analytics
-from nordea_analytics.nalib.exceptions import ApiServerError
-from nordea_analytics.nalib.exceptions import HttpClientImproperlyConfigured
+from nordea_analytics.nalib.exceptions import (
+    ApiServerError,
+    HttpClientImproperlyConfigured,
+)
 from nordea_analytics.nalib.http.errors import (
     BadRequestError,
     ForbiddenRequestError,
+    NotFoundRequestError,
     ServiceUnavailableError,
     UnauthorizedRequestError,
+    UnknownClientError,
 )
-from nordea_analytics.nalib.http.errors import NotFoundRequestError, UnknownClientError
 from nordea_analytics.nalib.http.models import AnalyticsApiResponse
 
 ANALYTICS_CLIENT_HEADER = "X-Analytics-Client"

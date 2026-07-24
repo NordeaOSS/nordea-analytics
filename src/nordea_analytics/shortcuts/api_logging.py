@@ -1,9 +1,9 @@
 ﻿def log_to_file() -> None:
     """Write logs to APPDATA folder ."""
-    import logging
-    import http.client
-    import os
     import datetime
+    import http.client
+    import logging
+    import os
 
     appdata = os.getenv("APPDATA") or "."
 

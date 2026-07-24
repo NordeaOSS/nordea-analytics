@@ -1,5 +1,5 @@
 from json import JSONDecodeError
-from typing import Any, Optional, Dict, cast
+from typing import Any, Dict, Optional, cast
 
 import requests
 

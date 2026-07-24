@@ -4,8 +4,7 @@ from typing import Any, Dict, List, Optional, Union
 
 import pandas as pd
 
-from nordea_analytics.convention_variable_names import CashflowType
-from nordea_analytics.convention_variable_names import DmbModel
+from nordea_analytics.convention_variable_names import CashflowType, DmbModel
 from nordea_analytics.curve_variable_names import (
     CurveName,
 )

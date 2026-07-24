@@ -1,5 +1,5 @@
 import os
-from typing import Optional, Dict
+from typing import Dict, Optional
 
 from nordea_analytics import NordeaAnalyticsService
 from nordea_analytics.nalib.background_requests.open_banking import (

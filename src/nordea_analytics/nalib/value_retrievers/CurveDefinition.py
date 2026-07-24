@@ -96,7 +96,7 @@ class CurveDefinition(ValueRetriever):
 
         if isinstance(curve_name, CurveName):
             curve_name_string = convert_to_variable_string(curve_name, CurveName)
-            if curve_name_string != ValueError:
+            if curve_name_string != ValueError:  # noqa: E721
                 curve_name_string = curve_name_string.upper()
             else:
                 CustomWarning(

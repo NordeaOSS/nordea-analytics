@@ -1,6 +1,6 @@
+import warnings
 from datetime import datetime
 from typing import Any, Dict, List, Mapping, Optional, Union
-import warnings
 
 import pandas as pd
 
@@ -19,8 +19,8 @@ from nordea_analytics.search_bond_names import (
     AssetType,
     CapitalCentres,
     CapitalCentreTypes,
-    SearchBondInstrumentGroup,
     Issuers,
+    SearchBondInstrumentGroup,
 )
 
 config = get_config()

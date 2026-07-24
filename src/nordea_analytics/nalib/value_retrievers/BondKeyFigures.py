@@ -1,5 +1,5 @@
-from datetime import datetime
 import math
+from datetime import datetime
 from typing import Any, Dict, List, Union
 
 import numpy as np
@@ -15,8 +15,8 @@ from nordea_analytics.nalib.data_retrieval_client import (
 from nordea_analytics.nalib.exceptions import AnalyticsInputError
 from nordea_analytics.nalib.util import (
     convert_enum_symbols_to_strings,
-    convert_to_list,
     convert_to_float_if_float,
+    convert_to_list,
     convert_to_original_format,
     convert_to_variable_string,
     get_config,

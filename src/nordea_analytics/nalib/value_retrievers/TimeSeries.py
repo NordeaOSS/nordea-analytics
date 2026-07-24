@@ -1,15 +1,14 @@
+import math
+import warnings
 from collections.abc import Iterator
 from datetime import datetime, timedelta
-import math
-from typing import Any, Dict, List, Union, Optional
+from typing import Any, Dict, List, Optional, Union
 
 import numpy as np
 import pandas as pd
 
-import warnings
-
-from nordea_analytics.instrument_variable_names import BenchmarkName, BondIndexName
 from nordea_analytics.convention_variable_names import DmbModel
+from nordea_analytics.instrument_variable_names import BenchmarkName, BondIndexName
 from nordea_analytics.key_figure_names import (
     TimeSeriesKeyFigureName,
 )
@@ -18,16 +17,16 @@ from nordea_analytics.nalib.data_retrieval_client import (
 )
 from nordea_analytics.nalib.exceptions import (
     AnalyticsInputError,
+    AnalyticsWarning,
 )
 from nordea_analytics.nalib.util import (
     convert_to_float_if_float,
+    convert_to_list,
     convert_to_original_format,
     convert_to_variable_string,
     get_config,
-    convert_to_list,
 )
 from nordea_analytics.nalib.value_retriever import ValueRetriever
-from nordea_analytics.nalib.exceptions import AnalyticsWarning
 
 config = get_config()
 
@@ -205,7 +204,7 @@ class TimeSeries(ValueRetriever):
         w: List[warnings.WarningMessage] = []
         with warnings.catch_warnings(
             record=True
-        ) as w:  # Catches all warnings thrown by Analytics API
+        ) as w:  # noqa: F811  # Catches all warnings thrown by Analytics API
             # category=AnalyticsWarning not supported by python 3.9, so workaround by looping over warnings
             json_response: List[Any] = []
 

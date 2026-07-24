@@ -10,8 +10,8 @@ from nordea_analytics.nalib.data_retrieval_client import (
     DataRetrievalServiceClient,
 )
 from nordea_analytics.nalib.exceptions import (
-    AnalyticsResponseError,
     AnalyticsInputError,
+    AnalyticsResponseError,
 )
 from nordea_analytics.nalib.util import (
     convert_to_list,
